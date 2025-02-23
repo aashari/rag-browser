@@ -1,104 +1,104 @@
 export interface Link {
-  title: string;
-  url: string;
-  selector: string;
+	title: string;
+	url: string;
+	selector: string;
 }
 
 export interface Button {
-  text: string;
-  selector: string;
+	text: string;
+	selector: string;
 }
 
 export interface Input {
-  label: string;
-  type: string;
-  selector: string;
-  isVisible: boolean;
-  id?: string;
-  role?: string;
-  name?: string;
-  value?: string;
-  placeholder?: string;
-  needsSpecialHandling?: boolean;
+	label: string;
+	type: string;
+	selector: string;
+	isVisible: boolean;
+	id?: string;
+	role?: string;
+	name?: string;
+	value?: string;
+	placeholder?: string;
+	needsSpecialHandling?: boolean;
 }
 
 export interface WaitAction {
-  type: 'wait';
-  elements: string[];
+	type: "wait";
+	elements: string[];
 }
 
 export interface ClickAction {
-  type: 'click';
-  element: string;
+	type: "click";
+	element: string;
 }
 
 export interface TypingAction {
-  type: 'typing';
-  element: string;
-  value: string;
-  delay?: number;
+	type: "typing";
+	element: string;
+	value: string;
+	delay?: number;
 }
 
 export interface KeyPressAction {
-  type: 'keyPress';
-  key: string;
-  element?: string;
+	type: "keyPress";
+	key: string;
+	element?: string;
 }
 
 export interface SubmitAction {
-  type: 'submit';
-  element: string;
+	type: "submit";
+	element: string;
 }
 
 export interface PrintAction {
-  type: 'print';
-  elements: string[];
+	type: "print";
+	elements: string[];
 }
 
 export type Action = WaitAction | ClickAction | TypingAction | KeyPressAction | SubmitAction | PrintAction;
 
 export interface Plan {
-  actions: Action[];
+	actions: Action[];
 }
 
 export interface PlannedActionResult {
-  selector: string;
-  html?: string;
-  error?: string;
+	selector: string;
+	html?: string;
+	error?: string;
 }
 
 export interface PageAnalysis {
-  title: string;
-  description: string;
-  links: Link[];
-  buttons: Button[];
-  inputs: Input[];
-  plannedActions?: PlannedActionResult[];
+	title: string;
+	description: string;
+	links: Link[];
+	buttons: Button[];
+	inputs: Input[];
+	plannedActions?: PlannedActionResult[];
 }
 
-export type SelectorMode = 'full' | 'simple';
+export type SelectorMode = "full" | "simple";
 
 export interface BrowserOptions {
-  headless: boolean;
-  slowMo?: number;
-  timeout?: number;
-  selectorMode?: SelectorMode;
-  plan?: Plan;
+	headless: boolean;
+	slowMo?: number;
+	timeout?: number;
+	selectorMode?: SelectorMode;
+	plan?: Plan;
 }
 
 export interface ActionResult {
-  success: boolean;
-  message: string;
-  warning?: string;
-  error?: string;
-  data?: any;
+	success: boolean;
+	message: string;
+	warning?: string;
+	error?: string;
+	data?: PlannedActionResult[];
 }
 
 export interface ActionStatus {
-  step: number;
-  totalSteps: number;
-  action: Action;
-  symbol: string;
-  description: string;
-  result?: ActionResult;
-} 
+	step: number;
+	totalSteps: number;
+	action: Action;
+	symbol: string;
+	description: string;
+	result?: ActionResult;
+}

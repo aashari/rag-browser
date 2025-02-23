@@ -3,21 +3,33 @@
   "module": "src/api.ts",
   "type": "module",
   "bin": {
-    "rag-browser": "./src/cli/index.ts"
+    "rag-browser": "./src/cli/index.ts",
+    "rag-browser-mcp": "./src/cli/mcp.ts"
   },
   "scripts": {
     "browser": "bun run src/cli/index.ts",
+    "start:mcp": "bun run src/cli/mcp.ts",
     "build": "bun build src/api.ts --outdir dist",
     "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
+    "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\"",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --fix"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "@typescript-eslint/eslint-plugin": "^8.24.1",
+    "@typescript-eslint/parser": "^8.24.1",
+    "bun-types": "latest",
+    "eslint": "^9.21.0",
+    "eslint-config-prettier": "^10.0.1",
+    "prettier": "^3.5.2"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.5.0",
     "chalk": "^5.4.1",
     "playwright": "^1.50.1"
   }

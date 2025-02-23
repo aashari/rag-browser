@@ -1,111 +1,116 @@
-import type { Page, Browser } from 'playwright';
-import { chromium } from 'playwright';
-import type { PageAnalysis, BrowserOptions, ActionStatus, PlannedActionResult } from '../types';
-import { DEFAULT_TIMEOUT, LINK_SELECTORS, BUTTON_SELECTORS, INPUT_SELECTORS } from '../config/constants';
-import { executePlan } from './actions';
-import { waitForPageStability } from './stability';
-import { getFullPath } from './scripts';
-import { getElementInfo } from '../utils/element';
-import { log } from '../utils/logging';
+import { chromium } from "playwright";
+import type { PageAnalysis, BrowserOptions, PlannedActionResult } from "../types";
+import { DEFAULT_TIMEOUT, LINK_SELECTORS, BUTTON_SELECTORS, INPUT_SELECTORS } from "../config/constants";
+import { executePlan } from "./actions";
+import { waitForPageStability } from "./stability";
+import { getFullPath } from "./scripts";
+import { getElementInfo } from "../utils/element";
+import { info, error } from "../utils/logging";
 
 declare global {
-  interface Window {
-    getFullPath: (element: Element) => string;
-  }
+	interface Window {
+		getFullPath: (element: Element) => string;
+	}
 }
 
 export async function analyzePage(url: string, options: BrowserOptions): Promise<PageAnalysis> {
-  const browser = await chromium.launch({ 
-    headless: options.headless,
-    slowMo: options.slowMo || 0
-  });
-  
-  const page = await browser.newPage();
-  let plannedActionResults: PlannedActionResult[] = [];
+	const browser = await chromium.launch({
+		headless: options.headless,
+		slowMo: options.slowMo || 0,
+	});
 
-  try {
-    // Inject utility functions
-    await page.addInitScript(`
+	const page = await browser.newPage();
+	let plannedActionResults: PlannedActionResult[] = [];
+
+	try {
+		// Inject utility functions
+		await page.addInitScript(`
       window.getFullPath = ${getFullPath.toString()};
     `);
 
-    log(`Navigating to ${url}...`);
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: options.timeout || DEFAULT_TIMEOUT });
-    log('Initial page load complete, waiting for stability...');
+		info("Starting navigation", { url, options });
+		await page.goto(url, { waitUntil: "domcontentloaded", timeout: options.timeout || DEFAULT_TIMEOUT });
+		info("Initial page load complete");
 
-    await waitForPageStability(page);
-    log('Page appears stable, extracting content...');
+		await waitForPageStability(page);
+		info("Page stability confirmed");
 
-    // Extract inputs first
-    const inputElements = await page.$$(INPUT_SELECTORS);
-    const inputs = await Promise.all(
-      inputElements.map(element => getElementInfo(page, element))
-    );
+		// Extract inputs first
+		const inputElements = await page.$$(INPUT_SELECTORS);
+		const inputs = await Promise.all(inputElements.map((element) => getElementInfo(page, element)));
+		info("Input elements extracted", { count: inputs.length });
 
-    // Execute plan if provided
-    if (options.plan) {
-      const { plannedActionResults: results } = await executePlan(page, options.plan, options);
-      plannedActionResults = results;
-    }
+		// Execute plan if provided
+		if (options.plan) {
+			info("Executing action plan", { plan: options.plan });
+			const { plannedActionResults: results } = await executePlan(page, options.plan, options);
+			plannedActionResults = results;
+			info("Action plan execution complete", { results });
+		}
 
-    // Re-inject utility functions after navigation
-    await page.addInitScript(`
+		// Re-inject utility functions after navigation
+		await page.addInitScript(`
       window.getFullPath = ${getFullPath.toString()};
     `);
 
-    // Extract page content
-    const analysis = await page.evaluate(({ 
-      linkSelectors, 
-      buttonSelectors, 
-      inputSelectors, 
-      selectorMode 
-    }) => {
-      const getAllElements = (selector: string) => Array.from(document.querySelectorAll(selector));
-      
-      // Extract page metadata
-      const title = document.title;
-      const description = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-      
-      // Extract links
-      const linkElements = getAllElements(linkSelectors);
-      const links = linkElements.map((link) => {
-        const element = link as HTMLElement;
-        const text = element.textContent?.trim() || '';
-        return {
-          title: text,
-          url: element.getAttribute('href') || '',
-          selector: window.getFullPath(element)
-        };
-      }).filter(link => link.url && !link.url.startsWith('javascript:'));
-      
-      // Extract buttons
-      const buttonElements = getAllElements(buttonSelectors);
-      const buttons = buttonElements.map((button) => {
-        const element = button as HTMLElement;
-        return {
-          text: element.textContent?.trim() || '',
-          selector: window.getFullPath(element)
-        };
-      });
+		// Extract page content
+		const analysis = await page.evaluate(
+			({ linkSelectors, buttonSelectors }) => {
+				const getAllElements = (selector: string): Element[] => Array.from(document.querySelectorAll(selector));
 
-      return { title, description, links, buttons };
-    }, { 
-      linkSelectors: LINK_SELECTORS,
-      buttonSelectors: BUTTON_SELECTORS,
-      inputSelectors: INPUT_SELECTORS,
-      selectorMode: options.selectorMode
-    });
+				// Extract page metadata
+				const title = document.title;
+				const description = document.querySelector('meta[name="description"]')?.getAttribute("content") || "";
 
-    return {
-      ...analysis,
-      inputs,
-      plannedActions: plannedActionResults.length > 0 ? plannedActionResults : undefined
-    };
+				// Extract links
+				const linkElements = getAllElements(linkSelectors);
+				const links = linkElements
+					.map((link) => {
+						const element = link as HTMLElement;
+						const text = element.textContent?.trim() || "";
+						return {
+							title: text,
+							url: element.getAttribute("href") || "",
+							selector: window.getFullPath(element),
+						};
+					})
+					.filter((link) => link.url && !link.url.startsWith("javascript:"));
 
-  } catch (error) {
-    console.error('Fatal error:', error);
-    throw error;
-  } finally {
-    await browser.close();
-  }
-} 
+				// Extract buttons
+				const buttonElements = getAllElements(buttonSelectors);
+				const buttons = buttonElements.map((button) => {
+					const element = button as HTMLElement;
+					return {
+						text: element.textContent?.trim() || "",
+						selector: window.getFullPath(element),
+					};
+				});
+
+				return { title, description, links, buttons };
+			},
+			{
+				linkSelectors: LINK_SELECTORS,
+				buttonSelectors: BUTTON_SELECTORS,
+				selectorMode: options.selectorMode,
+			}
+		);
+
+		info("Page analysis complete", {
+			title: analysis.title,
+			linksCount: analysis.links.length,
+			buttonsCount: analysis.buttons.length,
+			inputsCount: inputs.length,
+		});
+
+		return {
+			...analysis,
+			inputs,
+			plannedActions: plannedActionResults.length > 0 ? plannedActionResults : undefined,
+		};
+	} catch (err) {
+		error("Fatal error during page analysis", { error: err instanceof Error ? err.message : String(err) });
+		throw err;
+	} finally {
+		await browser.close();
+	}
+}
