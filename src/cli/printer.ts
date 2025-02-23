@@ -134,6 +134,21 @@ export function printAnalysis(analysis: PageAnalysis, format: OutputFormat = "pr
 		}
 	}
 
+	// Print action results if available
+	if (analysis.plannedActions?.length) {
+		output += `\n${chalk.bold("Print Action Results:")}\n`;
+		analysis.plannedActions.forEach((result) => {
+			output += `\n🖨️  ${chalk.bold(result.selector)}\n`;
+			if (result.html) {
+				output += chalk.gray(`  HTML: ${result.html}\n`);
+			}
+			if (result.error) {
+				output += chalk.red(`  Error: ${result.error}\n`);
+			}
+		});
+		output += "\n";
+	}
+
 	output += "\n";
 	return output;
 }

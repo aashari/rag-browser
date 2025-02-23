@@ -79,7 +79,7 @@ export async function handleToolCall(
 
 		// Default browser options
 		const options = {
-			headless: true,
+			headless: false,
 			slowMo: VISIBLE_MODE_SLOW_MO,
 			timeout: DEFAULT_TIMEOUT,
 			selectorMode: "full" as const
