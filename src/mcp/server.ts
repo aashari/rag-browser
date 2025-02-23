@@ -9,7 +9,7 @@ export async function runServer(): Promise<void> {
 	const server = new Server(
 		{
 			name: "@aashari/rag-browser",
-			version: "1.4.0",
+			version: "1.4.1",
 		},
 		{
 			capabilities: {

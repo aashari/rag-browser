@@ -174,7 +174,16 @@ export function createToolDefinitions(): Tool[] {
 							"- Escape quotes in JSON correctly (e.g., `\"` instead of `'`).\n" +
 							"- Include 'wait' before interactions if elements may load asynchronously.\n\n" +
 							"### Example:\n" +
-							`'{\"actions\": [{\"type\": \"wait\", \"elements\": [\"input#searchInput\"]}, {\"type\": \"typing\", \"element\": \"input#searchInput\", \"value\": \"AI Tools\"}, {\"type\": \"keyPress\", \"key\": \"Enter\", \"element\": \"input#searchInput\"}, {\"type\": \"print\", \"elements\": [\"#mw-content-text\"]}]}'`,
+							'```json\n' +
+							'{\n' +
+							'  "actions": [\n' +
+							'    {"type": "wait", "elements": ["#searchInput"]},\n' +
+							'    {"type": "typing", "element": "#searchInput", "value": "AI Tools"},\n' +
+							'    {"type": "keyPress", "key": "Enter", "element": "#searchInput"},\n' +
+							'    {"type": "print", "elements": ["#mw-content-text"]}\n' +
+							'  ]\n' +
+							'}\n' +
+							'```',
 					},
 				},
 				required: ["url", "plan"],
