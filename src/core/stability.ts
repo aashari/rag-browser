@@ -64,7 +64,7 @@ async function injectStabilityScripts(page: Page) {
 
     log('Stability scripts injection complete and verified');
   } catch (error) {
-    console.error('Error injecting stability scripts:', error);
+    log('Error injecting stability scripts:', error);
     throw error; // Re-throw to handle in the calling function
   }
 }
@@ -151,7 +151,7 @@ export async function waitForPageStability(page: Page, options: { timeout?: numb
           }
           throw error;
         }
-        console.error('Error during stability check:', error);
+        log('Error during stability check:', error);
         // On error, wait a bit and continue
         await page.waitForTimeout(MUTATION_CHECK_INTERVAL);
       }
@@ -161,7 +161,7 @@ export async function waitForPageStability(page: Page, options: { timeout?: numb
     log('Stability check timed out after', Date.now() - startTime, 'ms');
     return true;
   } catch (error) {
-    console.error('Fatal error in stability check:', error);
+    log('Fatal error in stability check:', error);
     return true; // Return true on error to allow the process to continue
   }
 }

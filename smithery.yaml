@@ -1,0 +1,65 @@
+name: rag-browser
+description: A web automation and analysis tool using Playwright
+version: 0.1.0
+author: aashari
+license: MIT
+
+# Start command configuration
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      headless:
+        type: boolean
+        description: Whether to run browser in headless mode
+        default: false
+      defaultTimeout:
+        type: number
+        description: Default timeout for operations in milliseconds
+        default: 30000
+  commandFunction: |-
+    (config) => ({
+      command: 'bun',
+      args: ['src/index.ts'],
+      env: {
+        HEADLESS: config.headless.toString(),
+        DEFAULT_TIMEOUT: config.defaultTimeout.toString()
+      }
+    })
+
+# Registry configuration
+registry:
+  type: github
+  repository: aashari/rag-browser
+  visibility: public
+  tags:
+    - browser-automation
+    - web-testing
+    - playwright
+    - typescript
+
+# Deployment configuration
+deployment:
+  type: docker
+  dockerfile: Dockerfile
+  platforms:
+    - linux/amd64
+    - linux/arm64
+  env:
+    - name: HEADLESS
+      description: Whether to run browser in headless mode
+      default: "false"
+    - name: DEFAULT_TIMEOUT
+      description: Default timeout for operations in milliseconds
+      default: "30000"
+
+# Git configuration
+git:
+  main: main
+  ignorePatterns:
+    - node_modules
+    - dist
+    - .env
+  hooks:
+    pre-commit: bun run typecheck 

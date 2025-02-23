@@ -1,6 +1,6 @@
 # RAG Browser
 
-A powerful tool for AI-driven browser automation and analysis, optimized for Retrieval-Augmented Generation (RAG).
+A powerful tool for AI-driven browser automation and analysis, optimized for Retrieval-Augmented Generation (RAG) and now with Model Context Protocol (MCP) support.
 
 ## Quick Start for Non-Developers
 
@@ -34,9 +34,21 @@ Run `rag-browser` directly from GitHub without installing permanently! You can u
    npx -y github:aashari/rag-browser --url "https://www.wikipedia.org" --headless --json
    ```
 
-### Alternative: Install Globally
+## Features
 
-If you prefer to keep `rag-browser` as a permanent tool:
+- Web page navigation and analysis
+- Automated interaction with web elements
+- Action plan execution
+- Extracts links, buttons, and inputs with unique CSS selectors
+- Supports headless and visible modes
+- Outputs in JSON or pretty print
+- Includes stability checks and debug logging
+- MCP server integration for AI agent compatibility
+- Docker deployment ready
+
+## Installation
+
+### As CLI Tool
 
 1. Clone the repo:
    ```bash
@@ -54,23 +66,14 @@ If you prefer to keep `rag-browser` as a permanent tool:
    rag-browser --url "https://example.com"
    ```
 
-See [Command Line](#command-line) below for more options.
-
-## Features
-
-- Extracts links, buttons, and inputs with unique CSS selectors
-- Executes action plans for clicking, typing, and more
-- Supports headless and visible modes
-- Outputs in JSON or pretty print
-- Includes stability checks and debug logging
-- Enhanced with comprehensive tests
-
-## Installation
-
-Install with Bun:
+### As MCP Server
 
 ```bash
+# Install dependencies
 bun install
+
+# Install with Smithery (for MCP integration)
+npx @smithery/cli install . --client claude
 ```
 
 ## Usage
@@ -106,10 +109,48 @@ bun run browser --url "https://www.wikipedia.org" --plan '{
 }'
 ```
 
-The command will execute each action in sequence, displaying progress with emoji indicators. After completion, you'll see:
-- A summary of successful actions
-- Page analysis showing inputs, buttons, and links
-- The captured HTML content from `#mw-content-text`
+### As MCP Server
+
+1. Start the server:
+```bash
+bun start
+```
+
+2. Available Tools:
+
+- `navigate`: Navigate to a URL
+  ```json
+  {
+    "name": "navigate",
+    "arguments": {
+      "url": "https://example.com",
+      "timeout": 30000,
+      "waitUntil": "networkidle"
+    }
+  }
+  ```
+
+- `execute`: Execute an action plan
+  ```json
+  {
+    "name": "execute",
+    "arguments": {
+      "plan": {
+        "actions": [
+          {"type": "wait", "elements": ["input#search"]},
+          {"type": "typing", "element": "input#search", "value": "test"},
+          {"type": "keyPress", "key": "Enter"}
+        ]
+      },
+      "headless": false,
+      "selectorMode": "full"
+    }
+  }
+  ```
+
+3. Available Resources:
+
+- `browser://content`: Get current page content
 
 ### Programmatic Usage
 
@@ -153,11 +194,35 @@ console.log(analysis);
   - Stability is ensured post-action (except `print`).
   - Results of `print` appear in the `plannedActions` output field.
 
+### Configuration
+
+The server can be configured through environment variables or Smithery config:
+
+- `HEADLESS`: Run browser in headless mode (default: false)
+- `DEFAULT_TIMEOUT`: Default timeout in milliseconds (default: 30000)
+
+### Docker Deployment
+
+```bash
+# Build the image
+docker build -t rag-browser .
+
+# Run the container
+docker run -it --rm rag-browser
+```
+
 ## Development
+
+### Project Structure
+- `src/cli/`: CLI entry and output formatting
+- `src/core/`: Browser automation logic
+- `src/utils/`: Helper functions
+- `src/mcp/`: MCP server implementation
+- `tests/`: Unit and integration tests
 
 ### Commands
 ```bash
-# Type check
+# Run TypeScript type checking
 bun run typecheck
 
 # Run tests
@@ -167,17 +232,26 @@ bun test
 bun run build
 ```
 
-### Project Structure
-- `src/cli/`: CLI entry and output formatting
-- `src/core/`: Browser automation logic
-- `src/utils/`: Helper functions
-- `tests/`: Unit and integration tests
+## Debug Logging
 
-### Debugging
+The server includes comprehensive debug logging. Debug messages are output in JSON format:
+
+```json
+{
+  "type": "debug",
+  "message": "Starting navigation",
+  "data": {
+    "url": "https://example.com",
+    "timeout": 30000
+  }
+}
+```
+
 Debug logs help troubleshoot:
 - Stability checks (mutations, layout shifts)
 - Action execution steps
 - Selector generation
+- MCP server operations
 
 ## Configuration
 

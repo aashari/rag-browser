@@ -3,13 +3,14 @@
   "module": "src/api.ts",
   "type": "module",
   "bin": {
-    "rag-browser": "./src/cli/index.ts"
+    "rag-browser": "./src/index.ts"
   },
   "scripts": {
     "browser": "bun run src/cli/index.ts",
     "build": "bun build src/api.ts --outdir dist",
     "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "start": "bun src/index.ts"
   },
   "devDependencies": {
     "bun-types": "latest"
@@ -18,7 +19,9 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.5.0",
     "chalk": "^5.4.1",
-    "playwright": "^1.50.1"
+    "playwright": "^1.50.1",
+    "zod": "^3.24.2"
   }
 }
