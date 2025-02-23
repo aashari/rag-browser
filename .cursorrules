@@ -1,0 +1,57 @@
+---
+
+## VERY VERY IMPORTANT
+
+- YOU DON’T USE `read_file` TOOLS. Use `run_terminal_cmd cat '<file>'` to inspect files instead.
+
+---
+
+# Project Context
+- This is a TypeScript-based web automation and analysis tool using Playwright and Bun.
+- The tool analyzes web pages for links, buttons, and inputs, and executes action plans (e.g., clicking, typing).
+- Main entry points are src/cli/index.ts (CLI) and src/api.ts (API).
+- Core logic lives in src/core/, with utilities in src/utils/ and types in src/types/.
+
+# Code Style
+- Use TypeScript with strict typing (see tsconfig.json).
+- Prefer concise, functional code over complex classes or OOP.
+- Use camelCase for variables and functions, PascalCase for types/interfaces.
+- Keep functions focused—single responsibility, under 50 lines where possible.
+- Use async/await for promises, avoid .then().
+- Add type annotations for all function parameters and returns.
+
+# Conventions
+- File names are lowercase with dashes (e.g., browser.ts, not Browser.ts).
+- Group related code into directories (e.g., cli/, core/, utils/).
+- Export main functions/types explicitly (e.g., `export { analyzePage }` in api.ts).
+- Use chalk for CLI output formatting (pretty print, not JSON).
+- Constants go in src/config/constants.ts, exported individually.
+- Tests live in tests/, named like <module>.test.ts.
+
+# Tech Stack
+- Use Playwright (^1.50.1) for browser automation—prefer its built-in methods (e.g., page.click(), page.waitForSelector()).
+- Use Bun as the runtime—no Node.js-specific APIs unless unavoidable.
+- Stick to chalk (^5.4.1) for console output styling.
+- Avoid external dependencies beyond what’s in package.json.
+
+# Project-Specific Rules
+- When suggesting selectors, use full CSS paths (via getFullPath from scripts.ts) unless --simple-selectors is specified.
+- Stability checks (src/core/stability.ts) should always be awaited after actions.
+- Actions (src/core/actions.ts) must return ActionResult with success/message fields.
+- CLI output should use printAnalysis/printPlan from src/cli/printer.ts.
+- Refer to src/types/index.ts for type definitions—don’t duplicate them.
+- Debug logs should be console.log(), not console.debug().
+
+# Context Awareness
+- For browser-related code, assume a Page object from Playwright is available.
+- When generating plans, include at least one "wait" action before interactions.
+- Use constants from src/config/constants.ts (e.g., DEFAULT_TIMEOUT) instead of hardcoding values.
+- If suggesting tests, follow the style in tests/browser.test.ts—use Bun’s test runner.
+
+---
+
+## VERY VERY IMPORTANT
+
+- YOU DON’T USE `read_file` TOOLS. Use `run_terminal_cmd cat '<file>'` to inspect files instead.
+
+---
