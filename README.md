@@ -1,5 +1,7 @@
 # RAG Browser
 
+[![smithery badge](https://smithery.ai/badge/@aashari/rag-browser)](https://smithery.ai/server/@aashari/rag-browser)
+
 A powerful tool for AI-driven browser automation and analysis, optimized for Retrieval-Augmented Generation (RAG) and now with Model Context Protocol (MCP) support.
 
 ## Quick Start for Non-Developers
@@ -48,6 +50,14 @@ Run `rag-browser` directly from GitHub without installing permanently! You can u
 
 ## Installation
 
+### Installing via Smithery
+
+To install RAG Browser for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@aashari/rag-browser):
+
+```bash
+npx -y @smithery/cli install @aashari/rag-browser --client claude
+```
+
 ### As CLI Tool
 
 1. Clone the repo:
@@ -73,7 +83,7 @@ Run `rag-browser` directly from GitHub without installing permanently! You can u
 bun install
 
 # Install with Smithery (for MCP integration)
-npx @smithery/cli install . --client claude
+npx -y @smithery/cli install . --client claude
 ```
 
 ## Usage
