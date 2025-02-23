@@ -1,5 +1,5 @@
 {
-  "name": "@aashari/rag-browser",
+  "name": "rag-browser",
   "version": "0.1.0",
   "type": "module",
   "bin": {
@@ -14,7 +14,7 @@
     "browser": "bun run src/cli/index.ts",
     "build": "bun build ./src/cli/index.ts --outfile=./dist/cli.js --target node --external playwright --external playwright-core --external chromium-bidi --external electron && bun build ./src/index.ts --outfile=./dist/index.js --target node --external playwright --external playwright-core --external chromium-bidi --external electron",
     "postbuild": "chmod +x dist/*.js",
-    "prepare": "bun run build",
+    "prepare": "bun install && bun run build",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
