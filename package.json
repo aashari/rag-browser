@@ -7,8 +7,8 @@
     "rag-browser-mcp": "./src/cli/mcp.ts"
   },
   "scripts": {
+    "start": "bun run src/index.ts",
     "browser": "bun run src/cli/index.ts",
-    "start:mcp": "bun run src/cli/mcp.ts",
     "build": "bun build src/mcp/server.ts --outdir dist --target bun --external playwright --external playwright-core --external chromium-bidi --external electron",
     "typecheck": "tsc --noEmit",
     "test": "bun test",

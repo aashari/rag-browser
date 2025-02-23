@@ -5,7 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { createToolDefinitions } from "./tools.js";
 import { setupRequestHandlers } from "./requestHandler.js";
 
-async function runServer(): Promise<void> {
+export async function runServer(): Promise<void> {
 	const server = new Server(
 		{
 			name: "ai-tools-browser",
@@ -38,5 +38,3 @@ async function runServer(): Promise<void> {
 		})
 	);
 }
-
-runServer().catch(console.error);
