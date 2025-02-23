@@ -4,24 +4,35 @@ A powerful tool for AI-driven browser automation and analysis, optimized for Ret
 
 ## Quick Start for Non-Developers
 
-Run `rag-browser` directly without cloning or installing permanently!
+Run `rag-browser` directly from GitHub without installing permanently! You can use either Bun or Node.js:
 
-1. **Install Bun**:
-   - Open your terminal and run:
+1. **Choose your runtime**:
+
+   **Option A: Using Bun (Recommended)**
+   - Install Bun:
      ```bash
      curl -fsSL https://bun.sh/install | bash
      ```
-   - Restart your terminal and check: `bun --version`
-
-2. **Run rag-browser**:
-   - Use this command to analyze any webpage:
+   - Run directly from GitHub:
      ```bash
      bunx github:aashari/rag-browser --url "https://example.com"
      ```
-   - Example with options:
+
+   **Option B: Using Node.js/npm**
+   - Install Node.js from https://nodejs.org
+   - Run directly with npx (includes auto-confirmation):
      ```bash
-     bunx github:aashari/rag-browser --url "https://www.wikipedia.org" --headless --json
+     npx -y github:aashari/rag-browser --url "https://example.com"
      ```
+
+2. **Try with options**:
+   ```bash
+   # Using Bun
+   bunx github:aashari/rag-browser --url "https://www.wikipedia.org" --headless --json
+
+   # Using npm
+   npx -y github:aashari/rag-browser --url "https://www.wikipedia.org" --headless --json
+   ```
 
 ### Alternative: Install Globally
 
