@@ -1,5 +1,5 @@
 {
-  "name": "@aashari/rag-browser-mcp",
+  "name": "@aashari/rag-browser",
   "version": "1.0.0",
   "description": "A Model Context Protocol server for browser automation using Playwright.",
   "license": "MIT",
@@ -7,7 +7,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "rag-browser-mcp": "dist/index.js"
+    "rag-browser": "dist/index.js"
   },
   "files": [
     "dist"
