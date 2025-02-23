@@ -1,6 +1,6 @@
 {
   "name": "@aashari/rag-browser",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "An MCP server for Playwright-based web automation.",
   "license": "MIT",
   "type": "module",
