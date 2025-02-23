@@ -9,7 +9,7 @@
 # Project Context
 - This is a TypeScript-based web automation and analysis tool using Playwright and Bun.
 - The tool analyzes web pages for links, buttons, and inputs, and executes action plans (e.g., clicking, typing).
-- Main entry points are src/cli/index.ts (CLI) and src/api.ts (API).
+- Main entry points are src/cli/index.ts (CLI) and src/mcp/server.ts (API).
 - Core logic lives in src/core/, with utilities in src/utils/ and types in src/types/.
 
 # Code Style
@@ -23,7 +23,7 @@
 # Conventions
 - File names are lowercase with dashes (e.g., browser.ts, not Browser.ts).
 - Group related code into directories (e.g., cli/, core/, utils/).
-- Export main functions/types explicitly (e.g., `export { analyzePage }` in api.ts).
+- Export main functions/types explicitly (e.g., `export { analyzePage }` in mcp/server.ts).
 - Use chalk for CLI output formatting (pretty print, not JSON).
 - Constants go in src/config/constants.ts, exported individually.
 - Tests live in tests/, named like <module>.test.ts.

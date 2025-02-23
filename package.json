@@ -1,6 +1,6 @@
 {
   "name": "rag-browser",
-  "module": "src/api.ts",
+  "module": "src/mcp/server.ts",
   "type": "module",
   "bin": {
     "rag-browser": "./src/cli/index.ts",
@@ -9,7 +9,7 @@
   "scripts": {
     "browser": "bun run src/cli/index.ts",
     "start:mcp": "bun run src/cli/mcp.ts",
-    "build": "bun build src/api.ts --outdir dist",
+    "build": "bun build src/mcp/server.ts --outdir dist --target bun --external playwright --external playwright-core --external chromium-bidi --external electron",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
