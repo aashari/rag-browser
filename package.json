@@ -4,7 +4,7 @@
   "type": "module",
   "bin": {
     "rag-browser": "dist/cli.js",
-    "rag-browser-mcp": "dist/server.js"
+    "rag-browser-mcp": "dist/index.js"
   },
   "files": [
     "dist"
@@ -12,7 +12,7 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "browser": "bun run src/cli/index.ts",
-    "build": "bun build ./src/cli/index.ts --outfile=./dist/cli.js --target bun --external playwright --external playwright-core --external chromium-bidi --external electron && bun build ./src/mcp/server.ts --outfile=./dist/server.js --target bun --external playwright --external playwright-core --external chromium-bidi --external electron",
+    "build": "bun build ./src/cli/index.ts --outfile=./dist/cli.js --target node --external playwright --external playwright-core --external chromium-bidi --external electron && bun build ./src/index.ts --outfile=./dist/index.js --target node --external playwright --external playwright-core --external chromium-bidi --external electron",
     "postbuild": "chmod +x dist/*.js",
     "prepare": "bun run build",
     "typecheck": "tsc --noEmit",
