@@ -8,8 +8,8 @@ import { setupRequestHandlers } from "./requestHandler.js";
 export async function runServer(): Promise<void> {
 	const server = new Server(
 		{
-			name: "ai-tools-browser",
-			version: "1.3.0",
+			name: "@aashari/rag-browser",
+			version: "1.4.0",
 		},
 		{
 			capabilities: {
