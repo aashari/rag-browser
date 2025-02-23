@@ -1,100 +1,91 @@
 # RAG Browser
 
-A powerful tool for AI-driven browser automation and analysis, optimized for Retrieval-Augmented Generation (RAG).
+A versatile browser automation and analysis tool optimized for AI-driven workflows, supporting both a command-line interface (CLI) and Model Context Protocol (MCP) server mode for integration with AI systems like Claude Desktop.
 
-## Quick Start for Non-Developers
+## Quick Start
 
-Run `rag-browser` directly from GitHub without installing permanently! You can use either Bun or Node.js:
+### CLI Mode
+Analyze webpages directly from the command line. Requires local setup:
 
-1. **Choose your runtime**:
-
-   **Option A: Using Bun (Recommended)**
-   - Install Bun:
-     ```bash
-     curl -fsSL https://bun.sh/install | bash
-     ```
-   - Run directly from GitHub:
-     ```bash
-     bunx github:aashari/rag-browser --url "https://example.com"
-     ```
-
-   **Option B: Using Node.js/npm**
-   - Install Node.js from https://nodejs.org
-   - Run directly with npx (includes auto-confirmation):
-     ```bash
-     npx -y github:aashari/rag-browser --url "https://example.com"
-     ```
-
-2. **Try with options**:
-   ```bash
-   # Using Bun
-   bunx github:aashari/rag-browser --url "https://www.wikipedia.org" --headless --json
-
-   # Using npm
-   npx -y github:aashari/rag-browser --url "https://www.wikipedia.org" --headless --json
-   ```
-
-### Alternative: Install Globally
-
-If you prefer to keep `rag-browser` as a permanent tool:
-
-1. Clone the repo:
+1. **Clone and Install**:
    ```bash
    git clone https://github.com/aashari/rag-browser.git
    cd rag-browser
+   bun install
+   ```
+2. **Run CLI**:
+   ```bash
+   bun run browser --url "https://example.com"
    ```
 
+### MCP Server Mode
+Run as an MCP server for AI integration, executable directly from GitHub:
+
+#### Using Bun (Recommended)
+1. Install Bun:
+   ```bash
+   curl -fsSL https://bun.sh/install | bash
+   ```
+2. Run MCP Server:
+   ```bash
+   bunx github:aashari/rag-browser
+   ```
+
+#### Using Node.js/npm
+1. Install Node.js from [nodejs.org](https://nodejs.org).
+2. Run MCP Server:
+   ```bash
+   npx -y github:aashari/rag-browser
+   ```
+
+- **Note**: MCP mode starts a server awaiting JSON-RPC requests (e.g., from Claude Desktop). Use CLI mode for direct URL analysis.
+
+### Install Globally
+For permanent CLI access:
+1. Clone and install as above.
 2. Install globally:
    ```bash
    bun install -g
    ```
-
-3. Run anywhere:
+3. Run CLI anywhere:
    ```bash
    rag-browser --url "https://example.com"
    ```
 
-See [Command Line](#command-line) below for more options.
-
 ## Features
 
-- Extracts links, buttons, and inputs with unique CSS selectors
-- Executes action plans for clicking, typing, and more
-- Supports headless and visible modes
-- Outputs in JSON or pretty print
-- Includes stability checks and debug logging
-- Enhanced with comprehensive tests
+- **Page Analysis**: Extracts links, buttons, and inputs with unique CSS selectors.
+- **Action Plans**: Executes sequences of actions (e.g., clicking, typing, submitting).
+- **MCP Integration**: Offers `navigate` and `execute` tools, storing up to 10 recent analyses as resources.
+- **Flexible Output**: CLI supports pretty print (default) or JSON, with customizable detail levels (`--inputs`, `--buttons`, `--links`).
+- **Stability Checks**: Ensures page stability during analysis and actions.
+- **Runtime Support**: Works with Bun (preferred) or Node.js.
 
 ## Installation
 
-Install with Bun:
-
+For local development:
 ```bash
 bun install
 ```
 
 ## Usage
 
-### Command Line
+### CLI Mode
+Run via `bun run browser` or `rag-browser` (if installed globally).
 
-#### Basic Usage
+#### Basic Analysis
 ```bash
-# Visible mode
+# Default: Visible mode, top 5 elements
 bun run browser --url "https://example.com"
 
-# Headless mode
-bun run browser --url "https://example.com" --headless
+# Headless mode with JSON output
+bun run browser --url "https://example.com" --headless --json
 
-# JSON output
-bun run browser --url "https://example.com" --json
-
-# Simple selectors
-bun run browser --url "https://example.com" --simple-selectors
+# Show all elements
+bun run browser --url "https://example.com" --inputs --buttons --links
 ```
 
-#### Automation with Plans
-Run a sequence of actions:
-
+#### With Action Plans
 ```bash
 bun run browser --url "https://www.wikipedia.org" --plan '{
   "actions": [
@@ -103,55 +94,60 @@ bun run browser --url "https://www.wikipedia.org" --plan '{
     {"type": "keyPress", "key": "Enter", "element": "input#searchInput"},
     {"type": "print", "elements": ["#mw-content-text"]}
   ]
-}'
+}' --inputs
 ```
+- Displays action progress, summary, and detailed input analysis.
 
-The command will execute each action in sequence, displaying progress with emoji indicators. After completion, you'll see:
-- A summary of successful actions
-- Page analysis showing inputs, buttons, and links
-- The captured HTML content from `#mw-content-text`
+#### CLI Options
+| Option             | Description                                      |
+|--------------------|--------------------------------------------------|
+| `--url`            | Target URL (required)                           |
+| `--headless`       | Run without UI (default: visible)               |
+| `--json`           | Output in JSON (default: pretty print)          |
+| `--simple-selectors`| Use simple selectors (default: full paths)      |
+| `--plan`           | JSON string of actions to execute               |
+| `--inputs`         | Show all inputs (default: top 5 visible)        |
+| `--buttons`        | Show all buttons (default: top 5)               |
+| `--links`          | Show all links (default: top 5)                 |
 
-### Programmatic Usage
-
-#### Basic Analysis
-```typescript
-import { analyzePage } from 'rag-browser';
-
-const analysis = await analyzePage('https://example.com', { headless: true });
-console.log(analysis);
+### MCP Server Mode
+Run as an MCP server:
+```bash
+bun run start
+# Or via npx/bunx as shown in Quick Start
 ```
+- **Tools**:
+  - `navigate`: Analyzes a webpage, optionally with detailed outputs (`inputs`, `buttons`, `links`).
+  - `execute`: Executes an action plan and analyzes the result.
+- **Resources**: Stores recent analyses (up to 10), accessible via `resources/list` and `resources/read`.
 
-#### With Action Plan
-```typescript
-import { analyzePage } from 'rag-browser';
-
-const analysis = await analyzePage('https://example.com', {
-  headless: true,
-  plan: {
-    actions: [
-      { type: 'wait', elements: ['input[name="username"]'] },
-      { type: 'typing', element: 'input[name="username"]', value: 'user@example.com' }
-    ]
+#### MCP Configuration (e.g., for Claude Desktop)
+```json
+{
+  "mcpServers": {
+    "rag-browser": {
+      "command": "npx",
+      "args": ["-y", "github:aashari/rag-browser"]
+    }
   }
-});
-console.log(analysis);
+}
 ```
+- **Example Tool Call**:
+  ```json
+  {"jsonrpc":"2.0","method":"tools/call","params":{"name":"navigate","arguments":{"url":"https://example.com","inputs":"true"}},"id":1}
+  ```
 
-### Available Action Types
+### Action Types
+| Type       | Required Fields          | Optional Fields | Example                                      |
+|------------|--------------------------|-----------------|----------------------------------------------|
+| `wait`     | `elements` (array)       | -               | `{"type": "wait", "elements": ["#input"]}`   |
+| `click`    | `element` (string)       | -               | `{"type": "click", "element": ".btn"}`       |
+| `typing`   | `element`, `value`       | `delay` (ms)    | `{"type": "typing", "element": "#search", "value": "test"}` |
+| `keyPress` | `key` (string)           | `element`       | `{"type": "keyPress", "key": "Enter"}`       |
+| `submit`   | `element` (string)       | -               | `{"type": "submit", "element": "form"}`      |
+| `print`    | `elements` (array)       | -               | `{"type": "print", "elements": ["#content"]}`|
 
-| Type       | Description                     | Required Properties         | Optional Properties | Example                                      |
-|------------|---------------------------------|-----------------------------|---------------------|----------------------------------------------|
-| `wait`     | Waits for elements to appear   | `elements` (array)          | -                   | `{"type": "wait", "elements": ["#input"]}`   |
-| `click`    | Clicks an element              | `element` (string)          | -                   | `{"type": "click", "element": ".btn"}`       |
-| `typing`   | Types text into an element     | `element`, `value` (string) | `delay`             | `{"type": "typing", "element": "#search", "value": "test"}` |
-| `keyPress` | Presses a key                  | `key` (string)              | `element`           | `{"type": "keyPress", "key": "Enter", "element": "#search"}` |
-| `submit`   | Submits a form or element      | `element` (string)          | -                   | `{"type": "submit", "element": "form#login"}`|
-| `print`    | Captures element HTML          | `elements` (array)          | -                   | `{"type": "print", "elements": ["#content"]}`|
-
-- **Notes**: 
-  - `elements` is an array of CSS selectors; `element` is a single CSS selector.
-  - Stability is ensured post-action (except `print`).
-  - Results of `print` appear in the `plannedActions` output field.
+- **Notes**: `print` results appear in `plannedActions`. Stability is ensured post-action.
 
 ## Development
 
@@ -163,31 +159,31 @@ bun run typecheck
 # Run tests
 bun test
 
-# Build
+# Build for distribution
 bun run build
+
+# Start MCP server
+bun run start
+
+# Clean running processes
+bun run clean
 ```
 
 ### Project Structure
-- `src/cli/`: CLI entry and output formatting
-- `src/core/`: Browser automation logic
-- `src/utils/`: Helper functions
+- `src/cli/`: CLI logic and output formatting
+- `src/core/`: Browser automation and stability
+- `src/mcp/`: MCP server, tools, and resources
+- `src/utils/`: Helper functions (e.g., selectors, logging)
 - `tests/`: Unit and integration tests
 
 ### Debugging
-Debug logs help troubleshoot:
-- Stability checks (mutations, layout shifts)
-- Action execution steps
-- Selector generation
+Enable verbose logs in `src/config/constants.ts`:
+```typescript
+export const DEBUG = true;
+```
 
 ## Configuration
-
-Adjust key settings in `src/config/constants.ts`:
-- `DEFAULT_TIMEOUT`: Max wait time (30000ms)
-- `DEFAULT_TYPING_DELAY`: Typing speed (50ms)
-- `VISIBLE_MODE_SLOW_MO`: Visible mode speed (100ms)
-
-See the file for more options.
-
-## License
-
-MIT
+Tune settings in `src/config/constants.ts`:
+- `DEFAULT_TIMEOUT`: 30,000ms
+- `VISIBLE_MODE_SLOW_MO`: 50ms
+- `MAX_STORED_ANALYSES`: 10 (in `src/mcp/resources.ts`)

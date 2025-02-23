@@ -9,7 +9,7 @@ export async function runServer(): Promise<void> {
 	const server = new Server(
 		{
 			name: "ai-tools-browser",
-			version: "1.2.0",
+			version: "1.3.0",
 		},
 		{
 			capabilities: {
