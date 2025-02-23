@@ -1,25 +1,26 @@
 {
-  "name": "@aashari/rag-browser",
+  "name": "@aashari/rag-browser-mcp",
   "version": "1.0.0",
-  "description": "An MCP server for Playwright-based web automation.",
+  "description": "A Model Context Protocol server for browser automation using Playwright.",
   "license": "MIT",
   "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
-    "rag-browser": "dist/index.js"
+    "rag-browser-mcp": "dist/index.js"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target=node --external playwright --external playwright-core --external chromium-bidi --external electron",
+    "build": "bun build ./src/index.ts --outdir ./dist --target=node --external playwright",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "prepare": "npm run build",
+    "prepublishOnly": "npm run build",
     "start": "bun run dist/index.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.5.0",
-    "chalk": "^5.4.1",
     "playwright": "^1.50.1",
     "zod": "^3.22.4"
   },
@@ -29,9 +30,27 @@
     "bun-types": "latest",
     "eslint": "^9.21.0",
     "eslint-config-prettier": "^10.0.1",
-    "prettier": "^3.5.2"
+    "prettier": "^3.5.2",
+    "typescript": "^5.7.3"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aashari/rag-browser.git"
+  },
+  "keywords": [
+    "playwright",
+    "automation",
+    "AI",
+    "mcp",
+    "model-context-protocol",
+    "rag"
+  ],
+  "author": "Andi Ashari",
+  "bugs": {
+    "url": "https://github.com/aashari/rag-browser/issues"
+  },
+  "homepage": "https://github.com/aashari/rag-browser"
 }
