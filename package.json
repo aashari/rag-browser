@@ -1,6 +1,6 @@
 {
   "name": "@aashari/rag-browser",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A Model Context Protocol server for browser automation using Playwright.",
   "license": "MIT",
   "type": "module",
@@ -18,7 +18,8 @@
     "test": "bun test",
     "prepublishOnly": "npm run build",
     "start": "bun run src/index.ts",
-    "clean": "lsof -ti:3000,5173 | xargs kill -9 2>/dev/null || true && pkill -f 'bun run src/index.ts'"
+    "clean": "lsof -ti:3000,5173 | xargs kill -9 2>/dev/null || true && pkill -f 'bun run src/index.ts'",
+    "browser": "bun run src/cli/index.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.5.0",

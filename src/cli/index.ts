@@ -13,16 +13,26 @@ async function main(): Promise<void> {
 	const headless = args.includes("--headless");
 	const format = (args.includes("--json") ? "json" : "pretty") as OutputFormat;
 	const selectorMode = args.includes("--simple-selectors") ? "simple" : "full";
+	
+	// New display options
+	const showInputs = args.includes("--inputs");
+	const showButtons = args.includes("--buttons");
+	const showLinks = args.includes("--links");
 
 	if (urlIndex === 0 || urlIndex >= args.length) {
 		console.error(
-			'Usage: bun run browser --url "https://example.com" [--headless] [--json] [--simple-selectors] [--plan \'{"actions":[...]}\']'
+			'Usage: bun run browser --url "https://example.com" [options]'
 		);
+		console.error("\nOptions:");
 		console.error("  --url              The URL to analyze");
 		console.error("  --headless         Run in headless mode (optional, default: false)");
 		console.error("  --json             Output in JSON format (optional, default: pretty print)");
 		console.error("  --simple-selectors Use simple selectors without full paths (optional, default: full paths)");
 		console.error("  --plan             JSON string defining actions to perform (optional)");
+		console.error("\nDisplay Options:");
+		console.error("  --inputs           Show all input elements (optional, default: top 5)");
+		console.error("  --buttons          Show all buttons (optional, default: top 5)");
+		console.error("  --links            Show all links (optional, default: top 5)");
 		process.exit(1);
 	}
 
@@ -32,11 +42,9 @@ async function main(): Promise<void> {
 	if (planIndex > 0 && planIndex < args.length) {
 		try {
 			plan = JSON.parse(args[planIndex]) as Plan;
-			// Basic validation
 			if (!plan.actions || !Array.isArray(plan.actions)) {
 				throw new Error("Plan must have an actions array");
 			}
-			// Print the plan before execution
 			console.warn(printPlan(plan));
 		} catch (error) {
 			console.error("Invalid --plan JSON:", error instanceof Error ? error.message : String(error));
@@ -54,7 +62,7 @@ async function main(): Promise<void> {
 			selectorMode,
 			plan,
 		});
-		console.warn(printAnalysis(analysis, format));
+		console.warn(printAnalysis(analysis, format, { showInputs, showButtons, showLinks }));
 	} catch (error) {
 		console.error("Error:", error instanceof Error ? error.message : String(error));
 		process.exit(1);

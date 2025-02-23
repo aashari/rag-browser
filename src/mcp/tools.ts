@@ -5,22 +5,23 @@ const commonProperties = {
 	url: {
 		type: "string",
 		format: "uri",
-		description: "The URL to navigate to",
+		description: "The target webpage URL to analyze. Must be a valid URL starting with http:// or https://. The page will be loaded and analyzed for interactive elements.",
 	},
-	headless: {
+	inputs: {
 		type: "string",
 		enum: ["true", "false"],
-		description: "Whether to run in headless mode",
+		description: "When set to 'true', displays detailed information about all input elements found on the page, including hidden inputs, form fields, text areas, and select dropdowns. Default behavior shows only top 5 visible inputs with basic information.",
 	},
-	selectorMode: {
+	buttons: {
 		type: "string",
-		enum: ["full", "simple"],
-		description: "Selector mode to use",
+		enum: ["true", "false"],
+		description: "When set to 'true', shows comprehensive details about all button elements, including submit buttons, clickable divs, and button-like elements. Default behavior shows only top 5 visible buttons with basic information.",
 	},
-	timeout: {
-		type: "number",
-		description: "Navigation timeout in milliseconds",
-	},
+	links: {
+		type: "string",
+		enum: ["true", "false"],
+		description: "When set to 'true', provides complete information about all hyperlinks on the page, including their URLs, text content, and selectors. Default behavior shows only top 5 visible links with basic information.",
+	}
 };
 
 // Type for additional properties in tool schemas
@@ -60,67 +61,129 @@ export function createToolDefinitions(): Tool[] {
 	return [
 		{
 			name: "navigate",
-			description: "Navigate to a URL and analyze the page",
+			description: "Analyzes a webpage by navigating to it and extracting information about interactive elements. This tool:\n" +
+				"1. Loads the specified webpage\n" +
+				"2. Waits for the page to be fully loaded and stable\n" +
+				"3. Identifies and analyzes all interactive elements (inputs, buttons, links)\n" +
+				"4. Returns a structured analysis with element details\n\n" +
+				"Use this tool when you need to:\n" +
+				"- Understand the structure and interactive elements of a webpage\n" +
+				"- Get information about forms and input fields\n" +
+				"- Find navigation links and clickable elements\n" +
+				"- Prepare for automation by identifying selectors\n" +
+				"\n" +
+				"Example: User ask to open wikipedia",
 			inputSchema: {
 				type: "object",
 				properties: {
 					url: {
 						type: "string",
-						description: "The URL to navigate to",
+						description: "The webpage URL to analyze. Must be a valid URL starting with http:// or https://. The page will be loaded and analyzed for interactive elements.",
 						format: "uri",
 					},
-					headless: {
+					inputs: {
 						type: "string",
-						description: "Whether to run in headless mode",
+						description: "Set to 'true' to get detailed information about all input elements, including:\n" +
+							"- Text inputs, textareas, and form fields\n" +
+							"- Hidden inputs and their values\n" +
+							"- Select dropdowns and their options\n" +
+							"- Input attributes (type, id, name, placeholder)\n" +
+							"Default 'false' shows only top 5 visible inputs.",
 						enum: ["true", "false"],
 					},
-					selectorMode: {
+					buttons: {
 						type: "string",
-						description: "Selector mode to use",
-						enum: ["full", "simple"],
+						description: "Set to 'true' to get comprehensive details about all buttons, including:\n" +
+							"- Standard button elements\n" +
+							"- Submit and reset buttons\n" +
+							"- Clickable elements with button roles\n" +
+							"- Button text and accessibility attributes\n" +
+							"Default 'false' shows only top 5 visible buttons.",
+						enum: ["true", "false"],
 					},
-					timeout: {
-						type: "number",
-						description: "Navigation timeout in milliseconds",
-					},
+					links: {
+						type: "string",
+						description: "Set to 'true' to get complete information about all hyperlinks, including:\n" +
+							"- Link URLs and their targets\n" +
+							"- Link text and titles\n" +
+							"- Navigation and menu links\n" +
+							"- Internal and external links\n" +
+							"Default 'false' shows only top 5 visible links.",
+						enum: ["true", "false"],
+					}
 				},
 				required: ["url"],
 			},
 		},
 		{
 			name: "execute",
-			description: "Execute a plan of actions on the current page",
+			description: "Executes a series of automated actions on a webpage while analyzing the page state. This tool:\n" +
+				"1. Loads the specified webpage\n" +
+				"2. Executes the provided action plan step by step\n" +
+				"3. Monitors page stability between actions\n" +
+				"4. Returns analysis of the final page state\n\n" +
+				"Use this tool when you need to:\n" +
+				"- Automate interactions with a webpage\n" +
+				"- Fill out forms and submit them\n" +
+				"- Navigate through multi-step processes\n" +
+				"- Verify page state after interactions\n" +
+				"\n" +
+				"Example: User ask to open wikipedia and search for 'AI Tools'",
 			inputSchema: {
 				type: "object",
 				properties: {
 					url: {
 						type: "string",
-						description: "The URL to navigate to",
+						description: "The webpage URL to execute actions on. Must be a valid URL starting with http:// or https://. The page will be loaded before executing the plan.\n" +
+							"Example URL: https://www.wikipedia.org",
 						format: "uri",
 					},
-					headless: {
+					inputs: {
 						type: "string",
-						description: "Whether to run in headless mode",
+						description: "Set to 'true' to get detailed information about all input elements after plan execution, including:\n" +
+							"- Updated input values and states\n" +
+							"- Form field changes\n" +
+							"- New or modified inputs\n" +
+							"Default 'false' shows only top 5 visible inputs.",
 						enum: ["true", "false"],
 					},
-					selectorMode: {
+					buttons: {
 						type: "string",
-						description: "Selector mode to use",
-						enum: ["full", "simple"],
+						description: "Set to 'true' to get comprehensive details about all buttons after plan execution, including:\n" +
+							"- Button states (enabled/disabled)\n" +
+							"- Changes in button visibility\n" +
+							"- New or modified buttons\n" +
+							"Default 'false' shows only top 5 visible buttons.",
+						enum: ["true", "false"],
 					},
-					timeout: {
-						type: "number",
-						description: "Navigation timeout in milliseconds",
+					links: {
+						type: "string",
+						description: "Set to 'true' to get complete information about all hyperlinks after plan execution, including:\n" +
+							"- Updated link states\n" +
+							"- New or modified links\n" +
+							"- Changes in navigation structure\n" +
+							"Default 'false' shows only top 5 visible links.",
+						enum: ["true", "false"],
 					},
 					plan: {
 						type: "string",
-						description: "The plan to execute as a JSON string. Must be an object with an 'actions' array. Each action must have a 'type' and specific required fields:\n" +
-							"- wait: elements (string[])\n" +
-							"- click: element (string)\n" +
-							"- typing: element (string), value (string), delay? (number)\n" +
-							"- keyPress: key (string), element? (string)\n" +
-							"- submit: element (string)\n" +
-							"- print: elements (string[])",
+						description: "A JSON string defining the sequence of actions to execute. The plan must be an object with an 'actions' array. Each action must have:\n" +
+							"1. A 'type' field specifying the action type:\n" +
+							"   - 'wait': Wait for elements to be present\n" +
+							"   - 'click': Click on an element\n" +
+							"   - 'typing': Enter text into an input\n" +
+							"   - 'keyPress': Simulate keyboard input\n" +
+							"   - 'submit': Submit a form\n" +
+							"   - 'print': Capture element HTML\n\n" +
+							"2. Required fields based on type:\n" +
+							"   - wait: elements (string[])\n" +
+							"   - click: element (string)\n" +
+							"   - typing: element (string), value (string)\n" +
+							"   - keyPress: key (string), element? (string)\n" +
+							"   - submit: element (string)\n" +
+							"   - print: elements (string[])\n\n" +
+							"Example plan:\n" +
+							'{ "actions": [ {"type": "wait", "elements": ["input#searchInput"]}, {"type": "typing", "element": "input#searchInput", "value": "AI Tools"}, {"type": "keyPress", "key": "Enter", "element": "input#searchInput"}, {"type": "print", "elements": ["#mw-content-text"]} ] }'
 					}
 				},
 				required: ["url", "plan"],

@@ -4,6 +4,7 @@ import { analyzePage } from "../core/browser";
 import { printAnalysis } from "../cli/printer";
 import type { Plan, Action, SelectorMode } from "../types";
 import { storeAnalysis } from "./resources";
+import { DEFAULT_TIMEOUT, VISIBLE_MODE_SLOW_MO } from "../config/constants";
 
 // Validate action type and required fields
 function validateAction(action: any): action is Action {
@@ -69,10 +70,19 @@ export async function handleToolCall(
 			};
 		}
 
+		// Process display options
+		const displayOptions = {
+			showInputs: args.inputs === "true",
+			showButtons: args.buttons === "true",
+			showLinks: args.links === "true"
+		};
+
+		// Default browser options
 		const options = {
-			headless: args.headless === "true",
-			timeout: args.timeout ? parseInt(args.timeout) : undefined,
-			selectorMode: (args.selectorMode === "full" ? "full" : "simple") as SelectorMode,
+			headless: true,
+			slowMo: VISIBLE_MODE_SLOW_MO,
+			timeout: DEFAULT_TIMEOUT,
+			selectorMode: "full" as const
 		};
 
 		switch (name) {
@@ -85,7 +95,7 @@ export async function handleToolCall(
 				const analysisResult = await analyzePage(args.url, options);
 				storeAnalysis(analysisResult, args.url);
 				return {
-					content: [{ type: "text", text: printAnalysis(analysisResult) }],
+					content: [{ type: "text", text: printAnalysis(analysisResult, "pretty", displayOptions) }],
 					isError: false,
 				};
 			}
@@ -118,7 +128,7 @@ export async function handleToolCall(
 				storeAnalysis(planResult, args.url);
 
 				return {
-					content: [{ type: "text", text: printAnalysis(planResult) }],
+					content: [{ type: "text", text: printAnalysis(planResult, "pretty", displayOptions) }],
 					isError: false,
 				};
 			}
