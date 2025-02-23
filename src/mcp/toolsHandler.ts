@@ -3,6 +3,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { analyzePage } from "../core/browser";
 import { printAnalysis } from "../cli/printer";
 import type { Plan, Action, SelectorMode } from "../types";
+import { storeAnalysis } from "./resources";
 
 // Validate action type and required fields
 function validateAction(action: any): action is Action {
@@ -82,6 +83,7 @@ export async function handleToolCall(
 				});
 
 				const analysisResult = await analyzePage(args.url, options);
+				storeAnalysis(analysisResult, args.url);
 				return {
 					content: [{ type: "text", text: printAnalysis(analysisResult) }],
 					isError: false,
@@ -113,6 +115,7 @@ export async function handleToolCall(
 					...options,
 					plan: planValidation.plan,
 				});
+				storeAnalysis(planResult, args.url);
 
 				return {
 					content: [{ type: "text", text: printAnalysis(planResult) }],

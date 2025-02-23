@@ -58,23 +58,73 @@ function createTool(name: string, description: string, additionalProps: SchemaPr
 
 export function createToolDefinitions(): Tool[] {
 	return [
-		// Basic navigation and analysis
-		createTool(
-			"navigate",
-			"Navigate to a URL and analyze the page"
-		),
-
-		// Plan execution
-		createTool(
-			"execute",
-			"Execute a plan of actions on the current page",
-			{
-				plan: {
-					type: "string",
-					description: "The plan to execute (JSON string)",
+		{
+			name: "navigate",
+			description: "Navigate to a URL and analyze the page",
+			inputSchema: {
+				type: "object",
+				properties: {
+					url: {
+						type: "string",
+						description: "The URL to navigate to",
+						format: "uri",
+					},
+					headless: {
+						type: "string",
+						description: "Whether to run in headless mode",
+						enum: ["true", "false"],
+					},
+					selectorMode: {
+						type: "string",
+						description: "Selector mode to use",
+						enum: ["full", "simple"],
+					},
+					timeout: {
+						type: "number",
+						description: "Navigation timeout in milliseconds",
+					},
 				},
+				required: ["url"],
 			},
-			["url", "plan"]
-		),
+		},
+		{
+			name: "execute",
+			description: "Execute a plan of actions on the current page",
+			inputSchema: {
+				type: "object",
+				properties: {
+					url: {
+						type: "string",
+						description: "The URL to navigate to",
+						format: "uri",
+					},
+					headless: {
+						type: "string",
+						description: "Whether to run in headless mode",
+						enum: ["true", "false"],
+					},
+					selectorMode: {
+						type: "string",
+						description: "Selector mode to use",
+						enum: ["full", "simple"],
+					},
+					timeout: {
+						type: "number",
+						description: "Navigation timeout in milliseconds",
+					},
+					plan: {
+						type: "string",
+						description: "The plan to execute as a JSON string. Must be an object with an 'actions' array. Each action must have a 'type' and specific required fields:\n" +
+							"- wait: elements (string[])\n" +
+							"- click: element (string)\n" +
+							"- typing: element (string), value (string), delay? (number)\n" +
+							"- keyPress: key (string), element? (string)\n" +
+							"- submit: element (string)\n" +
+							"- print: elements (string[])",
+					}
+				},
+				required: ["url", "plan"],
+			},
+		},
 	];
 }

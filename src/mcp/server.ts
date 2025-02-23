@@ -9,11 +9,15 @@ export async function runServer(): Promise<void> {
 	const server = new Server(
 		{
 			name: "ai-tools-browser",
-			version: "1.0.0",
+			version: "1.1.0",
 		},
 		{
 			capabilities: {
-				resources: {},
+				resources: {
+					list: true,
+					read: true,
+					templates: false,
+				},
 				tools: {},
 				logging: {},
 			},
