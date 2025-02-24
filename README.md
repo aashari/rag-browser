@@ -1,152 +1,173 @@
 # RAG Browser
 
-A versatile browser automation and analysis tool optimized for AI-driven workflows, supporting both a command-line interface (CLI) and Model Context Protocol (MCP) server mode for integration with AI systems like Claude Desktop.
+A versatile browser automation and analysis tool optimized for AI-driven workflows. It provides both a command-line interface (CLI) and Model Context Protocol (MCP) server mode for seamless integration with AI systems like Claude Desktop.
 
-## Quick Start
+[![Version](https://img.shields.io/npm/v/@aashari/rag-browser)](https://www.npmjs.com/package/@aashari/rag-browser)
+[![License](https://img.shields.io/npm/l/@aashari/rag-browser)](https://github.com/aashari/rag-browser/blob/main/LICENSE)
 
-### CLI Mode
+## 🚀 Quick Start
 
-Analyze webpages directly from the command line:
-
-#### Using Bun (Recommended)
-
-1. Install Bun:
-   ```bash
-   curl -fsSL https://bun.sh/install | bash
-   ```
-2. Run CLI from GitHub:
-   ```bash
-   bunx github:aashari/rag-browser --url "https://example.com"
-   ```
-
-#### Using Node.js/npm
-
-1. Install Node.js from [nodejs.org](https://nodejs.org).
-2. Run CLI from GitHub:
-   ```bash
-   npx -y github:aashari/rag-browser --url "https://example.com"
-   ```
-
-### MCP Server Mode
-
-Run as an MCP server for AI integration:
-
-#### Using Node.js/npm
-
-1. Install Node.js from [nodejs.org](https://nodejs.org).
-2. Run MCP Server from GitHub:
-   ```bash
-   npx -y github:aashari/rag-browser
-   ```
-
-#### Using Bun (Local Setup Required)
-
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/aashari/rag-browser.git
-   cd rag-browser
-   bun install
-   ```
-2. Run MCP Server:
-   ```bash
-   bun run start
-   ```
-
-### Install Globally
-
-For permanent access:
-
-1. Clone and install as above.
-2. Install globally:
-   ```bash
-   bun install -g
-   ```
-3. Run CLI:
-   ```bash
-   rag-browser --url "https://example.com"
-   ```
-   Or MCP server:
-   ```bash
-   rag-browser  # Without --url, defaults to MCP mode
-   ```
-
-## Features
-
-- **Page Analysis**: Extracts links, buttons, and inputs with unique CSS selectors.
-- **Action Plans**: Executes sequences of actions (e.g., clicking, typing, submitting).
-- **MCP Integration**: Offers `navigate` and `execute` tools, storing up to 10 recent analyses as resources.
-- **Flexible Output**: CLI supports pretty print (default) or JSON, with customizable detail levels (`--inputs`, `--buttons`, `--links`).
-- **Stability Checks**: Ensures page stability during analysis and actions.
-- **Runtime Support**: Works with Bun (CLI) and Node.js (MCP).
-
-## Installation
-
-For local development:
+### One-Line Usage
 
 ```bash
-bun install
-```
-
-## Usage
-
-### CLI Mode
-
-Run via `bunx github:aashari/rag-browser`, `npx -y github:aashari/rag-browser --url`, or `rag-browser` (if installed globally).
-
-#### Basic Analysis
-
-```bash
-# Default: Visible mode, top 5 elements
+# CLI Mode - Analyze a webpage
 bunx github:aashari/rag-browser --url "https://example.com"
 
-# Headless mode with JSON output
-bunx github:aashari/rag-browser --url "https://example.com" --headless --json
-
-# Show all elements
-bunx github:aashari/rag-browser --url "https://example.com" --inputs --buttons --links
+# MCP Server Mode - Start AI integration server
+bunx github:aashari/rag-browser
 ```
 
-#### With Action Plans
+### Installation Options
+
+Choose the method that best suits your needs:
+
+#### 1. Direct Execution (No Installation)
+
+Using Bun (Recommended):
+```bash
+bunx github:aashari/rag-browser [--url "https://example.com"]
+```
+
+Using Node.js:
+```bash
+npx -y github:aashari/rag-browser [--url "https://example.com"]
+```
+
+#### 2. Global Installation
 
 ```bash
-bunx github:aashari/rag-browser --url "https://www.wikipedia.org" --plan '{
-  "actions": [
-    {"type": "wait", "elements": ["input#searchInput"]},
-    {"type": "typing", "element": "input#searchInput", "value": "AI Tools"},
-    {"type": "keyPress", "key": "Enter", "element": "input#searchInput"},
-    {"type": "print", "elements": ["#mw-content-text"]}
-  ]
-}' --inputs
+# Install globally
+npm install -g @aashari/rag-browser
+
+# Then use anywhere
+rag-browser [--url "https://example.com"]
 ```
 
-- Displays action progress, summary, and detailed input analysis.
+#### 3. Local Development Setup
 
-#### CLI Options
+```bash
+# Clone and setup
+git clone https://github.com/aashari/rag-browser.git
+cd rag-browser
+bun install
 
-| Option               | Description                                |
-| -------------------- | ------------------------------------------ |
-| `--url`              | Target URL (required)                      |
-| `--headless`         | Run without UI (default: visible)          |
-| `--json`             | Output in JSON (default: pretty print)     |
-| `--simple-selectors` | Use simple selectors (default: full paths) |
-| `--plan`             | JSON string of actions to execute          |
-| `--inputs`           | Show all inputs (default: top 5 visible)   |
-| `--buttons`          | Show all buttons (default: top 5)          |
-| `--links`            | Show all links (default: top 5)            |
+# Run locally
+bun run start        # MCP server mode
+bun run browser      # CLI mode
+```
 
-### MCP Server Mode
+## 🎯 Features
 
-Run via `npx -y github:aashari/rag-browser` or locally with `bun run start`.
+- **Dual Mode Operation**
+  - CLI mode for direct webpage analysis
+  - MCP server mode for AI tool integration
+- **Smart Page Analysis**
+  - Extracts interactive elements (links, buttons, inputs)
+  - Generates unique, stable CSS selectors
+  - Supports both full and simplified selector paths
+- **Powerful Automation**
+  - Execute complex action sequences
+  - Built-in stability checks
+  - Supports headless operation
+- **AI Integration Ready**
+  - MCP protocol support
+  - Resource management (stores recent analyses)
+  - Structured JSON output option
 
-- **Tools**:
-  - `navigate`: Analyzes a webpage, optionally with detailed outputs (`inputs`, `buttons`, `links`).
-  - `execute`: Executes an action plan and analyzes the result.
-- **Resources**: Stores recent analyses (up to 10), accessible via `resources/list` and `resources/read`.
+## 💻 CLI Mode Usage
 
-#### MCP Configuration (e.g., for Claude Desktop)
+### Basic Examples
 
-Configure `claude_desktop_config.json`:
+```bash
+# Simple page analysis
+rag-browser --url "https://example.com"
 
+# Headless mode with JSON output
+rag-browser --url "https://example.com" --headless --json
+
+# Show all interactive elements
+rag-browser --url "https://example.com" --inputs --buttons --links
+```
+
+### Automation Example
+
+```bash
+# Search on Wikipedia
+rag-browser --url "https://wikipedia.org" --plan '{
+  "actions": [
+    {"type": "wait", "elements": ["#searchInput"]},
+    {"type": "typing", "element": "#searchInput", "value": "AI Tools"},
+    {"type": "keyPress", "key": "Enter"}
+  ]
+}'
+```
+
+### CLI Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--url` | Target webpage URL | Required |
+| `--headless` | Run without UI | false |
+| `--json` | JSON output format | false (pretty print) |
+| `--simple-selectors` | Use simplified selectors | false (full paths) |
+| `--plan` | Action sequence to execute | None |
+| `--inputs` | Show all input elements | false (top 5) |
+| `--buttons` | Show all buttons | false (top 5) |
+| `--links` | Show all links | false (top 5) |
+
+## 🤖 MCP Server Mode
+
+### Starting the Server
+
+```bash
+# Using npx
+npx -y github:aashari/rag-browser
+
+# Using bun
+bunx github:aashari/rag-browser
+
+# If installed globally
+rag-browser
+```
+
+### Tool: `action`
+
+A unified tool for both analysis and automation:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "action",
+    "arguments": {
+      "url": "https://example.com",
+      "inputs": "true",
+      "plan": {
+        "actions": [
+          {"type": "wait", "elements": ["#searchInput"]},
+          {"type": "typing", "element": "#searchInput", "value": "test"}
+        ]
+      }
+    }
+  }
+}
+```
+
+### Supported Actions
+
+| Action | Description | Required Fields | Optional Fields |
+|--------|-------------|-----------------|-----------------|
+| `wait` | Wait for elements | `elements: string[]` | - |
+| `click` | Click element | `element: string` | - |
+| `typing` | Type text | `element: string`, `value: string` | `delay: number` |
+| `keyPress` | Press keyboard key | `key: string` | `element: string` |
+| `submit` | Submit form | `element: string` | - |
+| `print` | Capture HTML | `elements: string[]` | - |
+
+### Claude Desktop Integration
+
+Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
@@ -158,65 +179,42 @@ Configure `claude_desktop_config.json`:
 }
 ```
 
-- **Example Tool Call**:
-  ```json
-  {"jsonrpc":"2.0","method":"tools/call","params":{"name":"navigate","arguments":{"url":"https://example.com","inputs":"true"}},"id":1}
-  ```
-
-### Action Types
-
-| Type       | Required Fields    | Optional Fields | Example                                                     |
-| ---------- | ------------------ | --------------- | ----------------------------------------------------------- |
-| `wait`     | `elements` (array) | -               | `{"type": "wait", "elements": ["#input"]}`                  |
-| `click`    | `element` (string) | -               | `{"type": "click", "element": ".btn"}`                      |
-| `typing`   | `element`, `value` | `delay` (ms)    | `{"type": "typing", "element": "#search", "value": "test"}` |
-| `keyPress` | `key` (string)     | `element`       | `{"type": "keyPress", "key": "Enter"}`                      |
-| `submit`   | `element` (string) | -               | `{"type": "submit", "element": "form"}`                     |
-| `print`    | `elements` (array) | -               | `{"type": "print", "elements": ["#content"]}`               |
-
-- **Notes**: `print` results appear in `plannedActions`. Stability is ensured post-action.
-
-## Development
-
-### Commands
-
-```bash
-# Type check
-bun run typecheck
-
-# Run tests
-bun test
-
-# Build for distribution
-bun run build
-
-# Start MCP server locally
-bun run start
-
-# Clean running processes
-bun run clean
-```
+## 🛠️ Development
 
 ### Project Structure
 
-- `src/cli/`: CLI logic and output formatting
-- `src/core/`: Browser automation and stability
-- `src/mcp/`: MCP server, tools, and resources
-- `src/utils/`: Helper functions (e.g., selectors, logging)
-- `tests/`: Unit and integration tests
-
-### Debugging
-
-Enable verbose logs in `src/config/constants.ts`:
-
-```typescript
-export const DEBUG = true;
+```
+src/
+├── cli/          # CLI implementation
+├── core/         # Core browser automation
+├── mcp/          # MCP server implementation
+├── utils/        # Shared utilities
+└── types/        # TypeScript definitions
 ```
 
-## Configuration
+### Available Commands
 
-Tune settings in `src/config/constants.ts`:
+```bash
+bun run typecheck   # Type checking
+bun run test        # Run tests
+bun run build       # Build for distribution
+bun run start       # Start MCP server
+bun run clean       # Clean processes
+```
 
-- `DEFAULT_TIMEOUT`: 30,000ms
-- `VISIBLE_MODE_SLOW_MO`: 50ms
-- `MAX_STORED_ANALYSES`: 10 (in `src/mcp/resources.ts`)
+### Configuration
+
+Key settings in `src/config/constants.ts`:
+```typescript
+export const DEFAULT_TIMEOUT = 30000;
+export const MAX_STORED_ANALYSES = 10;
+export const DEBUG = false;
+```
+
+## 📝 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please check our [Contributing Guidelines](CONTRIBUTING.md) for details.

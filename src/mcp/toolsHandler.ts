@@ -78,36 +78,27 @@ export async function handleToolCall(
 		};
 
 		// Default browser options
-		const options = {
-			headless: false,
+		const options: {
+			headless: boolean;
+			slowMo: number;
+			timeout: number;
+			selectorMode: "full" | "simple";
+			plan?: Plan;
+		} = {
+			headless: args.headless === "true",
 			slowMo: VISIBLE_MODE_SLOW_MO,
-			timeout: DEFAULT_TIMEOUT,
-			selectorMode: "full" as const
+			timeout: parseInt(args.timeout) || DEFAULT_TIMEOUT,
+			selectorMode: args.selectorMode as "full" | "simple" || "full"
 		};
 
-		switch (name) {
-			case "navigate": {
-				await server.sendLoggingMessage({
-					level: "info",
-					data: `Navigate tool called with URL: ${args.url}`,
-				});
+		if (name === "action") {
+			await server.sendLoggingMessage({
+				level: "info",
+				data: `Action tool called with URL: ${args.url}${args.plan ? " and plan" : ""}`
+			});
 
-				const analysisResult = await analyzePage(args.url, options);
-				storeAnalysis(analysisResult, args.url);
-				return {
-					content: [{ type: "text", text: printAnalysis(analysisResult, "pretty", displayOptions) }],
-					isError: false,
-				};
-			}
-
-			case "execute": {
-				if (!args.plan) {
-					return {
-						content: [{ type: "text", text: "Plan parameter is required" }],
-						isError: true,
-					};
-				}
-
+			// If plan is provided, validate it
+			if (args.plan) {
 				const planValidation = validatePlan(args.plan);
 				if (!planValidation.valid) {
 					return {
@@ -115,30 +106,21 @@ export async function handleToolCall(
 						isError: true,
 					};
 				}
-
-				await server.sendLoggingMessage({
-					level: "info",
-					data: `Execute tool called with plan: ${args.plan}`,
-				});
-
-				const planResult = await analyzePage(args.url, {
-					...options,
-					plan: planValidation.plan,
-				});
-				storeAnalysis(planResult, args.url);
-
-				return {
-					content: [{ type: "text", text: printAnalysis(planResult, "pretty", displayOptions) }],
-					isError: false,
-				};
+				options.plan = planValidation.plan;
 			}
 
-			default:
-				return {
-					content: [{ type: "text", text: `Unknown tool: ${name}` }],
-					isError: true,
-				};
+			const analysisResult = await analyzePage(args.url, options);
+			storeAnalysis(analysisResult, args.url);
+			return {
+				content: [{ type: "text", text: printAnalysis(analysisResult, "pretty", displayOptions) }],
+				isError: false,
+			};
 		}
+
+		return {
+			content: [{ type: "text", text: `Unknown tool: ${name}` }],
+			isError: true,
+		};
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		await server.sendLoggingMessage({

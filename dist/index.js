@@ -6493,46 +6493,91 @@ var commonProperties = {
   url: {
     type: "string",
     format: "uri",
-    description: "The URL to navigate to"
+    description: "The target webpage URL to analyze or interact with. Must be a valid URL starting with 'http://' or 'https://'. This URL is loaded in a browser instance and serves as the starting point for analysis or actions. Examples: 'https://www.wikipedia.org', 'https://example.com/login'. Invalid URLs (e.g., missing protocol, non-existent domains) will result in an error."
   },
-  headless: {
+  inputs: {
     type: "string",
     enum: ["true", "false"],
-    description: "Whether to run in headless mode"
+    description: "Controls the level of detail for input elements in the output. Set to 'true' to return comprehensive details about all input elements (e.g., text fields, textareas, dropdowns, hidden inputs) including type, ID, name, value, placeholder, visibility, and selectors. When 'false' (default), only the top 5 visible inputs are summarized with basic info (label, type, selector). Use 'true' when you need exhaustive form data or to interact with specific inputs."
   },
-  selectorMode: {
+  buttons: {
     type: "string",
-    enum: ["full", "simple"],
-    description: "Selector mode to use"
+    enum: ["true", "false"],
+    description: "Controls the level of detail for button elements in the output. Set to 'true' to return detailed information about all buttons (e.g., standard buttons, submit/reset buttons, clickable elements with role='button') including text content, selectors, and visibility. When 'false' (default), only the top 5 visible buttons are summarized with basic info (text, selector). Use 'true' when you need to identify all clickable elements for navigation or submission."
   },
-  timeout: {
-    type: "number",
-    description: "Navigation timeout in milliseconds"
+  links: {
+    type: "string",
+    enum: ["true", "false"],
+    description: "Controls the level of detail for hyperlinks in the output. Set to 'true' to return complete details about all links (e.g., anchor tags with 'href') including URL, text content, selectors, and whether they are internal or external. When 'false' (default), only the top 5 visible links are summarized with basic info (title, URL, selector). Use 'true' when you need a full navigation map or to follow specific links."
   }
 };
-function createBrowserToolSchema(additionalProps = {}, required = ["url"]) {
-  return {
-    type: "object",
-    properties: { ...commonProperties, ...additionalProps },
-    required
-  };
-}
-function createTool(name, description, additionalProps = {}, required = ["url"]) {
-  return {
-    name,
-    description,
-    inputSchema: createBrowserToolSchema(additionalProps, required)
-  };
-}
 function createToolDefinitions() {
   return [
-    createTool("navigate", "Navigate to a URL and analyze the page"),
-    createTool("execute", "Execute a plan of actions on the current page", {
-      plan: {
-        type: "string",
-        description: "The plan to execute (JSON string)"
+    {
+      name: "action",
+      description: `Analyzes and interacts with a webpage. This tool combines page analysis and action execution capabilities.
+
+` + `### Process:
+` + `1. **Loads the Webpage**: Opens the provided URL in a browser instance.
+` + `2. **Optional Plan Execution**: If a plan is provided, executes each action sequentially.
+` + `3. **Ensures Stability**: Monitors page stability during loading and after each action.
+` + `4. **Analyzes State**: Returns a structured analysis of the page's current state.
+
+` + `### When to Use:
+` + `- **Static Analysis**: To explore a webpage's structure and elements (without a plan).
+` + `- **Automation**: To perform tasks like form filling, clicking, or searching (with a plan).
+` + `- **Information Retrieval**: To extract page content or element details.
+` + `- **Multi-step Workflows**: To navigate through processes like login or checkout.
+
+` + `### Usage Guidelines:
+` + `- Always requires a valid 'url'.
+` + `- Optional 'plan' parameter for executing actions.
+` + `- Set 'inputs', 'buttons', or 'links' to 'true' for detailed element analysis.
+` + `- Results are stored as an MCP resource for later retrieval.
+
+` + `### Action Types (when using plan):
+` + `1. **wait**: Waits for elements to appear.
+` + "   - Required: `elements` (array of CSS selectors)\n" + "   - Example: `{'type': 'wait', 'elements': ['input#search']}`\n" + `2. **click**: Clicks a single element.
+` + "   - Required: `element` (CSS selector)\n" + "   - Example: `{'type': 'click', 'element': '.submit-btn'}`\n" + `3. **typing**: Types text into an input field.
+` + "   - Required: `element` (CSS selector), `value` (text to type)\n" + "   - Optional: `delay` (ms between keystrokes)\n" + "   - Example: `{'type': 'typing', 'element': '#username', 'value': 'user123'}`\n" + `4. **keyPress**: Simulates a key press.
+` + "   - Required: `key` (key name)\n" + "   - Optional: `element` (CSS selector to focus)\n" + "   - Example: `{'type': 'keyPress', 'key': 'Enter', 'element': '#search'}`\n" + `5. **submit**: Submits a form or clicks a submit-like element.
+` + "   - Required: `element` (CSS selector)\n" + "   - Example: `{'type': 'submit', 'element': 'form#login'}`\n" + `6. **print**: Captures HTML of specified elements.
+` + "   - Required: `elements` (array of CSS selectors)\n" + "   - Example: `{'type': 'print', 'elements': ['#content']}`\n\n" + `### Example Scenarios:
+` + `1. **Simple Analysis**: Just explore a page
+` + "   ```json\n" + `   {
+` + `     "url": "https://www.wikipedia.org",
+` + `     "inputs": "true",
+` + `     "links": "true"
+` + `   }
+` + "   ```\n\n" + `2. **Search Workflow**: Analyze and perform search
+` + "   ```json\n" + `   {
+` + `     "url": "https://www.wikipedia.org",
+` + `     "plan": {
+` + `       "actions": [
+` + `         {"type": "wait", "elements": ["#searchInput"]},
+` + `         {"type": "typing", "element": "#searchInput", "value": "AI Tools"},
+` + `         {"type": "keyPress", "key": "Enter"},
+` + `         {"type": "print", "elements": ["#mw-content-text"]}
+` + `       ]
+` + `     }
+` + `   }
+` + "   ```",
+      inputSchema: {
+        type: "object",
+        properties: {
+          ...commonProperties,
+          plan: {
+            type: "string",
+            description: `Optional JSON string defining actions to execute. When omitted, performs page analysis only. Must be a valid JSON object with an 'actions' array when provided. Each action requires a 'type' field and additional fields based on the type:
+` + "- **wait**: `elements` (string[]) - Waits for all listed CSS selectors to be present.\n" + "- **click**: `element` (string) - Clicks the specified CSS selector.\n" + "- **typing**: `element` (string), `value` (string), `delay?` (number) - Types the value into the element.\n" + "- **keyPress**: `key` (string), `element?` (string) - Presses the key, optionally focusing an element first.\n" + "- **submit**: `element` (string) - Submits the form or clicks the element.\n" + "- **print**: `elements` (string[]) - Captures HTML of the listed selectors.\n\n" + `### Guidelines:
+` + `- Use valid CSS selectors (e.g., '#id', '.class', 'input[name="field"]').
+` + `- Escape quotes in JSON correctly.
+` + "- Include 'wait' before interactions for async elements."
+          }
+        },
+        required: ["url"]
       }
-    }, ["url", "plan"])
+    }
   ];
 }
 
@@ -6544,6 +6589,7 @@ var DEBUG = true;
 var DEFAULT_TIMEOUT = 30000;
 var NETWORK_IDLE_TIMEOUT = 500;
 var MUTATION_CHECK_INTERVAL = 50;
+var VISIBLE_MODE_SLOW_MO = 50;
 var MUTATION_STABILITY_TIMEOUT = 300;
 var LAYOUT_STABILITY_TIMEOUT = 200;
 var ACTION_STABILITY_TIMEOUT = 2000;
@@ -6908,6 +6954,23 @@ function getActionDescription(action) {
 
 // src/cli/printer.ts
 var import_chalk2 = __toESM(require_source(), 1);
+function printPlan(plan) {
+  let output = "";
+  output += `
+\uD83D\uDCCB ${import_chalk2.default.bold("Plan to Execute:")}
+`;
+  output += "=".repeat(50) + `
+`;
+  plan.actions.forEach((action, index) => {
+    const symbol = getActionSymbol(action);
+    output += `${symbol} Step ${index + 1}/${plan.actions.length}: ${getActionDescription(action)}
+`;
+  });
+  output += "=".repeat(50) + `
+
+`;
+  return output;
+}
 function printActionStatus(status) {
   const { step, totalSteps, symbol, description, result } = status;
   let output = "";
@@ -6953,95 +7016,130 @@ function printActionSummary(statuses) {
 `;
   return output;
 }
-function printAnalysis(analysis, format = "pretty") {
+function printAnalysis(analysis, format = "pretty", options = {}) {
   if (format === "json") {
     return JSON.stringify(analysis, null, 2);
   }
   let output = "";
   output += `
 \uD83D\uDCC4 ${import_chalk2.default.bold("Page Analysis:")}
-`;
-  output += "=".repeat(50) + `
+
 `;
   output += `${import_chalk2.default.bold("Title:")} ${import_chalk2.default.cyan(analysis.title)}
 `;
   if (analysis.description) {
     output += `${import_chalk2.default.bold("Description:")} ${import_chalk2.default.gray(analysis.description)}
+
 `;
   }
   if (analysis.inputs?.length) {
-    output += `${import_chalk2.default.bold(`
-Inputs:`)} ${import_chalk2.default.cyan(analysis.inputs.length)}
+    output += `${import_chalk2.default.bold("Total Input Elements:")} ${import_chalk2.default.cyan(analysis.inputs.length)}
 `;
-    analysis.inputs.forEach((input) => {
-      output += `
+    if (options.showInputs) {
+      analysis.inputs.forEach((input) => {
+        output += `
 \uD83D\uDD24 ${import_chalk2.default.bold(input.label || input.type)}
 `;
-      output += import_chalk2.default.gray(`  Type: ${input.type}
+        output += import_chalk2.default.gray(`  Type: ${input.type}
 `);
-      if (input.id)
-        output += import_chalk2.default.gray(`  ID: ${input.id}
+        if (input.id)
+          output += import_chalk2.default.gray(`  ID: ${input.id}
 `);
-      if (input.role)
-        output += import_chalk2.default.gray(`  Role: ${input.role}
+        if (!input.isVisible)
+          output += import_chalk2.default.yellow(`  Hidden: true
 `);
-      if (!input.isVisible)
-        output += import_chalk2.default.yellow(`  Hidden: true
+        output += import_chalk2.default.gray(`  Selector: ${input.selector}
 `);
-      output += import_chalk2.default.gray(`  Selector: ${input.selector}
+      });
+    } else {
+      const visibleInputs = analysis.inputs.filter((i) => i.isVisible).slice(0, 5);
+      if (visibleInputs.length) {
+        output += `[Showing top visible 5 inputs]
+`;
+        visibleInputs.forEach((input) => {
+          output += `- ${import_chalk2.default.cyan(input.label || input.type)}
+`;
+        });
+        output += import_chalk2.default.gray(`> to get list of all inputs add --inputs
 `);
-    });
+      }
+    }
   }
   if (analysis.buttons?.length) {
-    output += `${import_chalk2.default.bold(`
-Buttons:`)} ${import_chalk2.default.cyan(analysis.buttons.length)}
+    output += `
+${import_chalk2.default.bold("Total Button Elements:")} ${import_chalk2.default.cyan(analysis.buttons.length)}
 `;
-    analysis.buttons.forEach((button) => {
-      output += `
+    if (options.showButtons) {
+      analysis.buttons.forEach((button) => {
+        output += `
 \uD83D\uDD18 ${import_chalk2.default.bold(button.text || "No text")}
 `;
-      output += import_chalk2.default.gray(`  Selector: ${button.selector}
+        output += import_chalk2.default.gray(`  Selector: ${button.selector}
 `);
-    });
+      });
+    } else {
+      const topButtons = analysis.buttons.slice(0, 5);
+      if (topButtons.length) {
+        output += `[Showing top visible 5 buttons]
+`;
+        topButtons.forEach((button) => {
+          output += `- ${import_chalk2.default.cyan(button.text || "No text")}
+`;
+        });
+        output += import_chalk2.default.gray(`> to get list of all buttons add --buttons
+`);
+      }
+    }
   }
   if (analysis.links?.length) {
-    output += `${import_chalk2.default.bold(`
-Links:`)} ${import_chalk2.default.cyan(analysis.links.length)}
+    output += `
+${import_chalk2.default.bold("Total Link Elements:")} ${import_chalk2.default.cyan(analysis.links.length)}
 `;
-    analysis.links.forEach((link) => {
-      output += `
+    if (options.showLinks) {
+      analysis.links.forEach((link) => {
+        output += `
 \uD83D\uDD17 ${import_chalk2.default.bold(link.title || "No title")}
 `;
-      output += import_chalk2.default.gray(`  URL: ${link.url}
+        output += import_chalk2.default.gray(`  URL: ${link.url}
 `);
-      output += import_chalk2.default.gray(`  Selector: ${link.selector}
+        output += import_chalk2.default.gray(`  Selector: ${link.selector}
 `);
-    });
+      });
+    } else {
+      const topLinks = analysis.links.slice(0, 5);
+      if (topLinks.length) {
+        output += `[Showing top visible 5 links]
+`;
+        topLinks.forEach((link) => {
+          output += `- ${import_chalk2.default.cyan(link.title || "No title")}
+`;
+        });
+        output += import_chalk2.default.gray(`> to get list of all links add --links
+`);
+      }
+    }
   }
   if (analysis.plannedActions?.length) {
-    output += `${import_chalk2.default.bold(`
-Planned Actions Results:`)} ${import_chalk2.default.cyan(analysis.plannedActions.length)}
+    output += `
+${import_chalk2.default.bold("Print Action Results:")}
 `;
-    analysis.plannedActions.forEach((action) => {
+    analysis.plannedActions.forEach((result) => {
       output += `
-\uD83D\uDCDD ${import_chalk2.default.bold(action.selector)}
+\uD83D\uDDA8️  ${import_chalk2.default.bold(result.selector)}
 `;
-      if (action.html) {
-        output += import_chalk2.default.gray(`  HTML:
-${action.html}
-`);
-      } else {
-        output += import_chalk2.default.yellow(`  HTML: Not captured
+      if (result.html) {
+        output += import_chalk2.default.gray(`  HTML: ${result.html}
 `);
       }
-      if (action.error) {
-        output += import_chalk2.default.red(`  Error: ${action.error}
+      if (result.error) {
+        output += import_chalk2.default.red(`  Error: ${result.error}
 `);
       }
     });
+    output += `
+`;
   }
   output += `
-` + "=".repeat(50) + `
 `;
   return output;
 }
@@ -7320,6 +7418,89 @@ async function analyzePage(url, options) {
   }
 }
 
+// src/utils/hash.ts
+import { createHash } from "crypto";
+function md5(input) {
+  return createHash("md5").update(input).digest("hex");
+}
+function formatTimestamp(date = new Date) {
+  return date.toISOString().replace(/[:.]/g, "-");
+}
+function formatReadableTimestamp(date = new Date) {
+  return date.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  });
+}
+function createResourceId(url, timestamp = new Date) {
+  const hash = md5(url);
+  const timeStr = formatTimestamp(timestamp);
+  return `${hash}-${timeStr}`;
+}
+
+// src/mcp/resources.ts
+var MAX_STORED_ANALYSES = 10;
+var analyses = [];
+var mcpServer = null;
+function initializeResources(server) {
+  mcpServer = server;
+}
+function log2(level, message) {
+  mcpServer?.sendLoggingMessage({ level, data: message });
+}
+function storeAnalysis(analysis, url) {
+  log2("debug", `Storing analysis for page: ${analysis.title}`);
+  const storedAnalysis = {
+    analysis,
+    timestamp: new Date,
+    url
+  };
+  analyses.unshift(storedAnalysis);
+  if (analyses.length > MAX_STORED_ANALYSES) {
+    analyses.length = MAX_STORED_ANALYSES;
+  }
+  log2("debug", `Total stored analyses: ${analyses.length}`);
+}
+function getAnalyses() {
+  log2("debug", `Getting all analyses. Count: ${analyses.length}`);
+  return analyses;
+}
+function getAnalysisByUri(uri) {
+  log2("debug", `Looking for analysis with URI: ${uri}`);
+  const analysis = analyses.find((a) => createResourceUri(a) === uri);
+  log2("debug", `Analysis ${analysis ? "found" : "not found"} for URI: ${uri}`);
+  return analysis;
+}
+function createResourceUri(stored) {
+  const resourceId = createResourceId(stored.url, stored.timestamp);
+  const uri = `page://${resourceId}`;
+  log2("debug", `Created URI for page: ${stored.analysis.title} -> ${uri}`);
+  return uri;
+}
+function createResourceName(stored) {
+  const timestamp = formatReadableTimestamp(stored.timestamp);
+  return `Page for [${stored.analysis.title}][${stored.url}] at ${timestamp}`;
+}
+function createResourceDescription(stored) {
+  const timestamp = formatReadableTimestamp(stored.timestamp);
+  const summary = [
+    `Page analysis scraped at ${timestamp}`,
+    `Title: ${stored.analysis.title}`,
+    `URL: ${stored.url}`,
+    `Links found: ${stored.analysis.links.length}`,
+    `Buttons found: ${stored.analysis.buttons.length}`,
+    `Input fields found: ${stored.analysis.inputs.length}`,
+    stored.analysis.plannedActions ? `Actions executed: ${stored.analysis.plannedActions.length}` : undefined
+  ].filter(Boolean).join(`
+`);
+  return summary;
+}
+
 // src/mcp/toolsHandler.ts
 function validateAction(action) {
   if (!action || typeof action !== "object")
@@ -7369,30 +7550,23 @@ async function handleToolCall(name, args, server) {
         isError: true
       };
     }
+    const displayOptions = {
+      showInputs: args.inputs === "true",
+      showButtons: args.buttons === "true",
+      showLinks: args.links === "true"
+    };
     const options = {
       headless: args.headless === "true",
-      timeout: args.timeout ? parseInt(args.timeout) : undefined,
-      selectorMode: args.selectorMode === "full" ? "full" : "simple"
+      slowMo: VISIBLE_MODE_SLOW_MO,
+      timeout: parseInt(args.timeout) || DEFAULT_TIMEOUT,
+      selectorMode: args.selectorMode || "full"
     };
-    switch (name) {
-      case "navigate": {
-        await server.sendLoggingMessage({
-          level: "info",
-          data: `Navigate tool called with URL: ${args.url}`
-        });
-        const analysisResult = await analyzePage(args.url, options);
-        return {
-          content: [{ type: "text", text: printAnalysis(analysisResult) }],
-          isError: false
-        };
-      }
-      case "execute": {
-        if (!args.plan) {
-          return {
-            content: [{ type: "text", text: "Plan parameter is required" }],
-            isError: true
-          };
-        }
+    if (name === "action") {
+      await server.sendLoggingMessage({
+        level: "info",
+        data: `Action tool called with URL: ${args.url}${args.plan ? " and plan" : ""}`
+      });
+      if (args.plan) {
         const planValidation = validatePlan(args.plan);
         if (!planValidation.valid) {
           return {
@@ -7400,25 +7574,19 @@ async function handleToolCall(name, args, server) {
             isError: true
           };
         }
-        await server.sendLoggingMessage({
-          level: "info",
-          data: `Execute tool called with plan: ${args.plan}`
-        });
-        const planResult = await analyzePage(args.url, {
-          ...options,
-          plan: planValidation.plan
-        });
-        return {
-          content: [{ type: "text", text: printAnalysis(planResult) }],
-          isError: false
-        };
+        options.plan = planValidation.plan;
       }
-      default:
-        return {
-          content: [{ type: "text", text: `Unknown tool: ${name}` }],
-          isError: true
-        };
+      const analysisResult = await analyzePage(args.url, options);
+      storeAnalysis(analysisResult, args.url);
+      return {
+        content: [{ type: "text", text: printAnalysis(analysisResult, "pretty", displayOptions) }],
+        isError: false
+      };
     }
+    return {
+      content: [{ type: "text", text: `Unknown tool: ${name}` }],
+      isError: true
+    };
   } catch (error2) {
     const errorMessage = error2 instanceof Error ? error2.message : String(error2);
     await server.sendLoggingMessage({
@@ -7434,11 +7602,34 @@ async function handleToolCall(name, args, server) {
 
 // src/mcp/requestHandler.ts
 function setupRequestHandlers(server, tools) {
-  server.setRequestHandler(ListResourcesRequestSchema, async () => ({
-    resources: []
-  }));
+  initializeResources(server);
+  server.setRequestHandler(ListResourcesRequestSchema, async () => {
+    server.sendLoggingMessage({ level: "debug", data: "Handling ListResourcesRequest" });
+    const analyses2 = getAnalyses();
+    const resources = analyses2.map((stored) => ({
+      uri: createResourceUri(stored),
+      name: createResourceName(stored),
+      description: createResourceDescription(stored),
+      mimeType: "text/plain"
+    }));
+    server.sendLoggingMessage({ level: "debug", data: `Returning ${resources.length} resources` });
+    return { resources };
+  });
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-    throw new Error(`Resource not found: ${request.params.uri}`);
+    server.sendLoggingMessage({ level: "debug", data: `Handling ReadResourceRequest for URI: ${request.params.uri}` });
+    const stored = getAnalysisByUri(request.params.uri);
+    if (!stored) {
+      server.sendLoggingMessage({ level: "error", data: `Resource not found: ${request.params.uri}` });
+      throw new Error(`Resource not found: ${request.params.uri}`);
+    }
+    server.sendLoggingMessage({ level: "debug", data: `Returning resource content for: ${request.params.uri}` });
+    return {
+      contents: [{
+        uri: request.params.uri,
+        mimeType: "text/plain",
+        text: printAnalysis(stored.analysis)
+      }]
+    };
   });
   server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => ({
     resourceTemplates: []
@@ -7452,11 +7643,15 @@ function setupRequestHandlers(server, tools) {
 // src/mcp/server.ts
 async function runServer() {
   const server = new Server({
-    name: "ai-tools-browser",
-    version: "1.0.0"
+    name: "@aashari/rag-browser",
+    version: "1.5.0"
   }, {
     capabilities: {
-      resources: {},
+      resources: {
+        list: true,
+        read: true,
+        templates: false
+      },
       tools: {},
       logging: {}
     }
@@ -7472,8 +7667,76 @@ async function runServer() {
   }));
 }
 
+// src/cli/index.ts
+async function main() {
+  const args = process.argv.slice(2);
+  const urlIndex = args.indexOf("--url") + 1;
+  const planIndex = args.indexOf("--plan") + 1;
+  const headless = args.includes("--headless");
+  const format = args.includes("--json") ? "json" : "pretty";
+  const selectorMode = args.includes("--simple-selectors") ? "simple" : "full";
+  const showInputs = args.includes("--inputs");
+  const showButtons = args.includes("--buttons");
+  const showLinks = args.includes("--links");
+  if (urlIndex === 0 || urlIndex >= args.length) {
+    console.error('Usage: bun run browser --url "https://example.com" [options]');
+    console.error(`
+Options:`);
+    console.error("  --url              The URL to analyze");
+    console.error("  --headless         Run in headless mode (optional, default: false)");
+    console.error("  --json             Output in JSON format (optional, default: pretty print)");
+    console.error("  --simple-selectors Use simple selectors without full paths (optional, default: full paths)");
+    console.error("  --plan             JSON string defining actions to perform (optional)");
+    console.error(`
+Display Options:`);
+    console.error("  --inputs           Show all input elements (optional, default: top 5)");
+    console.error("  --buttons          Show all buttons (optional, default: top 5)");
+    console.error("  --links            Show all links (optional, default: top 5)");
+    process.exit(1);
+  }
+  const url = args[urlIndex];
+  let plan;
+  if (planIndex > 0 && planIndex < args.length) {
+    try {
+      plan = JSON.parse(args[planIndex]);
+      if (!plan.actions || !Array.isArray(plan.actions)) {
+        throw new Error("Plan must have an actions array");
+      }
+      console.warn(printPlan(plan));
+    } catch (error2) {
+      console.error("Invalid --plan JSON:", error2 instanceof Error ? error2.message : String(error2));
+      process.exit(1);
+    }
+  }
+  console.warn(`Running in ${headless ? "headless" : "visible"} mode with ${selectorMode} selectors...`);
+  try {
+    const analysis = await analyzePage(url, {
+      headless,
+      slowMo: headless ? 0 : VISIBLE_MODE_SLOW_MO,
+      timeout: DEFAULT_TIMEOUT,
+      selectorMode,
+      plan
+    });
+    console.warn(printAnalysis(analysis, format, { showInputs, showButtons, showLinks }));
+  } catch (error2) {
+    console.error("Error:", error2 instanceof Error ? error2.message : String(error2));
+    process.exit(1);
+  }
+}
+if (import.meta.url === process.argv[1]) {
+  main();
+}
+
 // src/index.ts
-runServer().catch((error2) => {
-  console.error("Failed to start MCP server:", error2);
-  process.exit(1);
-});
+var hasUrlArg = process.argv.includes("--url");
+if (hasUrlArg) {
+  main().catch((error2) => {
+    console.error("CLI execution failed:", error2);
+    process.exit(1);
+  });
+} else {
+  runServer().catch((error2) => {
+    console.error("Failed to start MCP server:", error2);
+    process.exit(1);
+  });
+}
