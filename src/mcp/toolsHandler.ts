@@ -7,6 +7,7 @@ import { storeAnalysis } from "./resources";
 import { DEFAULT_TIMEOUT, VISIBLE_MODE_SLOW_MO } from "../config/constants";
 import { MCP_ERROR_CODES, type McpErrorCode } from "../config/errorCodes";
 import { validateUrl } from "../utils/security";
+import { error } from "../utils/logging";
 
 // Validate action type and required fields
 function validateAction(action: any): action is Action {
@@ -141,8 +142,9 @@ export async function handleToolCall(
 			isError: true,
 			code: MCP_ERROR_CODES.INVALID_TOOL
 		};
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+	} catch (err) {
+		error('Error in tool call', { error: err instanceof Error ? err.message : String(err) });
+		const errorMessage = err instanceof Error ? err.message : String(err);
 		await server.sendLoggingMessage({
 			level: "error",
 			data: `Error in tool ${name}: ${errorMessage}`,

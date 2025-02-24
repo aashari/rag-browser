@@ -1,6 +1,6 @@
 import type { Page } from "playwright";
 import type { PrintAction, ActionResult, BrowserOptions, PlannedActionResult } from "../../types";
-import { info } from "../../utils/logging";
+import { error, info } from "../../utils/logging";
 import { createActionResult } from "../../utils/handlers";
 import { convertToMarkdown } from "../../utils/markdown";
 
@@ -12,15 +12,61 @@ export async function captureElementsHtml(page: Page, selectors: string[], forma
         try {
             info('Searching for elements:', { selector });
             
-            // Use page.evaluate to get HTML content directly
+            // Use page.evaluate to get HTML content directly and clean it
             const content = await page.evaluate((sel) => {
                 const elements = Array.from(document.querySelectorAll(sel));
                 if (elements.length === 0) return '';
                 
-                // Combine HTML from all matching elements
-                return elements
-                    .map(el => el.outerHTML)
-                    .join('\n');
+                // Create a temporary container
+                const container = document.createElement('div');
+                
+                // Clone each element into the container
+                elements.forEach(el => {
+                    const clone = el.cloneNode(true) as Element;
+                    container.appendChild(clone);
+                });
+                
+                // Remove scripts and styles from the container
+                const scripts = container.getElementsByTagName('script');
+                const styles = container.getElementsByTagName('style');
+                
+                // Remove in reverse order to avoid index changes
+                for (let i = scripts.length - 1; i >= 0; i--) {
+                    scripts[i].remove();
+                }
+                for (let i = styles.length - 1; i >= 0; i--) {
+                    styles[i].remove();
+                }
+                
+                // Clean up attributes
+                const cleanAttributes = (element: Element) => {
+                    // Remove style and class attributes
+                    element.removeAttribute('style');
+                    element.removeAttribute('class');
+                    
+                    // Clean child elements recursively
+                    Array.from(element.children).forEach(child => {
+                        cleanAttributes(child);
+                    });
+                };
+                
+                // Clean all elements in the container
+                cleanAttributes(container);
+                
+                // Remove empty divs
+                const removeEmptyDivs = (element: Element) => {
+                    Array.from(element.children).forEach(child => {
+                        if (child.tagName.toLowerCase() === 'div' && !child.textContent?.trim()) {
+                            child.remove();
+                        } else {
+                            removeEmptyDivs(child);
+                        }
+                    });
+                };
+                
+                removeEmptyDivs(container);
+                
+                return container.innerHTML;
             }, selector);
             
             if (!content) {
@@ -66,11 +112,11 @@ export async function captureElementsHtml(page: Page, selectors: string[], forma
                 });
             }
             
-        } catch (error) {
-            info('Error capturing content:', { error });
+        } catch (err) {
+            error('Error capturing content:', { error: err instanceof Error ? err.message : String(err) });
             results.push({ 
                 selector, 
-                error: error instanceof Error ? error.message : "Failed to capture element content", 
+                error: err instanceof Error ? err.message : "Failed to capture element content", 
                 type: 'print' as const, 
                 html: '',
                 format 

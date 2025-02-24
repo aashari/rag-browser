@@ -2,6 +2,7 @@ import type { Page } from "playwright";
 import type { WaitAction, ActionResult, BrowserOptions } from "../../types";
 import { waitForActionStability } from "../stability";
 import { DEFAULT_TIMEOUT } from "../../config/constants";
+import { error } from "../../utils/logging";
 
 export async function executeWaitAction(
     page: Page,
@@ -56,18 +57,19 @@ export async function executeWaitAction(
             message: "Elements found and stable",
             warning: !isStable ? "Page not fully stable, but elements are present" : undefined,
         };
-    } catch (error) {
+    } catch (err) {
+        error('Error in wait action', { error: err instanceof Error ? err.message : String(err) });
         if (isInfiniteWait) {
             return {
                 success: false,
                 message: "Infinite wait interrupted",
-                error: error instanceof Error ? error.message : "Unknown error occurred",
+                error: err instanceof Error ? err.message : "Unknown error occurred",
             };
         }
         return {
             success: false,
             message: "Failed to find elements",
-            error: error instanceof Error ? error.message : "Unknown error occurred",
+            error: err instanceof Error ? err.message : "Unknown error occurred",
         };
     } finally {
         // Clean up abort controller

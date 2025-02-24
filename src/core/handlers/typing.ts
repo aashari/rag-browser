@@ -1,7 +1,7 @@
 import type { Page } from "playwright";
 import type { TypingAction, ActionResult, BrowserOptions } from "../../types";
 import { waitForActionStability } from "../stability";
-
+import { error } from "../../utils/logging";
 export async function executeTypingAction(
     page: Page,
     action: TypingAction,
@@ -15,11 +15,12 @@ export async function executeTypingAction(
             message: "Text input successful",
             warning: !isStable ? "Page not fully stable after typing" : undefined,
         };
-    } catch (error) {
+    } catch (err) {
+        error('Error in typing action', { error: err instanceof Error ? err.message : String(err) });
         return {
             success: false,
             message: "Failed to input text",
-            error: error instanceof Error ? error.message : "Unknown error occurred",
+            error: err instanceof Error ? err.message : "Unknown error occurred",
         };
     }
 } 

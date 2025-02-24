@@ -21583,7 +21583,7 @@ class StdioServerTransport {
 }
 
 // src/config/version.ts
-var VERSION = "1.18.0";
+var VERSION = "1.19.0";
 var [MAJOR, MINOR, PATCH] = VERSION.split(".").map(Number);
 var GIT_VERSION = `v${VERSION}`;
 var PACKAGE_NAME = "@aashari/rag-browser";
@@ -22134,18 +22134,19 @@ async function executeWaitAction(page, action, options) {
       message: "Elements found and stable",
       warning: !isStable ? "Page not fully stable, but elements are present" : undefined
     };
-  } catch (error2) {
+  } catch (err) {
+    error("Error in wait action", { error: err instanceof Error ? err.message : String(err) });
     if (isInfiniteWait) {
       return {
         success: false,
         message: "Infinite wait interrupted",
-        error: error2 instanceof Error ? error2.message : "Unknown error occurred"
+        error: err instanceof Error ? err.message : "Unknown error occurred"
       };
     }
     return {
       success: false,
       message: "Failed to find elements",
-      error: error2 instanceof Error ? error2.message : "Unknown error occurred"
+      error: err instanceof Error ? err.message : "Unknown error occurred"
     };
   } finally {
     if (abortController) {
@@ -22164,14 +22165,15 @@ async function executeClickAction(page, action, options) {
       message: "Click successful",
       warning: !isStable ? "Page not fully stable after click" : undefined
     };
-  } catch (error2) {
-    if (error2 instanceof Error && error2.message.includes("context was destroyed")) {
+  } catch (err) {
+    error("Error in click action", { error: err instanceof Error ? err.message : String(err) });
+    if (err instanceof Error && err.message.includes("context was destroyed")) {
       return { success: true, message: "Click completed", warning: "Page navigation occurred" };
     }
     return {
       success: false,
       message: "Failed to click element",
-      error: error2 instanceof Error ? error2.message : "Unknown error occurred"
+      error: err instanceof Error ? err.message : "Unknown error occurred"
     };
   }
 }
@@ -22186,11 +22188,12 @@ async function executeTypingAction(page, action, options) {
       message: "Text input successful",
       warning: !isStable ? "Page not fully stable after typing" : undefined
     };
-  } catch (error2) {
+  } catch (err) {
+    error("Error in typing action", { error: err instanceof Error ? err.message : String(err) });
     return {
       success: false,
       message: "Failed to input text",
-      error: error2 instanceof Error ? error2.message : "Unknown error occurred"
+      error: err instanceof Error ? err.message : "Unknown error occurred"
     };
   }
 }
@@ -22224,26 +22227,23 @@ var turndownService = new import_turndown.default({
   codeBlockStyle: "fenced",
   bulletListMarker: "-"
 });
-function cleanHtml(html) {
-  return html.replace(/ style="[^"]*"/g, "").replace(/<div[^>]*>\s*<\/div>/g, "").replace(/class="[^"]*"/g, "");
-}
 var convertToMarkdown = (html, selector) => {
   try {
-    const cleanedHtml = cleanHtml(html);
-    const markdown = turndownService.turndown(cleanedHtml).trim();
+    const markdown = turndownService.turndown(html).trim();
     return {
       selector,
       html: markdown,
       type: "print",
       format: "markdown"
     };
-  } catch (error2) {
+  } catch (err) {
+    error("Error converting to markdown", { error: err instanceof Error ? err.message : String(err) });
     return {
       selector,
       html,
       type: "print",
       format: "html",
-      error: error2 instanceof Error ? error2.message : "Unknown error during markdown conversion"
+      error: err instanceof Error ? err.message : "Unknown error during markdown conversion"
     };
   }
 };
@@ -22258,8 +22258,38 @@ async function captureElementsHtml(page, selectors, format = "markdown") {
         const elements = Array.from(document.querySelectorAll(sel));
         if (elements.length === 0)
           return "";
-        return elements.map((el) => el.outerHTML).join(`
-`);
+        const container = document.createElement("div");
+        elements.forEach((el) => {
+          const clone = el.cloneNode(true);
+          container.appendChild(clone);
+        });
+        const scripts = container.getElementsByTagName("script");
+        const styles = container.getElementsByTagName("style");
+        for (let i = scripts.length - 1;i >= 0; i--) {
+          scripts[i].remove();
+        }
+        for (let i = styles.length - 1;i >= 0; i--) {
+          styles[i].remove();
+        }
+        const cleanAttributes = (element) => {
+          element.removeAttribute("style");
+          element.removeAttribute("class");
+          Array.from(element.children).forEach((child) => {
+            cleanAttributes(child);
+          });
+        };
+        cleanAttributes(container);
+        const removeEmptyDivs = (element) => {
+          Array.from(element.children).forEach((child) => {
+            if (child.tagName.toLowerCase() === "div" && !child.textContent?.trim()) {
+              child.remove();
+            } else {
+              removeEmptyDivs(child);
+            }
+          });
+        };
+        removeEmptyDivs(container);
+        return container.innerHTML;
       }, selector);
       if (!content) {
         info("No elements found for selector:", { selector });
@@ -22300,11 +22330,11 @@ async function captureElementsHtml(page, selectors, format = "markdown") {
           format
         });
       }
-    } catch (error2) {
-      info("Error capturing content:", { error: error2 });
+    } catch (err) {
+      error("Error capturing content:", { error: err instanceof Error ? err.message : String(err) });
       results.push({
         selector,
-        error: error2 instanceof Error ? error2.message : "Failed to capture element content",
+        error: err instanceof Error ? err.message : "Failed to capture element content",
         type: "print",
         html: "",
         format
@@ -22332,11 +22362,12 @@ async function executeKeyPressAction(page, action, options) {
       message: "Key pressed",
       warning: !isStable ? "Page not fully stable after key press" : undefined
     };
-  } catch (error2) {
+  } catch (err) {
+    error("Error in key press action", { error: err instanceof Error ? err.message : String(err) });
     return {
       success: false,
       message: "Failed to press key",
-      error: error2 instanceof Error ? error2.message : "Unknown error occurred"
+      error: err instanceof Error ? err.message : "Unknown error occurred"
     };
   }
 }
@@ -22376,14 +22407,15 @@ async function executeAction(page, action, options) {
   }
   try {
     return await handler(page, action, options);
-  } catch (error2) {
-    if (error2 instanceof Error && error2.message.includes("context was destroyed")) {
+  } catch (err) {
+    error("Error executing action", { error: err instanceof Error ? err.message : String(err) });
+    if (err instanceof Error && err.message.includes("context was destroyed")) {
       return { success: true, message: "Action completed", warning: "Page navigation occurred" };
     }
     return {
       success: false,
       message: "Action failed",
-      error: error2 instanceof Error ? error2.message : "Unknown error occurred"
+      error: err instanceof Error ? err.message : "Unknown error occurred"
     };
   }
 }
@@ -23226,8 +23258,9 @@ async function handleToolCall(name, args, server) {
       isError: true,
       code: MCP_ERROR_CODES.INVALID_TOOL
     };
-  } catch (error2) {
-    const errorMessage = error2 instanceof Error ? error2.message : String(error2);
+  } catch (err) {
+    error("Error in tool call", { error: err instanceof Error ? err.message : String(err) });
+    const errorMessage = err instanceof Error ? err.message : String(err);
     await server.sendLoggingMessage({
       level: "error",
       data: `Error in tool ${name}: ${errorMessage}`

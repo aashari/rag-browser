@@ -5,6 +5,7 @@ import { executeClickAction } from "./click";
 import { executeTypingAction } from "./typing";
 import { executePrintAction } from "./print";
 import { executeKeyPressAction } from "./keyPress";
+import { error } from "../../utils/logging";
 
 type ActionHandler<T extends Action> = (page: Page, action: T, options: BrowserOptions) => Promise<ActionResult>;
 
@@ -38,14 +39,15 @@ export async function executeAction(page: Page, action: Action, options: Browser
     }
     try {
         return await handler(page, action, options);
-    } catch (error) {
-        if (error instanceof Error && error.message.includes("context was destroyed")) {
+    } catch (err) {
+        error('Error executing action', { error: err instanceof Error ? err.message : String(err) });
+        if (err instanceof Error && err.message.includes("context was destroyed")) {
             return { success: true, message: "Action completed", warning: "Page navigation occurred" };
         }
         return {
             success: false,
             message: "Action failed",
-            error: error instanceof Error ? error.message : "Unknown error occurred",
+            error: err instanceof Error ? err.message : "Unknown error occurred",
         };
     }
 }

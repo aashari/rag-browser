@@ -1,5 +1,6 @@
 import type { PlannedActionResult } from '../types';
 import TurndownService from 'turndown';
+import { error } from './logging';
 
 // Initialize turndown service with minimal options
 export const turndownService = new TurndownService({
@@ -8,19 +9,10 @@ export const turndownService = new TurndownService({
     bulletListMarker: '-'
 });
 
-// Clean up HTML before conversion
-function cleanHtml(html: string): string {
-    // Remove style attributes and empty divs
-    return html.replace(/ style="[^"]*"/g, '')
-        .replace(/<div[^>]*>\s*<\/div>/g, '')
-        .replace(/class="[^"]*"/g, '');
-}
-
 // Convert HTML to markdown with minimal processing
 export const convertToMarkdown = (html: string, selector: string): PlannedActionResult => {
     try {
-        const cleanedHtml = cleanHtml(html);
-        const markdown = turndownService.turndown(cleanedHtml).trim();
+        const markdown = turndownService.turndown(html).trim();
         
         return {
             selector,
@@ -28,13 +20,14 @@ export const convertToMarkdown = (html: string, selector: string): PlannedAction
             type: 'print' as const,
             format: 'markdown' as const
         };
-    } catch (error) {
-        return {
+    } catch (err) {
+        error('Error converting to markdown', { error: err instanceof Error ? err.message : String(err) });
+        return {    
             selector,
             html,
             type: 'print' as const,
             format: 'html' as const,
-            error: error instanceof Error ? error.message : 'Unknown error during markdown conversion'
+            error: err instanceof Error ? err.message : 'Unknown error during markdown conversion'
         };
     }
 }; 
