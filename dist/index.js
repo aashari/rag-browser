@@ -7642,9 +7642,10 @@ function setupRequestHandlers(server, tools) {
 
 // src/mcp/server.ts
 async function runServer() {
+  const version = "1.5.0";
   const server = new Server({
     name: "@aashari/rag-browser",
-    version: "1.5.0"
+    version
   }, {
     capabilities: {
       resources: {
@@ -7663,7 +7664,17 @@ async function runServer() {
   console.warn(JSON.stringify({
     jsonrpc: "2.0",
     method: "server.started",
-    id: "startup-1"
+    id: "startup-1",
+    params: {
+      name: "@aashari/rag-browser",
+      version,
+      mode: "MCP Server",
+      capabilities: {
+        resources: true,
+        tools: true,
+        logging: true
+      }
+    }
   }));
 }
 
