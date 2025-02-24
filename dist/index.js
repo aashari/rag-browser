@@ -21582,6 +21582,13 @@ class StdioServerTransport {
   }
 }
 
+// src/config/version.ts
+var VERSION = "1.17.0";
+var [MAJOR, MINOR, PATCH] = VERSION.split(".").map(Number);
+var GIT_VERSION = `v${VERSION}`;
+var PACKAGE_NAME = "@aashari/rag-browser";
+var FULL_NAME = `${PACKAGE_NAME}@${VERSION}`;
+
 // src/mcp/tools.ts
 var commonProperties = {
   url: {
@@ -21651,7 +21658,7 @@ function createToolDefinitions() {
 ` + `- To override this tool, say 'don't use the browser' or similar.
 
 ` + "Give me a task, and I'll jump in with a plan to make it happen!",
-      version: "1.16.0",
+      version: VERSION,
       compatibility: {
         minVersion: "1.0.0",
         deprecatedFeatures: []
@@ -22274,7 +22281,7 @@ ${markdown}`;
         });
       }
     } catch (error2) {
-      console.error("Error in markdown conversion:", error2);
+      info("Error in markdown conversion:", error2);
       results.push({
         selector,
         error: "Element not found or inaccessible",
@@ -22582,7 +22589,7 @@ async function executePlan(page, plan, options) {
     const description = getActionDescription(action);
     const status = { step, totalSteps, action, symbol, description };
     status.result = await executeAction(page, action, options);
-    console.warn(printActionStatus(status));
+    info(printActionStatus(status));
     actionStatuses.push(status);
     if (status.result?.success) {
       plannedActionResults.push({
@@ -22594,7 +22601,7 @@ async function executePlan(page, plan, options) {
     if (!status.result?.success)
       break;
   }
-  console.warn(printActionSummary(actionStatuses));
+  info(printActionSummary(actionStatuses));
   return { actionStatuses, plannedActionResults };
 }
 
@@ -22683,7 +22690,7 @@ async function analyzePage(url, options) {
     if (frame === page.mainFrame()) {
       const frameUrl = frame.url();
       if (frameUrl !== "about:blank") {
-        console.log(`Navigation to: ${frameUrl}`);
+        info(`Navigation to: ${frameUrl}`);
         await page.waitForTimeout(500);
         await page.addInitScript(`
 					window.getFullPath = ${getFullPath.toString()};
@@ -22711,18 +22718,18 @@ async function analyzePage(url, options) {
     if (frame === page.mainFrame()) {
       const frameUrl = frame.url();
       if (frameUrl !== "about:blank") {
-        console.log(`Navigation to: ${frameUrl}`);
+        info(`Navigation to: ${frameUrl}`);
       }
     }
   });
   browser.on("page", async (newPage) => {
     const newUrl = newPage.url();
     if (newUrl && newUrl !== "about:blank") {
-      console.log(`Intercepted popup: ${newUrl}`);
+      info(`Intercepted popup: ${newUrl}`);
       try {
         await page.goto(newUrl);
       } catch (err) {
-        console.error(`Failed to navigate to: ${newUrl}`, err);
+        error(`Failed to navigate to: ${newUrl}`, err);
       }
     }
     await newPage.close().catch(() => {
@@ -23286,11 +23293,9 @@ function setupRequestHandlers(server, tools) {
 
 // src/mcp/server.ts
 async function runServer() {
-  const name = "ai-tools-browser";
-  const version = "1.16.0";
   const server = new Server({
-    name: "@aashari/rag-browser",
-    version
+    name: PACKAGE_NAME,
+    version: VERSION
   }, {
     capabilities: {
       resources: {
@@ -23301,7 +23306,7 @@ async function runServer() {
         caching: false
       },
       tools: {
-        version,
+        version: VERSION,
         features: ["action"]
       },
       logging: {
@@ -23318,8 +23323,8 @@ async function runServer() {
     method: "server.started",
     id: "startup-1",
     params: {
-      name: "@aashari/rag-browser",
-      version,
+      name: PACKAGE_NAME,
+      version: VERSION,
       mode: "MCP Server",
       capabilities: {
         resources: true,

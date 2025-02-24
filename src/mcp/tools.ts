@@ -1,4 +1,8 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { analyzePage } from "../core/browser.js";
+import { validateUrl } from "../utils/security.js";
+import { VERSION } from "../config/version.js";
+import type { BrowserOptions, PageAnalysis } from "../types";
 
 // Common properties shared between tools
 const commonProperties = {
@@ -117,7 +121,7 @@ export function createToolDefinitions(): EnhancedTool[] {
 				"- If I need more info (e.g., search terms), I'll ask.\n" +
 				"- To override this tool, say 'don't use the browser' or similar.\n\n" +
 				"Give me a task, and I'll jump in with a plan to make it happen!",
-			version: "1.16.0",
+			version: VERSION,
 			compatibility: {
 				minVersion: "1.0.0",
 				deprecatedFeatures: [],
@@ -148,7 +152,7 @@ export function createToolDefinitions(): EnhancedTool[] {
 export const tools = {
 	action: {
 		name: "action",
-		version: "1.16.0",
+		version: VERSION,
 		// ... existing code ...
 	}
 };

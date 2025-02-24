@@ -1,6 +1,7 @@
 import type { Page } from "playwright";
 import type { MarkdownAction, ActionResult, BrowserOptions, PlannedActionResult } from "../../types";
 import { turndownService } from "../../utils/markdown";
+import { info } from "../../utils/logging";
 
 export async function executeMarkdownAction(
     page: Page,
@@ -33,7 +34,7 @@ export async function executeMarkdownAction(
                 });
             }
         } catch (error) {
-            console.error('Error in markdown conversion:', error);
+            info('Error in markdown conversion:', error);
             results.push({ 
                 selector, 
                 error: "Element not found or inaccessible", 

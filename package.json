@@ -1,6 +1,6 @@
 {
   "name": "@aashari/rag-browser",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "description": "A Model Context Protocol server for browser automation using Playwright.",
   "license": "MIT",
   "type": "module",
@@ -14,14 +14,15 @@
   ],
   "scripts": {
     "browser": "bun run src/cli/index.ts",
-    "build": "bun build ./src/index.ts --outdir ./dist --target=node --external playwright",
+    "build": "bun build ./src/index.ts --outdir ./dist --target=node --external playwright && mkdir -p dist/config && cp src/config/version.ts dist/config/version.js",
     "clean": "((lsof -ti:3000,5173 | xargs kill -9) || true) && ((pkill -f 'bun run src/index.ts') || true) && ((pkill -f 'rag-browser') || true)",
     "docs:generate": "repomix --ignore '**/*.md,.cursorrules,**/*.log,**/*.lock,**/*.json'",
     "inspector": "bun run clean && npx @modelcontextprotocol/inspector bun run start",
     "prepublishOnly": "npm run build",
     "start": "bun run src/index.ts",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "version:sync": "bun run scripts/sync-version.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.5.0",

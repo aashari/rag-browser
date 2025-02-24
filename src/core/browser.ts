@@ -75,7 +75,7 @@ export async function analyzePage(url: string, options: BrowserOptions): Promise
 		if (frame === page.mainFrame()) {
 			const frameUrl = frame.url();
 			if (frameUrl !== 'about:blank') {
-				console.log(`Navigation to: ${frameUrl}`);
+				info(`Navigation to: ${frameUrl}`);
 				// Re-inject utility functions after a short delay
 				await page.waitForTimeout(500);
 				await page.addInitScript(`
@@ -108,7 +108,7 @@ export async function analyzePage(url: string, options: BrowserOptions): Promise
 		if (frame === page.mainFrame()) {
 			const frameUrl = frame.url();
 			if (frameUrl !== 'about:blank') {
-				console.log(`Navigation to: ${frameUrl}`);
+				info(`Navigation to: ${frameUrl}`);
 			}
 		}
 	});
@@ -117,11 +117,11 @@ export async function analyzePage(url: string, options: BrowserOptions): Promise
 	browser.on('page', async (newPage) => {
 		const newUrl = newPage.url();
 		if (newUrl && newUrl !== 'about:blank') {
-			console.log(`Intercepted popup: ${newUrl}`);
+			info(`Intercepted popup: ${newUrl}`);
 			try {
 				await page.goto(newUrl);
 			} catch (err) {
-				console.error(`Failed to navigate to: ${newUrl}`, err);
+				error(`Failed to navigate to: ${newUrl}`, err);
 			}
 		}
 		await newPage.close().catch(() => {});

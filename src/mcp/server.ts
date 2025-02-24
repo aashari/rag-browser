@@ -4,14 +4,13 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createToolDefinitions } from "./tools.js";
 import { setupRequestHandlers } from "./requestHandler.js";
+import { VERSION, PACKAGE_NAME } from "../config/version.js";
 
 export async function runServer(): Promise<void> {
-	const name = "ai-tools-browser";
-	const version = "1.16.0";
 	const server = new Server(
 		{
-			name: "@aashari/rag-browser",
-			version,
+			name: PACKAGE_NAME,
+			version: VERSION,
 		},
 		{
 			capabilities: {
@@ -23,7 +22,7 @@ export async function runServer(): Promise<void> {
 					caching: false,   // Future support for resource caching
 				},
 				tools: {
-					version,      // Explicit tool versioning tied to server version
+					version: VERSION,      // Explicit tool versioning tied to server version
 					features: ["action"], // Supported tool capabilities
 				},
 				logging: {
@@ -50,8 +49,8 @@ export async function runServer(): Promise<void> {
 			method: "server.started",
 			id: "startup-1",
 			params: {
-				name: "@aashari/rag-browser",
-				version,
+				name: PACKAGE_NAME,
+				version: VERSION,
 				mode: "MCP Server",
 				capabilities: {
 					resources: true,

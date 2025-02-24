@@ -3,6 +3,7 @@ import type { ActionStatus, BrowserOptions, Plan, PlannedActionResult } from "..
 import { getActionSymbol, getActionDescription } from "../utils/actions";
 import { executeAction } from "./handlers";
 import { printActionStatus, printActionSummary } from "../utils/output";
+import { info } from "../utils/logging";
 
 export async function executePlan(
     page: Page,
@@ -23,7 +24,7 @@ export async function executePlan(
         const status: ActionStatus = { step, totalSteps, action, symbol, description };
 
         status.result = await executeAction(page, action, options);
-        console.warn(printActionStatus(status));
+        info(printActionStatus(status));
         actionStatuses.push(status);
 
         // Track success for all actions
@@ -42,6 +43,6 @@ export async function executePlan(
         if (!status.result?.success) break;
     }
 
-    console.warn(printActionSummary(actionStatuses));
+    info(printActionSummary(actionStatuses));
     return { actionStatuses, plannedActionResults };
 } 
