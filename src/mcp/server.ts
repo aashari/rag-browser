@@ -7,7 +7,7 @@ import { setupRequestHandlers } from "./requestHandler.js";
 
 export async function runServer(): Promise<void> {
 	const name = "ai-tools-browser";
-	const version = "1.14.0";
+	const version = "1.15.0";
 	const server = new Server(
 		{
 			name: "@aashari/rag-browser",

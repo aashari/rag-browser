@@ -65,7 +65,7 @@ function createTool(name: string, description: string, additionalProps: SchemaPr
 	return {
 		name,
 		description,
-		version: "1.14.0",
+		version: "1.15.0",
 		compatibility: {
 			minVersion: "1.0.0",
 			deprecatedFeatures: [], // No deprecated features yet
@@ -305,8 +305,58 @@ export function createToolDefinitions(): EnhancedTool[] {
 				"4. **Error Checking**:\n" +
 				"   ```json\n" +
 				"   {\"type\": \"print\", \"elements\": [\".error-message, .alert, .notification\"]}\n" +
-				"   ```\n",
-			version: "1.14.0",
+				"   ```\n\n" +
+				"### Common Authentication Flows:\n\n" +
+				"1. **Twitter/X Authentication**:\n" +
+				"   ```json\n" +
+				"   {\n" +
+				"     \"url\": \"https://x.com\",\n" +
+				"     \"plan\": {\n" +
+				"       \"actions\": [\n" +
+				"         // Wait for either timeline or login button\n" +
+				"         {\"type\": \"wait\", \"elements\": [\"[aria-label='Timeline: Your Home Timeline'], [data-testid='loginButton']\", \"timeout\": -1]},\n" +
+				"         // Check if we're logged in by looking for timeline\n" +
+				"         {\"type\": \"print\", \"elements\": [\"[aria-label='Timeline: Your Home Timeline']\"]}\n" +
+				"       ]\n" +
+				"     }\n" +
+				"   }\n" +
+				"   ```\n" +
+				"   This plan will:\n" +
+				"   - Wait indefinitely for either the timeline or login button\n" +
+				"   - Confirm authentication by checking for timeline presence\n" +
+				"   - Allow manual login if needed\n\n" +
+				"2. **Slack Authentication**:\n" +
+				"   ```json\n" +
+				"   {\n" +
+				"     \"url\": \"https://app.slack.com/client\",\n" +
+				"     \"plan\": {\n" +
+				"       \"actions\": [\n" +
+				"         // Wait for either workspace content or sign-in form\n" +
+				"         {\"type\": \"wait\", \"elements\": [\".p-workspace__primary_view_contents, .p-signin_form\", \"timeout\": -1]},\n" +
+				"         // Verify authentication by checking for workspace content\n" +
+				"         {\"type\": \"print\", \"elements\": [\".p-workspace__primary_view_contents, .p-workspace__banner\"]}\n" +
+				"       ]\n" +
+				"     }\n" +
+				"   }\n" +
+				"   ```\n" +
+				"   This plan will:\n" +
+				"   - Wait indefinitely for either workspace content or login form\n" +
+				"   - Confirm authentication by checking for workspace content\n" +
+				"   - Allow manual login if needed\n\n" +
+				"### Authentication Best Practices:\n\n" +
+				"1. **Use Infinite Wait**:\n" +
+				"   - Set `timeout: -1` for authentication flows\n" +
+				"   - Allows time for manual login\n" +
+				"   - Prevents premature timeouts\n\n" +
+				"2. **Check Multiple States**:\n" +
+				"   - Wait for both authenticated and unauthenticated elements\n" +
+				"   - Use comma-separated selectors for alternatives\n" +
+				"   - Verify final state with print action\n\n" +
+				"3. **Handle Different Paths**:\n" +
+				"   - Account for various login methods\n" +
+				"   - Check for error messages\n" +
+				"   - Verify successful authentication\n",
+			version: "1.15.0",
 			compatibility: {
 				minVersion: "1.0.0",
 				deprecatedFeatures: [],
@@ -340,13 +390,13 @@ export function createToolDefinitions(): EnhancedTool[] {
 export const tools = {
 	action: {
 		name: "action",
-		version: "1.14.0",
+		version: "1.15.0",
 		// ... existing code ...
 	}
 };
 
 export const compatibility = {
 	minimumVersion: "1.0.0",
-	version: "1.14.0",
+	version: "1.15.0",
 	// ... existing code ...
 };
