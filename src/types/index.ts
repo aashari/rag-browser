@@ -48,6 +48,7 @@ export type KeyPressAction = {
 export type PrintAction = {
 	type: "print";
 	elements: string[];
+	format?: "html" | "markdown";
 };
 
 export type MarkdownAction = {
@@ -55,7 +56,7 @@ export type MarkdownAction = {
 	elements: string[];
 };
 
-export type Action = WaitAction | ClickAction | TypingAction | KeyPressAction | PrintAction | MarkdownAction;
+export type Action = WaitAction | ClickAction | TypingAction | KeyPressAction | PrintAction;
 
 export type Plan = {
 	actions: Action[];
@@ -64,7 +65,8 @@ export type Plan = {
 export interface PlannedActionResult {
 	selector: string;
 	html: string;
-	type: 'print' | 'markdown';
+	type: 'print';
+	format?: 'html' | 'markdown';
 	error?: string;
 	metadata?: {
 		tagName: string;

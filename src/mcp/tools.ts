@@ -138,8 +138,7 @@ export function createToolDefinitions(): EnhancedTool[] {
 							"- `click`: Clicks an element (e.g., `element: 'button.submit'`).\n" +
 							"- `typing`: Types text (e.g., `element: 'input', value: 'hello'`).\n" +
 							"- `keyPress`: Presses a key (e.g., `key: 'Enter'`).\n" +
-							"- `print`: Gets raw HTML from elements.\n" +
-							"- `markdown`: Extracts content as markdown.\n" +
+							"- `print`: Gets content from elements. Use `format: 'html'` for raw HTML or `format: 'markdown'` (default) for markdown.\n" +
 							"Use CSS selectors (e.g., '#id', '.class'). I'll build this for you based on your request."
 					}
 				},

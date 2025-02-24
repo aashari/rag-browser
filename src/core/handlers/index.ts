@@ -1,10 +1,9 @@
 import type { Page } from "playwright";
-import type { Action, ActionResult, BrowserOptions, WaitAction, ClickAction, TypingAction, PrintAction, MarkdownAction, KeyPressAction } from "../../types";
+import type { Action, ActionResult, BrowserOptions, WaitAction, ClickAction, TypingAction, KeyPressAction } from "../../types";
 import { executeWaitAction } from "./wait";
 import { executeClickAction } from "./click";
 import { executeTypingAction } from "./typing";
 import { executePrintAction } from "./print";
-import { executeMarkdownAction } from "./markdown";
 import { executeKeyPressAction } from "./keyPress";
 
 type ActionHandler<T extends Action> = (page: Page, action: T, options: BrowserOptions) => Promise<ActionResult>;
@@ -28,11 +27,7 @@ export const actionHandlers: Record<string, ActionHandler<Action>> = {
     },
     print: (page: Page, action: Action, options: BrowserOptions) => {
         if (action.type !== "print") throw new Error("Invalid action type");
-        return executePrintAction(page, action as PrintAction, options);
-    },
-    markdown: (page: Page, action: Action, options: BrowserOptions) => {
-        if (action.type !== "markdown") throw new Error("Invalid action type");
-        return executeMarkdownAction(page, action as MarkdownAction, options);
+        return executePrintAction(page, action, options);
     },
 };
 
@@ -55,4 +50,4 @@ export async function executeAction(page: Page, action: Action, options: Browser
     }
 }
 
-export { executeWaitAction, executeClickAction, executeTypingAction, executePrintAction, executeMarkdownAction, executeKeyPressAction }; 
+export { executeWaitAction, executeClickAction, executeTypingAction, executePrintAction, executeKeyPressAction }; 

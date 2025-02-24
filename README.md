@@ -101,7 +101,7 @@ rag-browser --url "https://wikipedia.org" --plan '{
     {"type": "typing", "element": "#searchInput", "value": "AI Tools"},
     {"type": "keyPress", "key": "Enter"},
     {"type": "wait", "elements": [".mw-search-results-container"]},
-    {"type": "markdown", "elements": [".mw-search-result"]}
+    {"type": "print", "elements": [".mw-search-result"], "format": "markdown"}
   ]
 }'
 
@@ -168,14 +168,13 @@ A unified tool for both analysis and automation:
 
 ### Supported Actions
 
-| Action     | Description                                                           | Required Fields                 | Optional Fields   |
-| ---------- | --------------------------------------------------------------------- | ------------------------------ | ----------------- |
-| `wait`     | Wait for elements to appear (supports infinite wait with timeout: -1) | `elements: string[]`           | `timeout: number` |
-| `click`    | Click element                                                         | `element: string`              | -                 |
+| Action     | Description                                                           | Required Fields              | Optional Fields   |
+| ---------- | --------------------------------------------------------------------- | ---------------------------- | ----------------- |
+| `wait`     | Wait for elements to appear (supports infinite wait with timeout: -1) | `elements: string[]`         | `timeout: number` |
+| `click`    | Click element                                                         | `element: string`            | -                 |
 | `typing`   | Type text                                                             | `element: string`, `value: string` | `delay: number`   |
-| `keyPress` | Press keyboard key                                                    | `key: string`                  | `element: string` |
-| `print`    | Capture raw HTML (use only when HTML structure analysis is needed)    | `elements: string[]`           | -                 |
-| `markdown` | Convert content to markdown format (preferred for content extraction)  | `elements: string[]`           | -                 |
+| `keyPress` | Press keyboard key                                                    | `key: string`                | `element: string` |
+| `print`    | Capture content from elements                                         | `elements: string[]`         | `format: 'html' \| 'markdown'` |
 
 ### Claude Desktop Integration
 

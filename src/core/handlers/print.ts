@@ -1,55 +1,79 @@
 import type { Page } from "playwright";
 import type { PrintAction, ActionResult, BrowserOptions, PlannedActionResult } from "../../types";
 import { info } from "../../utils/logging";
+import { createActionResult } from "../../utils/handlers";
+import { convertToMarkdown } from "../../utils/markdown";
 
 // Shared function to capture HTML content from elements
-export async function captureElementsHtml(page: Page, selectors: string[]): Promise<PlannedActionResult[]> {
+export async function captureElementsHtml(page: Page, selectors: string[], format: 'html' | 'markdown' = 'markdown'): Promise<PlannedActionResult[]> {
     const results: PlannedActionResult[] = [];
     
     for (const selector of selectors) {
         try {
             info('Searching for elements:', { selector });
-            const elements = await page.$$(selector);
             
-            if (elements.length === 0) {
+            // Use page.evaluate to get HTML content directly
+            const content = await page.evaluate((sel) => {
+                const elements = Array.from(document.querySelectorAll(sel));
+                if (elements.length === 0) return '';
+                
+                // Combine HTML from all matching elements
+                return elements
+                    .map(el => el.outerHTML)
+                    .join('\n');
+            }, selector);
+            
+            if (!content) {
                 info('No elements found for selector:', { selector });
                 results.push({ 
                     selector, 
                     error: "No elements found", 
                     type: 'print' as const, 
-                    html: '' 
+                    html: '',
+                    format 
                 });
                 continue;
             }
 
-            info('Found elements:', { count: elements.length, selector });
+            info('Successfully captured HTML content');
             
-            for (const element of elements) {
+            // Convert to markdown if requested
+            if (format === 'markdown') {
                 try {
-                    const html = await element.evaluate(el => el.outerHTML);
-                    info('Successfully captured HTML for element');
-                    results.push({ 
-                        selector, 
-                        html,
-                        type: 'print' as const
+                    const result = convertToMarkdown(content, selector);
+                    info('Successfully converted content to markdown');
+                    results.push({
+                        ...result,
+                        type: 'print' as const,
+                        format
                     });
-                } catch (evalError) {
-                    info('Error evaluating element:', { error: evalError });
+                } catch (conversionError) {
+                    info('Error converting to markdown, falling back to HTML:', { error: conversionError });
                     results.push({ 
                         selector, 
-                        error: evalError instanceof Error ? evalError.message : "Failed to capture element HTML", 
-                        type: 'print' as const, 
-                        html: '' 
+                        html: content,
+                        type: 'print' as const,
+                        format: 'html',
+                        error: conversionError instanceof Error ? conversionError.message : "Failed to convert to markdown"
                     });
                 }
+            } else {
+                results.push({ 
+                    selector, 
+                    html: content,
+                    type: 'print' as const,
+                    format
+                });
             }
+            
         } catch (error) {
-            info('Error finding elements:', { error });
+            info('Error capturing content:', { error });
             results.push({ 
                 selector, 
-                error: error instanceof Error ? error.message : "Element not found or inaccessible", 
+                error: error instanceof Error ? error.message : "Failed to capture element content", 
                 type: 'print' as const, 
-                html: '' 
+                html: '',
+                format 
             });
         }
     }
@@ -62,21 +86,6 @@ export async function executePrintAction(
     action: PrintAction,
     _options: BrowserOptions
 ): Promise<ActionResult> {
-    const results = await captureElementsHtml(page, action.elements);
-
-    const successfulResults = results.filter(r => !r.error && r.html);
-    const failedResults = results.filter(r => r.error);
-
-    return {
-        success: successfulResults.length > 0,
-        message: successfulResults
-            .map(r => `Content from ${r.selector}:\n=================\n${r.html}\n=================\n`)
-            .join("\n"),
-        warning: failedResults.length > 0
-            ? `Failed to capture some elements: ${failedResults
-                .map((r) => `${r.selector} (${r.error})`)
-                .join(", ")}`
-            : undefined,
-        data: results,
-    };
+    const results = await captureElementsHtml(page, action.elements, action.format);
+    return createActionResult(results, action.format);
 }
