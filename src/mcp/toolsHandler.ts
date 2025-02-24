@@ -1,7 +1,7 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { analyzePage } from "../core/browser";
-import { printAnalysis } from "../cli/printer";
+import { printAnalysis } from "../utils/output";
 import type { Plan, Action, SelectorMode } from "../types";
 import { storeAnalysis } from "./resources";
 import { DEFAULT_TIMEOUT, VISIBLE_MODE_SLOW_MO } from "../config/constants";

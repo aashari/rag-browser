@@ -1,7 +1,8 @@
 import type { Page } from "playwright";
 import type { ActionStatus, BrowserOptions, Plan, PlannedActionResult } from "../types";
-import { getActionSymbol, getActionDescription, printActionStatus, printActionSummary } from "../utils/printer";
+import { getActionSymbol, getActionDescription } from "../utils/actions";
 import { executeAction } from "./handlers";
+import { printActionStatus, printActionSummary } from "../utils/output";
 
 export async function executePlan(
     page: Page,

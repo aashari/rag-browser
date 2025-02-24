@@ -110,14 +110,11 @@ export function createToolDefinitions(): EnhancedTool[] {
 				"   - Required: `key` (key name)\n" +
 				"   - Optional: `element` (CSS selector to focus)\n" +
 				"   - Example: `{'type': 'keyPress', 'key': 'Enter', 'element': '#search'}`\n" +
-				"5. **submit**: Submits a form or clicks a submit-like element.\n" +
-				"   - Required: `element` (CSS selector)\n" +
-				"   - Example: `{'type': 'submit', 'element': 'form#login'}`\n" +
-				"6. **print**: Captures raw HTML of specified elements.\n" +
+				"5. **print**: Captures raw HTML of specified elements.\n" +
 				"   - Required: `elements` (array of CSS selectors)\n" +
 				"   - Example: `{'type': 'print', 'elements': ['#content']}`\n" +
 				"   - Use when HTML structure analysis is needed\n" +
-				"7. **markdown**: Converts elements to markdown format.\n" +
+				"6. **markdown**: Converts elements to markdown format.\n" +
 				"   - Required: `elements` (array of CSS selectors)\n" +
 				"   - Example: `{'type': 'markdown', 'elements': ['#content']}`\n" +
 				"   - Preferred for content extraction (cleaner output)\n\n" +
@@ -162,7 +159,6 @@ export function createToolDefinitions(): EnhancedTool[] {
 							"- **click**: `element` (string) - Clicks the specified CSS selector.\n" +
 							"- **typing**: `element` (string), `value` (string), `delay?` (number) - Types the value into the element.\n" +
 							"- **keyPress**: `key` (string), `element?` (string) - Presses the key, optionally focusing an element first.\n" +
-							"- **submit**: `element` (string) - Submits the form or clicks the element.\n" +
 							"- **print**: `elements` (string[]) - Captures raw HTML of the listed selectors. Use only when HTML structure analysis is needed.\n" +
 							"- **markdown**: `elements` (string[]) - Converts content to markdown format. Preferred for content extraction.\n\n" +
 							"### Guidelines:\n" +

@@ -1,96 +1,79 @@
-export interface Link {
+export type Link = {
 	title: string;
 	url: string;
 	selector: string;
-}
+};
 
-export interface Button {
+export type Button = {
 	text: string;
 	selector: string;
-}
+};
 
-export interface Input {
-	label: string;
+export type Input = {
 	type: string;
+	label?: string;
+	id?: string;
 	selector: string;
 	isVisible: boolean;
-	id?: string;
-	role?: string;
-	name?: string;
-	value?: string;
-	placeholder?: string;
-	needsSpecialHandling?: boolean;
-}
+};
 
-export interface WaitAction {
+export type WaitAction = {
 	type: "wait";
 	elements: string[];
-}
+};
 
-export interface ClickAction {
+export type ClickAction = {
 	type: "click";
 	element: string;
-}
+};
 
-export interface TypingAction {
+export type TypingAction = {
 	type: "typing";
 	element: string;
 	value: string;
 	delay?: number;
-}
+};
 
-export interface KeyPressAction {
+export type KeyPressAction = {
 	type: "keyPress";
 	key: string;
 	element?: string;
-}
+};
 
-export interface SubmitAction {
-	type: "submit";
-	element: string;
-}
-
-export interface PrintAction {
+export type PrintAction = {
 	type: "print";
 	elements: string[];
-}
+};
 
-export interface MarkdownAction {
+export type MarkdownAction = {
 	type: "markdown";
 	elements: string[];
-}
+};
 
-export type Action = WaitAction | ClickAction | TypingAction | KeyPressAction | SubmitAction | PrintAction | MarkdownAction;
+export type Action = WaitAction | ClickAction | TypingAction | KeyPressAction | PrintAction | MarkdownAction;
 
-export interface Plan {
+export type Plan = {
 	actions: Action[];
-}
+};
 
 export type PlannedActionResult = {
+	type?: "print" | "markdown";
 	selector: string;
 	error?: string;
-} & (
-	| {
-			type: 'print';
-			html: string;
-	}
-	| {
-			type: 'markdown';
-			html: string;
-	}
-);
+	html?: string;
+};
 
-export interface PageAnalysis {
+export type PageAnalysis = {
 	title: string;
-	description: string;
-	links: Link[];
-	buttons: Button[];
+	description?: string;
 	inputs: Input[];
+	buttons: Button[];
+	links: Link[];
 	plannedActions?: PlannedActionResult[];
 	cacheKey?: string;
 	timestamp?: number;
 	expiresAt?: number;
-}
+};
 
 export type SelectorMode = "full" | "simple";
 
@@ -102,13 +85,13 @@ export interface BrowserOptions {
 	plan?: Plan;
 }
 
-export interface ActionResult {
+export type ActionResult = {
 	success: boolean;
 	message: string;
 	warning?: string;
 	error?: string;
 	data?: PlannedActionResult[];
-}
+};
 
 export interface ActionStatus {
 	step: number;

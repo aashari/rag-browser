@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { chromium } from 'playwright';
-import { executeAction } from '../src/core/actions';
+import { executeAction } from '../src/core/handlers';
 import type { Action } from '../src/types';
 import { debug } from '../src/utils/logging';
 
@@ -45,7 +45,7 @@ test('executeAction - typing action', async () => {
   const typingResult = await executeAction(page, typingAction, { headless: true });
   debug('Typing action complete', { result: typingResult });
   expect(typingResult.success).toBe(true);
-  expect(typingResult.message).toBe('Text entered');
+  expect(typingResult.message).toBe('Text input successful');
   
   // Verify the value was entered before proceeding
   const inputValue = await page.$eval('#testInput', el => (el as HTMLInputElement).value);

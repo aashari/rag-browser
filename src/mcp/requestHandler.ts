@@ -16,7 +16,7 @@ import {
 	createResourceDescription,
 	initializeResources
 } from "./resources.js";
-import { printAnalysis } from "../cli/printer.js";
+import { printAnalysis } from "../utils/output";
 
 export function setupRequestHandlers(server: Server, tools: Tool[]): void {
 	// Initialize resources with server instance

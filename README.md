@@ -24,11 +24,13 @@ Choose the method that best suits your needs:
 #### 1. Direct Execution (No Installation)
 
 Using Bun (Recommended):
+
 ```bash
 bunx github:aashari/rag-browser [--url "https://example.com"]
 ```
 
 Using Node.js:
+
 ```bash
 npx -y github:aashari/rag-browser [--url "https://example.com"]
 ```
@@ -106,16 +108,16 @@ rag-browser --url "https://wikipedia.org" --plan '{
 
 ### CLI Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--url` | Target webpage URL | Required |
-| `--headless` | Run without UI | false |
-| `--json` | JSON output format | false (pretty print) |
-| `--simple-selectors` | Use simplified selectors | false (full paths) |
-| `--plan` | Action sequence to execute | None |
-| `--inputs` | Show all input elements | false (top 5) |
-| `--buttons` | Show all buttons | false (top 5) |
-| `--links` | Show all links | false (top 5) |
+| Option               | Description                | Default              |
+| -------------------- | -------------------------- | -------------------- |
+| `--url`              | Target webpage URL         | Required             |
+| `--headless`         | Run without UI             | false                |
+| `--json`             | JSON output format         | false (pretty print) |
+| `--simple-selectors` | Use simplified selectors   | false (full paths)   |
+| `--plan`             | Action sequence to execute | None                 |
+| `--inputs`           | Show all input elements    | false (top 5)        |
+| `--buttons`          | Show all buttons           | false (top 5)        |
+| `--links`            | Show all links             | false (top 5)        |
 
 ## 🤖 MCP Server Mode
 
@@ -158,19 +160,19 @@ A unified tool for both analysis and automation:
 
 ### Supported Actions
 
-| Action | Description | Required Fields | Optional Fields |
-|--------|-------------|-----------------|-----------------|
-| `wait` | Wait for elements | `elements: string[]` | - |
-| `click` | Click element | `element: string` | - |
-| `typing` | Type text | `element: string`, `value: string` | `delay: number` |
-| `keyPress` | Press keyboard key | `key: string` | `element: string` |
-| `submit` | Submit form | `element: string` | - |
-| `print` | Capture raw HTML (use only when HTML structure analysis is needed) | `elements: string[]` | - |
-| `markdown` | Convert content to markdown format (preferred for content extraction) | `elements: string[]` | - |
+| Action     | Description                                                           | Required Fields                    | Optional Fields   |
+| ---------- | --------------------------------------------------------------------- | ---------------------------------- | ----------------- |
+| `wait`     | Wait for elements                                                     | `elements: string[]`               | -                 |
+| `click`    | Click element                                                         | `element: string`                  | -                 |
+| `typing`   | Type text                                                             | `element: string`, `value: string` | `delay: number`   |
+| `keyPress` | Press keyboard key                                                    | `key: string`                      | `element: string` |
+| `print`    | Capture raw HTML (use only when HTML structure analysis is needed)    | `elements: string[]`               | -                 |
+| `markdown` | Convert content to markdown format (preferred for content extraction) | `elements: string[]`               | -                 |
 
 ### Claude Desktop Integration
 
 Add to your `claude_desktop_config.json`:
+
 ```json
 {
   "mcpServers": {
@@ -208,6 +210,7 @@ bun run clean       # Clean processes
 ### Configuration
 
 Key settings in `src/config/constants.ts`:
+
 ```typescript
 export const DEFAULT_TIMEOUT = 30000;
 export const MAX_STORED_ANALYSES = 10;

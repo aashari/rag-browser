@@ -1,5 +1,4 @@
 import type { Action } from "../types";
-import chalk from "chalk";
 
 export function getActionSymbol(action: Action): string {
 	switch (action.type) {
@@ -11,8 +10,6 @@ export function getActionSymbol(action: Action): string {
 			return "⌨️";
 		case "keyPress":
 			return "🔤";
-		case "submit":
-			return "📤";
 		case "print":
 			return "📝";
 		case "markdown":
@@ -25,21 +22,17 @@ export function getActionSymbol(action: Action): string {
 export function getActionDescription(action: Action): string {
 	switch (action.type) {
 		case "wait":
-			return `Wait for elements: ${chalk.cyan(action.elements.join(", "))}`;
+			return `Wait for elements: ${action.elements.join(", ")}`;
 		case "click":
-			return `Click element: ${chalk.cyan(action.element)}`;
-		// Simplified typing action - pressKey and submit are now handled by separate actions
+			return `Click element: ${action.element}`;
 		case "typing":
-			const extraInfo = action.delay ? chalk.gray(` (delay ${action.delay}ms)`) : "";
-			return `Type ${chalk.green(`"${action.value}"`)} into ${chalk.cyan(action.element)}${extraInfo}`;
+			return `Type "${action.value}" into: ${action.element}`;
 		case "keyPress":
-			return `Press ${chalk.yellow(action.key)}${action.element ? ` on ${chalk.cyan(action.element)}` : ""}`;
-		case "submit":
-			return `Submit form: ${chalk.cyan(action.element)}`;
+			return `Press ${action.key}${action.element ? ` on ${action.element}` : ""}`;
 		case "print":
-			return `Print HTML for: ${chalk.cyan(action.elements.join(", "))}`;
+			return `Print HTML content of: ${action.elements.join(", ")}`;
 		case "markdown":
-			return `Convert to Markdown: ${chalk.cyan(action.elements.join(", "))}`;
+			return `Convert HTML to Markdown: ${action.elements.join(", ")}`;
 		default:
 			return "Unknown action";
 	}

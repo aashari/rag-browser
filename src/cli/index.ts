@@ -2,8 +2,7 @@
 
 import { analyzePage } from "../core/browser";
 import type { Plan } from "../types";
-import { printAnalysis, printPlan } from "./printer";
-import type { OutputFormat } from "./printer";
+import { printAnalysis, printPlan, type OutputFormat } from "../utils/output";
 import { DEFAULT_TIMEOUT, VISIBLE_MODE_SLOW_MO } from "../config/constants";
 import { fileURLToPath } from 'url';
 
