@@ -138,22 +138,16 @@ export async function executeAction(page: Page, action: Action, options: Browser
 			}
 
 			case "print": {
-				const results = [];
+				const results: PlannedActionResult[] = [];
 				for (const selector of action.elements) {
 					try {
-						debugLog(`Getting HTML for selector: ${selector}`);
-						// Get all matching elements
 						const elements = await page.$$(selector);
-						debugLog(`Found ${elements.length} elements matching ${selector}`);
-
 						for (const element of elements) {
 							const html = await element.evaluate(el => el.outerHTML);
-							debugLog(`Print HTML result: ${html.substring(0, 100)}...`);
 							results.push({ selector, html, type: 'print' as const });
 						}
 					} catch (_error) {
-						debugLog(`Error getting HTML for selector: ${selector} - ${_error instanceof Error ? _error.message : String(_error)}`);
-						results.push({ selector, error: "Element not found or inaccessible" });
+						results.push({ selector, error: "Element not found or inaccessible", type: 'print' as const, html: '' });
 					}
 				}
 				return {
@@ -173,24 +167,17 @@ export async function executeAction(page: Page, action: Action, options: Browser
 			}
 
 			case "markdown": {
-				const results = [];
+				const results: PlannedActionResult[] = [];
 				for (const selector of action.elements) {
 					try {
-						debugLog(`Getting HTML for selector: ${selector}`);
-						// Get all matching elements
 						const elements = await page.$$(selector);
-						debugLog(`Found ${elements.length} elements matching ${selector}`);
-						
 						for (const element of elements) {
 							const html = await element.evaluate(el => el.outerHTML);
-							debugLog(`Converting HTML to Markdown: ${html.substring(0, 100)}...`);
 							const markdown = turndownService.turndown(html);
-							debugLog(`Markdown result: ${markdown.substring(0, 100)}...`);
-							results.push({ selector, html: markdown });
+							results.push({ selector, html: markdown, type: 'markdown' as const });
 						}
 					} catch (_error) {
-						debugLog(`Error getting HTML for selector: ${selector} - ${_error instanceof Error ? _error.message : String(_error)}`);
-						results.push({ selector, error: "Element not found or inaccessible" });
+						results.push({ selector, error: "Element not found or inaccessible", type: 'markdown' as const, html: '' });
 					}
 				}
 				return {
