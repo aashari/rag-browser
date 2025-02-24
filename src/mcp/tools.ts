@@ -65,7 +65,7 @@ function createTool(name: string, description: string, additionalProps: SchemaPr
 	return {
 		name,
 		description,
-		version: "1.15.0",
+		version: "1.16.0",
 		compatibility: {
 			minVersion: "1.0.0",
 			deprecatedFeatures: [], // No deprecated features yet
@@ -117,7 +117,7 @@ export function createToolDefinitions(): EnhancedTool[] {
 				"- If I need more info (e.g., search terms), I'll ask.\n" +
 				"- To override this tool, say 'don't use the browser' or similar.\n\n" +
 				"Give me a task, and I'll jump in with a plan to make it happen!",
-			version: "1.15.0",
+			version: "1.16.0",
 			compatibility: {
 				minVersion: "1.0.0",
 				deprecatedFeatures: [],
@@ -148,13 +148,13 @@ export function createToolDefinitions(): EnhancedTool[] {
 export const tools = {
 	action: {
 		name: "action",
-		version: "1.15.0",
+		version: "1.16.0",
 		// ... existing code ...
 	}
 };
 
 export const compatibility = {
 	minimumVersion: "1.0.0",
-	version: "1.15.0",
+	version: "1.16.0",
 	// ... existing code ...
 };
