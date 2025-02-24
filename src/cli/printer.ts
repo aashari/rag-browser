@@ -64,8 +64,12 @@ export function printAnalysis(analysis: PageAnalysis, format: OutputFormat = "pr
 	output += `\n📄 ${chalk.bold("Page Analysis:")}\n\n`;
 	output += `${chalk.bold("Title:")} ${chalk.cyan(analysis.title)}\n`;
 	if (analysis.description) {
-		output += `${chalk.bold("Description:")} ${chalk.gray(analysis.description)}\n\n`;
+		output += `${chalk.bold("Description:")} ${chalk.gray(analysis.description)}\n`;
 	}
+
+	// Page elements summary first
+	output += `\n${chalk.bold("Page Elements Summary:")}\n`;
+	output += chalk.gray("=".repeat(50)) + "\n";
 
 	// Inputs summary
 	if (analysis.inputs?.length) {
@@ -134,19 +138,45 @@ export function printAnalysis(analysis: PageAnalysis, format: OutputFormat = "pr
 		}
 	}
 
-	// Print action results if available
+	// Print action results after page elements
 	if (analysis.plannedActions?.length) {
-		output += `\n${chalk.bold("Print Action Results:")}\n`;
-		analysis.plannedActions.forEach((result) => {
-			output += `\n🖨️  ${chalk.bold(result.selector)}\n`;
-			if (result.html) {
-				output += chalk.gray(`  HTML: ${result.html}\n`);
-			}
-			if (result.error) {
+		const results = analysis.plannedActions.filter(r => !r.error);
+		const errorResults = analysis.plannedActions.filter(r => r.error);
+
+		if (results.length) {
+			output += `\n\n${chalk.bold("Action Results:")}\n`;
+			output += chalk.yellow("=".repeat(80)) + "\n\n";
+			results.forEach((result) => {
+				if (result.html) {
+					if (result.selector.includes('print')) {
+						// For print action, show both HTML and markdown
+						output += chalk.bold("HTML Output:") + "\n";
+						output += chalk.gray(result.rawHtml || '') + "\n\n";
+						output += chalk.bold("Markdown Output:") + "\n";
+					}
+					// Remove duplicate link references
+					const lines = result.html.split('\n');
+					const seenRefs = new Set<string>();
+					const uniqueLines = lines.filter(line => {
+						if (line.match(/^\[.*\]:/)) {
+							if (seenRefs.has(line)) return false;
+							seenRefs.add(line);
+						}
+						return true;
+					});
+					output += uniqueLines.join('\n') + "\n";
+				}
+			});
+			output += chalk.yellow("=".repeat(80)) + "\n";
+		}
+
+		if (errorResults.length) {
+			output += `\n${chalk.bold("Action Errors:")}\n`;
+			errorResults.forEach((result) => {
+				output += `\n❌ ${chalk.bold(result.selector)}\n`;
 				output += chalk.red(`  Error: ${result.error}\n`);
-			}
-		});
-		output += "\n";
+			});
+		}
 	}
 
 	output += "\n";

@@ -99,9 +99,14 @@ export function createToolDefinitions(): Tool[] {
 				"5. **submit**: Submits a form or clicks a submit-like element.\n" +
 				"   - Required: `element` (CSS selector)\n" +
 				"   - Example: `{'type': 'submit', 'element': 'form#login'}`\n" +
-				"6. **print**: Captures HTML of specified elements.\n" +
+				"6. **print**: Captures raw HTML of specified elements.\n" +
 				"   - Required: `elements` (array of CSS selectors)\n" +
-				"   - Example: `{'type': 'print', 'elements': ['#content']}`\n\n" +
+				"   - Example: `{'type': 'print', 'elements': ['#content']}`\n" +
+				"   - Use when HTML structure analysis is needed\n" +
+				"7. **markdown**: Converts elements to markdown format.\n" +
+				"   - Required: `elements` (array of CSS selectors)\n" +
+				"   - Example: `{'type': 'markdown', 'elements': ['#content']}`\n" +
+				"   - Preferred for content extraction (cleaner output)\n\n" +
 				"### Example Scenarios:\n" +
 				"1. **Simple Analysis**: Just explore a page\n" +
 				"   ```json\n" +
@@ -120,7 +125,8 @@ export function createToolDefinitions(): Tool[] {
 				"         {\"type\": \"wait\", \"elements\": [\"#searchInput\"]},\n" +
 				"         {\"type\": \"typing\", \"element\": \"#searchInput\", \"value\": \"AI Tools\"},\n" +
 				"         {\"type\": \"keyPress\", \"key\": \"Enter\"},\n" +
-				"         {\"type\": \"print\", \"elements\": [\"#mw-content-text\"]}\n" +
+				"         {\"type\": \"wait\", \"elements\": [\".mw-search-results-container\"]},\n" +
+				"         {\"type\": \"markdown\", \"elements\": [\".mw-search-result\"]}\n" +
 				"       ]\n" +
 				"     }\n" +
 				"   }\n" +
@@ -138,7 +144,8 @@ export function createToolDefinitions(): Tool[] {
 							"- **typing**: `element` (string), `value` (string), `delay?` (number) - Types the value into the element.\n" +
 							"- **keyPress**: `key` (string), `element?` (string) - Presses the key, optionally focusing an element first.\n" +
 							"- **submit**: `element` (string) - Submits the form or clicks the element.\n" +
-							"- **print**: `elements` (string[]) - Captures HTML of the listed selectors.\n\n" +
+							"- **print**: `elements` (string[]) - Captures raw HTML of the listed selectors. Use only when HTML structure analysis is needed.\n" +
+							"- **markdown**: `elements` (string[]) - Converts content to markdown format. Preferred for content extraction.\n\n" +
 							"### Guidelines:\n" +
 							"- Use valid CSS selectors (e.g., '#id', '.class', 'input[name=\"field\"]').\n" +
 							"- Escape quotes in JSON correctly.\n" +

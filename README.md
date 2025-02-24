@@ -97,7 +97,9 @@ rag-browser --url "https://wikipedia.org" --plan '{
   "actions": [
     {"type": "wait", "elements": ["#searchInput"]},
     {"type": "typing", "element": "#searchInput", "value": "AI Tools"},
-    {"type": "keyPress", "key": "Enter"}
+    {"type": "keyPress", "key": "Enter"},
+    {"type": "wait", "elements": [".mw-search-results-container"]},
+    {"type": "markdown", "elements": [".mw-search-result"]}
   ]
 }'
 ```
@@ -163,7 +165,8 @@ A unified tool for both analysis and automation:
 | `typing` | Type text | `element: string`, `value: string` | `delay: number` |
 | `keyPress` | Press keyboard key | `key: string` | `element: string` |
 | `submit` | Submit form | `element: string` | - |
-| `print` | Capture HTML | `elements: string[]` | - |
+| `print` | Capture raw HTML (use only when HTML structure analysis is needed) | `elements: string[]` | - |
+| `markdown` | Convert content to markdown format (preferred for content extraction) | `elements: string[]` | - |
 
 ### Claude Desktop Integration
 

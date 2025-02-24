@@ -15,6 +15,8 @@ export function getActionSymbol(action: Action): string {
 			return "📤";
 		case "print":
 			return "📝";
+		case "markdown":
+			return "📄";
 		default:
 			return "❓";
 	}
@@ -36,6 +38,8 @@ export function getActionDescription(action: Action): string {
 			return `Submit form: ${chalk.cyan(action.element)}`;
 		case "print":
 			return `Print HTML for: ${chalk.cyan(action.elements.join(", "))}`;
+		case "markdown":
+			return `Convert to Markdown: ${chalk.cyan(action.elements.join(", "))}`;
 		default:
 			return "Unknown action";
 	}

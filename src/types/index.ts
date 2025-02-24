@@ -55,17 +55,23 @@ export interface PrintAction {
 	elements: string[];
 }
 
-export type Action = WaitAction | ClickAction | TypingAction | KeyPressAction | SubmitAction | PrintAction;
+export interface MarkdownAction {
+	type: "markdown";
+	elements: string[];
+}
+
+export type Action = WaitAction | ClickAction | TypingAction | KeyPressAction | SubmitAction | PrintAction | MarkdownAction;
 
 export interface Plan {
 	actions: Action[];
 }
 
-export interface PlannedActionResult {
+export type PlannedActionResult = {
 	selector: string;
 	html?: string;
+	rawHtml?: string;
 	error?: string;
-}
+};
 
 export interface PageAnalysis {
 	title: string;

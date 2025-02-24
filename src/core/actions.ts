@@ -4,6 +4,49 @@ import { waitForActionStability } from "./stability";
 import { DEFAULT_TYPING_DELAY, ACTION_STABILITY_TIMEOUT } from "../config/constants";
 import { getActionSymbol, getActionDescription } from "../utils/actions";
 import { printActionStatus, printActionSummary } from "../cli/printer";
+import TurndownService from 'turndown';
+
+// Initialize turndown service with common options
+const turndownService = new TurndownService({
+	headingStyle: 'atx',
+	codeBlockStyle: 'fenced',
+	emDelimiter: '*',
+	bulletListMarker: '-',
+	hr: '---',
+	// Add options for better link handling
+	linkStyle: 'referenced',
+	linkReferenceStyle: 'full'
+});
+
+// Add custom rules for Wikipedia search results
+turndownService.addRule('searchResult', {
+	filter: ['li'],
+	replacement: function (content: string, node) {
+		const element = node as Element;
+		if (element.classList?.contains('mw-search-result')) {
+			// Extract components
+			const headingEl = element.querySelector('.mw-search-result-heading');
+			const heading = turndownService.turndown(headingEl?.innerHTML || '');
+			const snippet = element.querySelector('.searchresult')?.textContent?.trim() || '';
+			const metadata = element.querySelector('.mw-search-result-data')?.textContent?.trim() || '';
+			
+			debugLog(`Processing search result:`);
+			debugLog(`- Heading HTML: ${headingEl?.innerHTML}`);
+			debugLog(`- Heading MD: ${heading}`);
+			debugLog(`- Snippet: ${snippet}`);
+			debugLog(`- Metadata: ${metadata}`);
+			
+			// Format as markdown
+			return `## ${heading}\n\n${snippet}\n\n*${metadata}*\n\n---\n`;
+		}
+		return content;
+	}
+});
+
+// Helper for debug output
+function debugLog(message: string) {
+	process.stderr.write(`[Debug] ${message}\n`);
+}
 
 export async function executeAction(page: Page, action: Action, options: BrowserOptions): Promise<ActionResult> {
 	try {
@@ -98,9 +141,20 @@ export async function executeAction(page: Page, action: Action, options: Browser
 				const results = [];
 				for (const selector of action.elements) {
 					try {
-						const html = await page.$eval(selector, (el) => el.outerHTML);
-						results.push({ selector, html });
+						debugLog(`Getting HTML for selector: ${selector}`);
+						// Get all matching elements
+						const elements = await page.$$(selector);
+						debugLog(`Found ${elements.length} elements matching ${selector}`);
+						
+						for (const element of elements) {
+							const html = await element.evaluate(el => el.outerHTML);
+							debugLog(`Converting HTML to Markdown for print: ${html.substring(0, 100)}...`);
+							const markdown = turndownService.turndown(html);
+							debugLog(`Print markdown result: ${markdown.substring(0, 100)}...`);
+							results.push({ selector, html: markdown, rawHtml: html });
+						}
 					} catch (_error) {
+						debugLog(`Error getting HTML for selector: ${selector} - ${_error instanceof Error ? _error.message : String(_error)}`);
 						results.push({ selector, error: "Element not found or inaccessible" });
 					}
 				}
@@ -109,6 +163,43 @@ export async function executeAction(page: Page, action: Action, options: Browser
 					message: results
 						.filter((r) => !r.error)
 						.map((r) => `HTML captured for ${r.selector}`)
+						.join("\n"),
+					warning: results.some((r) => r.error)
+						? `Failed to capture some elements: ${results
+								.filter((r) => r.error)
+								.map((r) => r.selector)
+								.join(", ")}`
+						: undefined,
+					data: results,
+				};
+			}
+
+			case "markdown": {
+				const results = [];
+				for (const selector of action.elements) {
+					try {
+						debugLog(`Getting HTML for selector: ${selector}`);
+						// Get all matching elements
+						const elements = await page.$$(selector);
+						debugLog(`Found ${elements.length} elements matching ${selector}`);
+						
+						for (const element of elements) {
+							const html = await element.evaluate(el => el.outerHTML);
+							debugLog(`Converting HTML to Markdown: ${html.substring(0, 100)}...`);
+							const markdown = turndownService.turndown(html);
+							debugLog(`Markdown result: ${markdown.substring(0, 100)}...`);
+							results.push({ selector, html: markdown });
+						}
+					} catch (_error) {
+						debugLog(`Error getting HTML for selector: ${selector} - ${_error instanceof Error ? _error.message : String(_error)}`);
+						results.push({ selector, error: "Element not found or inaccessible" });
+					}
+				}
+				return {
+					success: results.some((r) => !r.error),
+					message: results
+						.filter((r) => !r.error)
+						.map((r) => `Markdown captured for ${r.selector}`)
 						.join("\n"),
 					warning: results.some((r) => r.error)
 						? `Failed to capture some elements: ${results
@@ -170,8 +261,8 @@ export async function executePlan(
 		console.warn(printActionStatus(status));
 		actionStatuses.push(status);
 
-		// Collect print results
-		if (action.type === "print" && status.result?.data) {
+		// Collect print and markdown results
+		if ((action.type === "print" || action.type === "markdown") && status.result?.data) {
 			plannedActionResults.push(...status.result.data);
 		}
 
