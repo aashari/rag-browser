@@ -12,7 +12,9 @@ export async function executePrintAction(
             const elements = await page.$$(selector);
             for (const element of elements) {
                 const text = await element.evaluate(el => el.textContent?.trim() || '');
-                results.push({ selector, html: text, type: 'print' as const });
+                if (text) {
+                    results.push({ selector, html: text, type: 'print' as const });
+                }
             }
         } catch (_error) {
             results.push({ selector, error: "Element not found or inaccessible", type: 'print' as const, html: '' });
