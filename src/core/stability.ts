@@ -156,12 +156,28 @@ export async function waitForPageStability(
 		let checkCount = 0;
 		let lastLoadingIndicatorCount = -1;
 		let consecutiveStableChecks = 0;
+		let navigationTimeout = false;
 
-		while (Date.now() - startTime < timeout && !options.abortSignal?.aborted) {
+		// Set a navigation timeout
+		const navigationTimer = setTimeout(() => {
+			navigationTimeout = true;
+			warn("Navigation timeout reached", { duration: Date.now() - startTime });
+		}, timeout);
+
+		while (Date.now() - startTime < timeout && !options.abortSignal?.aborted && !navigationTimeout) {
 			checkCount++;
 			debug("Stability check iteration", { iteration: checkCount });
 
 			try {
+				// Check if we're still on the same page
+				let currentUrl = '';
+				try {
+					currentUrl = await page.url();
+				} catch {
+					warn("Page context lost during stability check");
+					break;
+				}
+
 				await page
 					.waitForLoadState("networkidle", { timeout: NETWORK_IDLE_TIMEOUT })
 					.catch(() => warn("Network not idle"));
@@ -193,6 +209,7 @@ export async function waitForPageStability(
 						consecutiveStableChecks++;
 						debug("Page reported as stable", { consecutiveChecks: consecutiveStableChecks });
 						if (consecutiveStableChecks >= 2) {
+							clearTimeout(navigationTimer);
 							return true;
 						}
 					} else {
@@ -205,6 +222,7 @@ export async function waitForPageStability(
 					(err.message.includes("Target closed") || err.message.includes("context was destroyed"))) {
 					debug("Page context destroyed", { error: err.message });
 					if (options.expectNavigation) {
+						clearTimeout(navigationTimer);
 						return true;
 					}
 					throw err;
@@ -215,8 +233,12 @@ export async function waitForPageStability(
 			await page.waitForTimeout(MUTATION_CHECK_INTERVAL);
 		}
 
+		clearTimeout(navigationTimer);
+
 		if (options.abortSignal?.aborted) {
 			debug("Stability check aborted");
+		} else if (navigationTimeout) {
+			warn("Navigation timeout reached", { duration: Date.now() - startTime });
 		} else {
 			warn("Stability check timed out", { duration: Date.now() - startTime });
 		}

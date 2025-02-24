@@ -74,6 +74,7 @@ export type PageAnalysis = {
 	cacheKey?: string;
 	timestamp?: number;
 	expiresAt?: number;
+	error?: string;
 };
 
 export type SelectorMode = "full" | "simple";

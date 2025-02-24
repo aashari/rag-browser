@@ -1,7 +1,13 @@
 import type { PageAnalysis, Plan, Link, Button, Input, PlannedActionResult, ActionStatus } from "../types";
 import { getActionSymbol, getActionDescription } from "./actions";
 
-export type OutputFormat = "pretty" | "json";
+export type OutputFormat = "json" | "pretty";
+
+export interface DisplayOptions {
+	showInputs?: boolean;
+	showButtons?: boolean;
+	showLinks?: boolean;
+}
 
 export function printPlan(plan: Plan): string {
 	let output = "";
@@ -144,31 +150,129 @@ function printActionResults(plannedActions: PlannedActionResult[]): string {
 }
 
 export function printAnalysis(
-	analysis: PageAnalysis, 
-	format: OutputFormat = "pretty", 
-	options: { showInputs?: boolean, showButtons?: boolean, showLinks?: boolean } = {}
+	analysis: PageAnalysis,
+	format: OutputFormat = "pretty",
+	options: DisplayOptions = {}
 ): string {
 	if (format === "json") {
 		return JSON.stringify(analysis, null, 2);
 	}
 
-	let output = printPageHeader(analysis);
+	let output = "\n📄 Page Analysis:\n\n";
 
-	// Page elements summary
-	output += "\nPage Elements Summary:\n";
-	output += "=".repeat(50) + "\n";
-
-	// Print each section
-	output += printInputsSummary(analysis.inputs, options.showInputs || false);
-	output += printButtonsSummary(analysis.buttons, options.showButtons || false);
-	output += printLinksSummary(analysis.links, options.showLinks || false);
-
-	// Print action results if any
-	if (analysis.plannedActions?.length) {
-		output += printActionResults(analysis.plannedActions);
+	// Show error first if present
+	if (analysis.error) {
+		output += "⚠️ Error encountered:\n";
+		output += "==================================================\n";
+		output += analysis.error + "\n";
+		output += "==================================================\n\n";
 	}
 
+	output += `Title: ${analysis.title}\n`;
+	if (analysis.description) {
+		output += `Description: ${analysis.description}\n`;
+	}
+
+	output += "\nPage Elements Summary:\n";
+	output += "==================================================\n";
+
+	// Show inputs
+	output += `Total Input Elements: ${analysis.inputs.length}\n`;
+	if (analysis.inputs.length > 0) {
+		if (options.showInputs) {
+			output += "[Showing all inputs]\n";
+			analysis.inputs.forEach((input) => {
+				output += `- ${input.label || input.type}${!input.isVisible ? " (hidden)" : ""}\n`;
+			});
+		} else {
+			output += "[Showing top visible 5 inputs]\n";
+			analysis.inputs
+				.filter((input) => input.isVisible)
+				.slice(0, 5)
+				.forEach((input) => {
+					output += `- ${input.label || input.type}\n`;
+				});
+			if (analysis.inputs.length > 5) {
+				output += "> to get list of all inputs add --inputs\n";
+			}
+		}
+	}
 	output += "\n";
+
+	// Show buttons
+	output += `Total Button Elements: ${analysis.buttons.length}\n`;
+	if (analysis.buttons.length > 0) {
+		if (options.showButtons) {
+			output += "[Showing all buttons]\n";
+			analysis.buttons.forEach((button) => {
+				output += `- ${button.text || "No text"}\n`;
+			});
+		} else {
+			output += "[Showing top visible 5 buttons]\n";
+			analysis.buttons.slice(0, 5).forEach((button) => {
+				output += `- ${button.text || "No text"}\n`;
+			});
+			if (analysis.buttons.length > 5) {
+				output += "> to get list of all buttons add --buttons\n";
+			}
+		}
+	}
+	output += "\n";
+
+	// Show links
+	output += `Total Link Elements: ${analysis.links.length}\n`;
+	if (analysis.links.length > 0) {
+		if (options.showLinks) {
+			output += "[Showing all links]\n";
+			analysis.links.forEach((link) => {
+				output += `- ${link.title}\n`;
+			});
+		} else {
+			output += "[Showing top visible 5 links]\n";
+			analysis.links.slice(0, 5).forEach((link) => {
+				output += `- ${link.title}\n`;
+			});
+			if (analysis.links.length > 5) {
+				output += "> to get list of all links add --links\n";
+			}
+		}
+	}
+	output += "\n";
+
+	// Show action results if present
+	if (analysis.plannedActions && analysis.plannedActions.length > 0) {
+		output += "\nAction Results:\n";
+		output += "================================================================================\n\n";
+
+		// Group results by type
+		const printResults = analysis.plannedActions.filter((r) => r.type === "print");
+		const markdownResults = analysis.plannedActions.filter((r) => r.type === "markdown");
+
+		if (printResults.length > 0) {
+			output += "HTML Output:\n";
+			printResults.forEach((result) => {
+				if (result.error) {
+					output += `Error capturing ${result.selector}: ${result.error}\n`;
+				} else {
+					output += result.html + "\n";
+				}
+			});
+			output += "================================================================================\n\n";
+		}
+
+		if (markdownResults.length > 0) {
+			output += "Markdown Output:\n";
+			markdownResults.forEach((result) => {
+				if (result.error) {
+					output += `Error capturing ${result.selector}: ${result.error}\n`;
+				} else {
+					output += result.html + "\n";
+				}
+			});
+			output += "================================================================================\n\n";
+		}
+	}
+
 	return output;
 }
 

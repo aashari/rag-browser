@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import type { PageAnalysis, BrowserOptions, PlannedActionResult } from "../types";
+import type { PageAnalysis, BrowserOptions, PlannedActionResult, Input } from "../types";
 import { DEFAULT_TIMEOUT, LINK_SELECTORS, BUTTON_SELECTORS, INPUT_SELECTORS } from "../config/constants";
 import { executePlan } from "./actions";
 import { waitForPageStability } from "./stability";
@@ -395,63 +395,89 @@ export async function analyzePage(url: string, options: BrowserOptions): Promise
 		};
 	} catch (err) {
 		error("Fatal error during page analysis", { error: err instanceof Error ? err.message : String(err) });
-		throw err;
+		// Still return partial analysis if available
+		let partialInputs: Input[] = [];
+		try {
+			const inputElements = await page.$$(INPUT_SELECTORS);
+			partialInputs = await Promise.all(inputElements.map((element) => getElementInfo(page, element)));
+		} catch (e) {
+			error("Failed to get inputs in error handler", { error: e instanceof Error ? e.message : String(e) });
+		}
+		return {
+			title: await page.title().catch(() => "Unknown Title"),
+			inputs: partialInputs,
+			buttons: [],
+			links: [],
+			plannedActions: plannedActionResults.length > 0 ? plannedActionResults : undefined,
+			error: err instanceof Error ? err.message : String(err)
+		};
 	} finally {
-		// Close browser after successful completion or on error
-		// Only keep it open if we're still in the middle of waiting
-		if (actionSucceeded || options.timeout !== -1) {
-			// Log final URL before closing
-			try {
-				const finalUrl = page.url();
-				info("Final URL before closing", { url: finalUrl });
-			} catch (err) {
-				error("Failed to get final URL", { error: err instanceof Error ? err.message : String(err) });
-			}
-
-			// Save browser state
-			const state = await browser.storageState();
+		// Always show analysis summary before closing
+		try {
+			const finalUrl = page.url();
+			info("Final URL before closing", { url: finalUrl });
 			
-			// Process cookies
-			const cookies = state.cookies.map(({ 
-				name, 
-				value, 
-				domain, 
-				path 
-			}: Cookie) => ({
-				name,
-				value,
-				domain: domain || '',
-				path: path || '/'
-			}));
-
-			// Process origins
-			const origins = state.origins.map((origin: BrowserStorageOrigin) => {
-				const processedOrigin: StorageState['origins'][0] = {
-					origin: origin.origin,
-				};
-				
-				if (origin.localStorage) {
-					processedOrigin.localStorage = Object.fromEntries(
-						origin.localStorage.map((item: BrowserStorageItem) => [item.name, item.value])
-					);
-				}
-				
-				if (origin.sessionStorage) {
-					processedOrigin.sessionStorage = Object.fromEntries(
-						origin.sessionStorage.map((item: BrowserStorageItem) => [item.name, item.value])
-					);
-				}
-				
-				return processedOrigin;
+			// Log final state summary
+			info("Final execution state", {
+				url: finalUrl,
+				actionSucceeded,
+				plannedActionsCount: plannedActionResults.length,
+				hasTimeout: options.timeout !== -1
 			});
+		} catch (err) {
+			error("Error in cleanup", { error: err instanceof Error ? err.message : String(err) });
+		}
 
-			// Update the user's storage state for next run
-			options.storageState = {
-				cookies,
-				origins
-			};
+		// Close browser unless we're in infinite wait and action hasn't succeeded
+		if (actionSucceeded || options.timeout !== -1) {
+			try {
+				// Save browser state
+				const state = await browser.storageState();
+				
+				// Process cookies
+				const cookies = state.cookies.map(({ 
+					name, 
+					value, 
+					domain, 
+					path 
+				}: Cookie) => ({
+					name,
+					value,
+					domain: domain || '',
+					path: path || '/'
+				}));
 
-			await browser.close();
+				// Process origins
+				const origins = state.origins.map((origin: BrowserStorageOrigin) => {
+					const processedOrigin: StorageState['origins'][0] = {
+						origin: origin.origin,
+					};
+					
+					if (origin.localStorage) {
+						processedOrigin.localStorage = Object.fromEntries(
+							origin.localStorage.map((item: BrowserStorageItem) => [item.name, item.value])
+						);
+					}
+					
+					if (origin.sessionStorage) {
+						processedOrigin.sessionStorage = Object.fromEntries(
+							origin.sessionStorage.map((item: BrowserStorageItem) => [item.name, item.value])
+						);
+					}
+					
+					return processedOrigin;
+				});
+
+				// Update the user's storage state for next run
+				options.storageState = {
+					cookies,
+					origins
+				};
+
+				await browser.close();
+			} catch (err) {
+				error("Error in cleanup", { error: err instanceof Error ? err.message : String(err) });
+			}
 		}
 	}
 }
