@@ -12,7 +12,7 @@
   - **CLI Mode**: Analyzes webpages or executes action plans via `src/cli/index.ts`. Triggered with `bunx github:aashari/rag-browser --url` or `rag-browser --url`.
   - **MCP Server Mode**: Runs an MCP server for AI integration via `src/mcp/server.ts`. Triggered with `npx -y github:aashari/rag-browser` or `bun run start`.
 - Core logic lives in `src/core/`, utilities in `src/utils/`, types in `src/types/`, and MCP components in `src/mcp/`.
-- Current version: `1.7.0` (as of February 23, 2025).
+- Current version: `1.16.0` (as of February 23, 2025).
 
 # Model Context Protocol (MCP) Overview
 - **Purpose**: MCP is a JSON-RPC protocol for AI-tool communication, enabling an AI (e.g., Claude) to use external services.
@@ -21,7 +21,7 @@
   - **Tools**: Exposed functions like `action` (in `src/mcp/tools.ts`), called via `tools/call`.
   - **Resources**: Stored data (e.g., page analyses in `src/mcp/resources.ts`), accessed via `resources/list` and `resources/read`.
 - **Components in This Project**:
-  - **Server**: `src/mcp/server.ts` - Initializes with name `ai-tools-browser`, version `1.7.0`.
+  - **Server**: `src/mcp/server.ts` - Initializes with name `ai-tools-browser`, version `1.16.0`.
   - **Tools**: `action` (unified tool for analysis and execution), defined in `src/mcp/tools.ts`.
   - **Resources**: Up to 10 stored `PageAnalysis` objects, managed in `src/mcp/resources.ts`.
   - **Handlers**: `src/mcp/requestHandler.ts` - Processes MCP requests.
@@ -77,12 +77,12 @@
 - **Logging**: Use `console.error` with JSON-RPC format (`src/utils/logging.ts`) for MCP logs.
 
 # Versioning
-- **Format**: Use Semantic Versioning (`MAJOR.MINOR.PATCH`, e.g., `1.7.0`).
+- **Format**: Use Semantic Versioning (`MAJOR.MINOR.PATCH`, e.g., `1.16.0`).
 - **Files to Update**:
   - **`package.json`**: Update `"version": "x.x.x"` to reflect the new release.
   - **`src/mcp/server.ts`**: Update `version: "x.x.x"` in the `Server` constructor to match.
 - **Process**:
-  1. Increment version (e.g., `1.7.0` -> `1.8.0` for new features).
+  1. Increment version (e.g., `1.16.0` -> `1.8.0` for new features).
   2. Edit both files with the new version.
   3. Run `bun run build`.
   4. Commit: `git commit -m "Release vx.x.x"`.

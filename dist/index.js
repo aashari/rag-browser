@@ -21609,108 +21609,49 @@ function createToolDefinitions() {
   return [
     {
       name: "action",
-      description: `Analyzes and interacts with a webpage. This tool combines page analysis and action execution capabilities.
+      description: `A proactive web automation tool that enables me (the AI) to interact with webpages in a browser for you. I can open sites, wait for page loads or authentication, click buttons, type text, extract data, and more—based on your intent. My goal is to assist with tasks like opening apps, fetching content, or automating actions, even if you don't specify every step.
 
-` + `### Process:
-` + `1. **Loads the Webpage**: Opens the provided URL in a browser instance.
-` + `2. **Optional Plan Execution**: If a plan is provided, executes each action sequentially.
-` + `3. **Ensures Stability**: Monitors page stability during loading and after each action.
-` + `4. **Analyzes State**: Returns a structured analysis of the page's current state.
+` + `### When I'll Use This Tool:
+` + `- Automatically when you ask me to 'open' a webpage or app (e.g., 'open Slack,' 'open Twitter').
+` + `- When you request data from a webpage (e.g., 'give me unread messages,' 'list Slack channels').
+` + `- When you imply an action on a site (e.g., 'search Twitter for AI news').
+` + `I'll assume you want me to use this tool unless you explicitly say otherwise (e.g., 'don't use the browser').
 
-` + `### When to Use:
-` + `- **Static Analysis**: To explore a webpage's structure and elements (without a plan).
-` + `- **Automation**: To perform tasks like form filling, clicking, or searching (with a plan).
-` + `- **Information Retrieval**: To extract page content or element details.
-` + `- **Multi-step Workflows**: To navigate through processes like login or checkout.
-` + `- **Interactive Sessions**: To handle user authentication or manual intervention.
+` + `### What I Can Do:
+` + `- Open a URL and wait for it to load or for you to authenticate (e.g., Slack, Twitter).
+` + `- Extract content (e.g., unread messages, channel lists) as markdown or raw HTML.
+` + `- Perform actions like typing, clicking, or pressing keys (e.g., search, submit forms).
+` + `- Handle dynamic pages by waiting for specific elements to appear.
 
-` + `### Debugging Tips:
-` + "1. **Element Not Found**: Use `print` action to inspect the page structure:\n" + "   ```json\n" + `   {
-` + `     "url": "https://example.com",
-` + `     "plan": {
-` + `       "actions": [
-` + `         {"type": "print", "elements": ["body"]}
-` + `       ]
-` + `     }
-` + `   }
-` + "   ```\n" + `2. **Dynamic Content**: Add wait actions before interactions:
-` + "   ```json\n" + `   {"type": "wait", "elements": ["#dynamic-content"]}
-` + "   ```\n" + `3. **Authentication**: Use infinite wait for user login:
-` + "   ```json\n" + `   {"type": "wait", "elements": ["[aria-label='Timeline']"], "timeout": -1}
-` + "   ```\n\n" + `### Common Scenarios:
+` + `### How I'll Respond:
+` + `1. I'll confirm what I'm doing (e.g., 'Let me open Slack and wait for you to log in if needed').
+` + "2. I'll execute the tool with a crafted `plan` (e.g., wait, extract, etc.).\n" + `3. I'll share the results or ask for clarification if stuck (e.g., 'Here are your unread messages' or 'I need more details').
 
-` + `1. **Wikipedia Search and Extract**:
-` + "   ```json\n" + `   {
-` + `     "url": "https://wikipedia.org",
-` + `     "plan": {
-` + `       "actions": [
-` + `         {"type": "wait", "elements": ["#searchInput"]},
-` + `         {"type": "typing", "element": "#searchInput", "value": "Prabowo Subianto"},
-` + `         {"type": "keyPress", "key": "Enter"},
-` + `         {"type": "wait", "elements": [".mw-search-results"]},
-` + `         {"type": "print", "elements": [".mw-search-results"]},
-` + `         {"type": "click", "element": ".mw-search-result:first-child a"},
-` + `         {"type": "wait", "elements": ["#mw-content-text"]},
-` + `         {"type": "markdown", "elements": ["#mw-content-text"]}
-` + `       ]
-` + `     }
-` + `   }
-` + "   ```\n\n" + `2. **Twitter Authentication Flow**:
-` + "   ```json\n" + `   {
-` + `     "url": "https://x.com",
-` + `     "plan": {
-` + `       "actions": [
-` + `         {"type": "wait", "elements": ["[aria-label='Timeline: Your Home Timeline']"], "timeout": -1},
-` + `         {"type": "markdown", "elements": [".timeline"]}
-` + `       ]
-` + `     }
-` + `   }
-` + "   ```\n\n" + `3. **Form Filling with Validation**:
-` + "   ```json\n" + `   {
-` + `     "url": "https://example.com/form",
-` + `     "plan": {
-` + `       "actions": [
-` + `         {"type": "wait", "elements": ["form"]},
-` + `         {"type": "typing", "element": "#username", "value": "user123"},
-` + `         {"type": "typing", "element": "#password", "value": "pass123"},
-` + `         {"type": "click", "element": "button[type='submit']"},
-` + `         {"type": "wait", "elements": [".success-message, .error-message"]},
-` + `         {"type": "print", "elements": [".success-message, .error-message"]}
-` + `       ]
-` + `     }
-` + `   }
-` + "   ```\n\n" + `4. **Dynamic Content Navigation**:
-` + "   ```json\n" + `   {
-` + `     "url": "https://example.com/products",
-` + `     "plan": {
-` + `       "actions": [
-` + `         {"type": "wait", "elements": [".product-grid"]},
-` + `         {"type": "print", "elements": [".product-grid"]},
-` + `         {"type": "click", "element": ".load-more"},
-` + `         {"type": "wait", "elements": [".product-grid .product:nth-child(20)"]},
-` + `         {"type": "markdown", "elements": [".product-grid"]}
-` + `       ]
-` + `     }
-` + `   }
-` + "   ```\n\n" + `### Action Types:
-` + `1. **wait**: Waits for elements to appear.
-` + "   - Required: `elements` (array of CSS selectors)\n" + "   - Optional: `timeout` (number, -1 for infinite wait)\n" + `   - Use for: Dynamic content, authentication, ensuring elements are ready
-` + '   - Example: `{"type": "wait", "elements": ["#content"], "timeout": -1}`\n\n' + `2. **click**: Clicks a single element.
-` + "   - Required: `element` (CSS selector)\n" + `   - Use for: Navigation, form submission, triggering actions
-` + '   - Example: `{"type": "click", "element": ".submit-btn"}`\n\n' + `3. **typing**: Types text into an input field.
-` + "   - Required: `element` (CSS selector), `value` (text to type)\n" + "   - Optional: `delay` (ms between keystrokes)\n" + `   - Use for: Form filling, search inputs
-` + '   - Example: `{"type": "typing", "element": "#search", "value": "query", "delay": 100}`\n\n' + `4. **keyPress**: Simulates a keyboard key press.
-` + "   - Required: `key` (key name)\n" + "   - Optional: `element` (CSS selector to focus)\n" + `   - Use for: Form submission, keyboard shortcuts
-` + '   - Example: `{"type": "keyPress", "key": "Enter", "element": "#search"}`\n\n' + `5. **print**: Captures raw HTML.
-` + "   - Required: `elements` (array of CSS selectors)\n" + `   - Use for: Debugging, inspecting page structure
-` + '   - Example: `{"type": "print", "elements": ["#main-content"]}`\n\n' + `6. **markdown**: Converts content to markdown.
-` + "   - Required: `elements` (array of CSS selectors)\n" + `   - Use for: Content extraction, readable output
-` + '   - Example: `{"type": "markdown", "elements": ["article"]}`\n\n' + `### Best Practices:
-` + "1. Always start with a `wait` action before interacting with elements\n" + "2. Use `print` for debugging when elements aren't found\n" + "3. Prefer `markdown` over `print` for content extraction\n" + `4. Add appropriate timeouts for dynamic content
-` + `5. Chain actions logically (wait → interact → verify)
-` + `6. Handle errors gracefully with alternative selectors
-`,
-      version: "1.8.0",
+` + `### Key Examples:
+` + `1. **User: 'open Slack'**
+` + `   - I say: 'Let me open Slack. If you're not logged in, I'll wait for you.'
+` + '   - I run: `{"url": "https://app.slack.com/client", "plan": {"actions": [{"type": "wait", "elements": [".p-workspace__primary_view_contents, .p-signin_form"], "timeout": -1}]}}`\n' + `   - Next: Confirm it's loaded or wait for your input.
+
+` + `2. **User: 'open Slack give me unread messages'**
+` + `   - I say: 'I'll open Slack and fetch your unread messages.'
+` + '   - I run: `{"url": "https://app.slack.com/client", "plan": {"actions": [{"type": "wait", "elements": [".p-channel_sidebar__channel--unread span.p-channel_sidebar__name"], "timeout": -1}, {"type": "markdown", "elements": [".p-channel_sidebar__channel--unread span.p-channel_sidebar__name"]}]}}`\n' + `   - I say: 'Here are your unread Slack channels: #channel1, #channel2...'
+
+` + `3. **User: 'search Twitter for AI news'**
+` + `   - I say: 'I'm opening Twitter to search for AI news.'
+` + `   - I run: \`{"url": "https://x.com", "plan": {"actions": [{"type": "wait", "elements": ["input[data-testid='SearchBox_Search_Input']"], "timeout": -1}, {"type": "typing", "element": "input[data-testid='SearchBox_Search_Input']", "value": "AI news"}, {"type": "keyPress", "key": "Enter"}, {"type": "wait", "elements": ["[data-testid='tweet']"], "timeout": 5000}, {"type": "markdown", "elements": ["[data-testid='tweet']"]}]}}\`
+` + `   - I say: 'Here's what I found on Twitter about AI news...'
+
+` + `### My Approach:
+` + "- I'll start with a `wait` action to ensure the page is ready (e.g., key elements are loaded).\n" + "- For authentication, I'll use `timeout: -1` to wait indefinitely until you're logged in.\n" + `- I'll prioritize specific selectors (e.g., IDs, data attributes) and fall back to broader ones if needed.
+` + `- If elements are missing or the page fails to load, I'll adjust or ask you for help.
+
+` + `### Tips for You:
+` + `- Use natural phrases like 'open Slack,' 'list channels,' or 'search X'—I'll handle the details.
+` + `- If I need more info (e.g., search terms), I'll ask.
+` + `- To override this tool, say 'don't use the browser' or similar.
+
+` + "Give me a task, and I'll jump in with a plan to make it happen!",
+      version: "1.16.0",
       compatibility: {
         minVersion: "1.0.0",
         deprecatedFeatures: []
@@ -21721,11 +21662,8 @@ function createToolDefinitions() {
           ...commonProperties,
           plan: {
             type: "string",
-            description: `Optional JSON string defining actions to execute. When omitted, performs page analysis only. Must be a valid JSON object with an 'actions' array when provided. Each action requires a 'type' field and additional fields based on the type:
-` + "- **wait**: `elements` (string[]) - Waits for all listed CSS selectors to be present.\n" + "- **click**: `element` (string) - Clicks the specified CSS selector.\n" + "- **typing**: `element` (string), `value` (string), `delay?` (number) - Types the value into the element.\n" + "- **keyPress**: `key` (string), `element?` (string) - Presses the key, optionally focusing an element first.\n" + "- **print**: `elements` (string[]) - Captures raw HTML of the listed selectors. Use only when HTML structure analysis is needed.\n" + "- **markdown**: `elements` (string[]) - Converts content to markdown format. Preferred for content extraction.\n\n" + `### Guidelines:
-` + `- Use valid CSS selectors (e.g., '#id', '.class', 'input[name="field"]').
-` + `- Escape quotes in JSON correctly.
-` + "- Include 'wait' before interactions for async elements."
+            description: `A JSON string with an 'actions' array I'll use to interact with the page. If omitted, I'll just analyze the URL. Actions include:
+` + "- `wait`: Waits for elements (e.g., `elements: ['body', '.login']`).\n" + "- `click`: Clicks an element (e.g., `element: 'button.submit'`).\n" + "- `typing`: Types text (e.g., `element: 'input', value: 'hello'`).\n" + "- `keyPress`: Presses a key (e.g., `key: 'Enter'`).\n" + "- `print`: Gets raw HTML from elements.\n" + "- `markdown`: Extracts content as markdown.\n" + "Use CSS selectors (e.g., '#id', '.class'). I'll build this for you based on your request."
           }
         },
         required: ["url"]
@@ -21740,13 +21678,13 @@ import { chromium } from "playwright";
 // src/config/constants.ts
 var DEBUG = true;
 var DEFAULT_TIMEOUT = 30000;
-var NETWORK_IDLE_TIMEOUT = 500;
-var MUTATION_CHECK_INTERVAL = 50;
+var NETWORK_IDLE_TIMEOUT = 1000;
+var MUTATION_CHECK_INTERVAL = 100;
 var VISIBLE_MODE_SLOW_MO = 50;
-var MUTATION_STABILITY_TIMEOUT = 300;
-var LAYOUT_STABILITY_TIMEOUT = 200;
-var ACTION_STABILITY_TIMEOUT = 2000;
-var LOADING_INDICATORS = '[aria-busy="true"], [class*="loading"], [id*="loading"]';
+var MUTATION_STABILITY_TIMEOUT = 500;
+var LAYOUT_STABILITY_TIMEOUT = 300;
+var ACTION_STABILITY_TIMEOUT = 3000;
+var LOADING_INDICATORS = '[aria-busy="true"]:not([role="progressbar"]), [class*="loading-spinner"], [id*="loading-spinner"]';
 var INPUT_SELECTORS = 'input, textarea, select, [role="textbox"], [role="searchbox"], [role="combobox"], [contenteditable="true"], .QueryBuilder-Input';
 var BUTTON_SELECTORS = 'button, [role="button"]';
 var LINK_SELECTORS = "a[href]";
@@ -21968,28 +21906,63 @@ async function waitForPageStability(page, options = {}) {
     ]).catch(() => {
       warn("Initial domcontentloaded wait failed");
     });
+    if (options.abortSignal?.aborted) {
+      throw new Error("Stability check aborted");
+    }
     try {
       await injectStabilityScripts(page);
     } catch (err) {
       warn("Failed to inject stability scripts, will use basic stability check", {
         error: err instanceof Error ? err.message : String(err)
       });
-      await page.waitForLoadState("networkidle", { timeout: NETWORK_IDLE_TIMEOUT }).catch(() => warn("Network not idle"));
+      await page.waitForTimeout(NETWORK_IDLE_TIMEOUT);
       return true;
+    }
+    let isKnownDynamicApp = false;
+    try {
+      const url = page.url();
+      isKnownDynamicApp = url.includes("slack.com") || url.includes("discord.com") || url.includes("teams.microsoft.com");
+    } catch (err) {
+      warn("Failed to check URL", { error: err instanceof Error ? err.message : String(err) });
+    }
+    if (isKnownDynamicApp) {
+      debug("Dynamic app detected, using simplified stability check");
+      try {
+        await page.waitForFunction(() => {
+          return document.readyState === "complete" && document.body !== null && document.body.children.length > 0;
+        }, { timeout: NETWORK_IDLE_TIMEOUT });
+        await page.waitForTimeout(1000);
+        debug("Dynamic app basic stability confirmed");
+        return true;
+      } catch (err) {
+        warn("Dynamic app stability check failed", {
+          error: err instanceof Error ? err.message : String(err)
+        });
+        return true;
+      }
     }
     let checkCount = 0;
     let lastLoadingIndicatorCount = -1;
     let consecutiveStableChecks = 0;
-    while (Date.now() - startTime < timeout) {
+    let navigationTimeout = false;
+    const navigationTimer = setTimeout(() => {
+      navigationTimeout = true;
+      warn("Navigation timeout reached", { duration: Date.now() - startTime });
+    }, timeout);
+    while (Date.now() - startTime < timeout && !options.abortSignal?.aborted && !navigationTimeout) {
       checkCount++;
       debug("Stability check iteration", { iteration: checkCount });
       try {
-        const [, loadingIndicators] = await Promise.all([
-          page.waitForLoadState("networkidle", { timeout: NETWORK_IDLE_TIMEOUT }).catch(() => warn("Network not idle")),
-          page.$$(LOADING_INDICATORS).catch(() => [])
-        ]);
+        let currentUrl = "";
+        try {
+          currentUrl = await page.url();
+        } catch {
+          warn("Page context lost during stability check");
+          break;
+        }
+        await page.waitForLoadState("networkidle", { timeout: NETWORK_IDLE_TIMEOUT }).catch(() => warn("Network not idle"));
+        const loadingIndicators = await page.$$(LOADING_INDICATORS).catch(() => []);
         const currentLoadingCount = loadingIndicators.length;
-        debug("Loading indicators check", { count: currentLoadingCount });
         if (currentLoadingCount !== lastLoadingIndicatorCount) {
           lastLoadingIndicatorCount = currentLoadingCount;
           consecutiveStableChecks = 0;
@@ -21997,7 +21970,7 @@ async function waitForPageStability(page, options = {}) {
           continue;
         }
         if (currentLoadingCount === 0) {
-          debug("No loading indicators, checking page stability");
+          debug("Checking page stability");
           const isStable = await page.evaluate((timeout2) => {
             return window.checkPageStability?.(timeout2) ?? true;
           }, MUTATION_STABILITY_TIMEOUT).catch((err) => {
@@ -22010,6 +21983,7 @@ async function waitForPageStability(page, options = {}) {
             consecutiveStableChecks++;
             debug("Page reported as stable", { consecutiveChecks: consecutiveStableChecks });
             if (consecutiveStableChecks >= 2) {
+              clearTimeout(navigationTimer);
               return true;
             }
           } else {
@@ -22021,6 +21995,7 @@ async function waitForPageStability(page, options = {}) {
         if (err instanceof Error && (err.message.includes("Target closed") || err.message.includes("context was destroyed"))) {
           debug("Page context destroyed", { error: err.message });
           if (options.expectNavigation) {
+            clearTimeout(navigationTimer);
             return true;
           }
           throw err;
@@ -22030,7 +22005,14 @@ async function waitForPageStability(page, options = {}) {
       }
       await page.waitForTimeout(MUTATION_CHECK_INTERVAL);
     }
-    warn("Stability check timed out", { duration: Date.now() - startTime });
+    clearTimeout(navigationTimer);
+    if (options.abortSignal?.aborted) {
+      debug("Stability check aborted");
+    } else if (navigationTimeout) {
+      warn("Navigation timeout reached", { duration: Date.now() - startTime });
+    } else {
+      warn("Stability check timed out", { duration: Date.now() - startTime });
+    }
     return true;
   } catch (err) {
     error("Fatal error in stability check", { error: err instanceof Error ? err.message : String(err) });
@@ -22062,7 +22044,7 @@ async function waitForActionStability(page, options = {}) {
   }
   let consecutiveStableChecks = 0;
   let lastContent = "";
-  while (Date.now() - startTime < timeout) {
+  while (Date.now() - startTime < timeout && !options.abortSignal?.aborted) {
     try {
       const isLayoutStable = await page.evaluate((timeout2) => {
         return window.checkLayoutStability?.(timeout2) ?? true;
@@ -22098,7 +22080,11 @@ async function waitForActionStability(page, options = {}) {
     }
     await page.waitForTimeout(MUTATION_CHECK_INTERVAL);
   }
-  warn("Action stability check timed out", { duration: Date.now() - startTime });
+  if (options.abortSignal?.aborted) {
+    debug("Action stability check aborted");
+  } else {
+    warn("Action stability check timed out", { duration: Date.now() - startTime });
+  }
   return true;
 }
 
@@ -22106,25 +22092,34 @@ async function waitForActionStability(page, options = {}) {
 async function executeWaitAction(page, action, options) {
   const isInfiniteWait = action.timeout === -1 || options.timeout === -1;
   const timeout = isInfiniteWait ? 0 : action.timeout || options.timeout || DEFAULT_TIMEOUT;
+  let abortController;
   try {
     if (!isInfiniteWait) {
       await Promise.all(action.elements.map(async (selector) => {
         await page.waitForSelector(selector, { timeout });
       }));
     } else {
-      while (true) {
+      abortController = new AbortController;
+      const signal = abortController.signal;
+      while (!signal.aborted) {
         try {
           await Promise.all(action.elements.map(async (selector) => {
             await page.waitForSelector(selector, { timeout: 1000 });
           }));
           break;
         } catch (err) {
+          if (signal.aborted) {
+            throw new Error("Wait operation interrupted");
+          }
           await page.waitForTimeout(1000);
           continue;
         }
       }
     }
-    const isStable = await waitForActionStability(page, { timeout: timeout || undefined }).catch(() => false);
+    const isStable = await waitForActionStability(page, {
+      timeout: isInfiniteWait ? undefined : timeout,
+      abortSignal: abortController?.signal
+    }).catch(() => false);
     return {
       success: true,
       message: "Elements found and stable",
@@ -22143,6 +22138,10 @@ async function executeWaitAction(page, action, options) {
       message: "Failed to find elements",
       error: error2 instanceof Error ? error2.message : "Unknown error occurred"
     };
+  } finally {
+    if (abortController) {
+      abortController.abort();
+    }
   }
 }
 
@@ -22194,17 +22193,24 @@ async function executePrintAction(page, action, _options) {
     try {
       const elements = await page.$$(selector);
       for (const element of elements) {
-        const html = await element.evaluate((el) => el.outerHTML);
-        results.push({ selector, html, type: "print" });
+        const text = await element.evaluate((el) => el.textContent?.trim() || "");
+        if (text) {
+          results.push({ selector, html: text, type: "print" });
+        }
       }
     } catch (_error) {
       results.push({ selector, error: "Element not found or inaccessible", type: "print", html: "" });
     }
   }
+  const formattedResults = results.filter((r) => !r.error && r.html).map((r) => `Content from ${r.selector}:
+---
+${r.html}
+---
+`);
   return {
     success: results.some((r) => !r.error),
-    message: results.filter((r) => !r.error).map((r) => `HTML captured for ${r.selector}`).join(`
-`),
+    message: formattedResults.length > 0 ? formattedResults.join(`
+`) : "No content captured",
     warning: results.some((r) => r.error) ? `Failed to capture some elements: ${results.filter((r) => r.error).map((r) => r.selector).join(", ")}` : undefined,
     data: results
   };
@@ -22379,196 +22385,153 @@ function printPlan(plan) {
 `;
   return output;
 }
-function printPageHeader(analysis) {
-  let output = "";
-  output += `
+function printAnalysis(analysis, format = "pretty", options = {}) {
+  if (format === "json") {
+    return JSON.stringify(analysis, null, 2);
+  }
+  let output = `
 \uD83D\uDCC4 Page Analysis:
 
 `;
+  if (analysis.error) {
+    output += `⚠️ Error encountered:
+`;
+    output += `==================================================
+`;
+    output += analysis.error + `
+`;
+    output += `==================================================
+
+`;
+  }
   output += `Title: ${analysis.title}
 `;
   if (analysis.description) {
     output += `Description: ${analysis.description}
 `;
   }
-  return output;
-}
-function printInputsSummary(inputs, showAll) {
-  let output = "";
-  if (!inputs?.length)
-    return output;
-  output += `Total Input Elements: ${inputs.length}
-`;
-  if (showAll) {
-    inputs.forEach((input) => {
-      output += `
-\uD83D\uDD24 ${input.label || input.type}
-`;
-      output += `  Type: ${input.type}
-`;
-      if (input.id)
-        output += `  ID: ${input.id}
-`;
-      if (!input.isVisible)
-        output += `  Hidden: true
-`;
-      output += `  Selector: ${input.selector}
-`;
-    });
-  } else {
-    const visibleInputs = inputs.filter((i) => i.isVisible).slice(0, 5);
-    if (visibleInputs.length) {
-      output += `[Showing top visible 5 inputs]
-`;
-      visibleInputs.forEach((input) => {
-        output += `- ${input.label || input.type}
-`;
-      });
-      output += `> to get list of all inputs add --inputs
-`;
-    }
-  }
-  return output;
-}
-function printButtonsSummary(buttons, showAll) {
-  let output = "";
-  if (!buttons?.length)
-    return output;
-  output += `
-Total Button Elements: ${buttons.length}
-`;
-  if (showAll) {
-    buttons.forEach((button) => {
-      output += `
-\uD83D\uDD18 ${button.text || "No text"}
-`;
-      output += `  Selector: ${button.selector}
-`;
-    });
-  } else {
-    const topButtons = buttons.slice(0, 5);
-    if (topButtons.length) {
-      output += `[Showing top visible 5 buttons]
-`;
-      topButtons.forEach((button) => {
-        output += `- ${button.text || "No text"}
-`;
-      });
-      output += `> to get list of all buttons add --buttons
-`;
-    }
-  }
-  return output;
-}
-function printLinksSummary(links, showAll) {
-  let output = "";
-  if (!links?.length)
-    return output;
-  output += `
-Total Link Elements: ${links.length}
-`;
-  if (showAll) {
-    links.forEach((link) => {
-      output += `
-\uD83D\uDD17 ${link.title || "No title"}
-`;
-      output += `  URL: ${link.url}
-`;
-      output += `  Selector: ${link.selector}
-`;
-    });
-  } else {
-    const topLinks = links.slice(0, 5);
-    if (topLinks.length) {
-      output += `[Showing top visible 5 links]
-`;
-      topLinks.forEach((link) => {
-        output += `- ${link.title || "No title"}
-`;
-      });
-      output += `> to get list of all links add --links
-`;
-    }
-  }
-  return output;
-}
-function printActionResults(plannedActions) {
-  let output = "";
-  if (!plannedActions?.length)
-    return output;
-  const results = plannedActions.filter((r) => !r.error);
-  const errorResults = plannedActions.filter((r) => r.error);
-  if (results.length) {
-    output += `
-
-Action Results:
-`;
-    output += "=".repeat(80) + `
-
-`;
-    results.forEach((result) => {
-      if (!result.error && result.html) {
-        if (result.type === "print") {
-          output += `HTML Output:
-`;
-          output += result.html + `
-
-`;
-        } else if (result.type === "markdown") {
-          output += `Markdown Output:
-`;
-          const lines = result.html.split(`
-`);
-          const seenRefs = new Set;
-          const uniqueLines = lines.filter((line) => {
-            if (line.match(/^\[.*\]:/)) {
-              if (seenRefs.has(line))
-                return false;
-              seenRefs.add(line);
-            }
-            return true;
-          });
-          output += uniqueLines.join(`
-`) + `
-`;
-        }
-      }
-    });
-    output += "=".repeat(80) + `
-`;
-  }
-  if (errorResults.length) {
-    output += `
-Action Errors:
-`;
-    errorResults.forEach((result) => {
-      output += `
-❌ ${result.selector}
-`;
-      output += `  Error: ${result.error}
-`;
-    });
-  }
-  return output;
-}
-function printAnalysis(analysis, format = "pretty", options = {}) {
-  if (format === "json") {
-    return JSON.stringify(analysis, null, 2);
-  }
-  let output = printPageHeader(analysis);
   output += `
 Page Elements Summary:
 `;
-  output += "=".repeat(50) + `
+  output += `==================================================
 `;
-  output += printInputsSummary(analysis.inputs, options.showInputs || false);
-  output += printButtonsSummary(analysis.buttons, options.showButtons || false);
-  output += printLinksSummary(analysis.links, options.showLinks || false);
-  if (analysis.plannedActions?.length) {
-    output += printActionResults(analysis.plannedActions);
+  output += `Total Input Elements: ${analysis.inputs.length}
+`;
+  if (analysis.inputs.length > 0) {
+    if (options.showInputs) {
+      output += `[Showing all inputs]
+`;
+      analysis.inputs.forEach((input) => {
+        output += `- ${input.label || input.type}${!input.isVisible ? " (hidden)" : ""}
+`;
+      });
+    } else {
+      output += `[Showing top visible 5 inputs]
+`;
+      analysis.inputs.filter((input) => input.isVisible).slice(0, 5).forEach((input) => {
+        output += `- ${input.label || input.type}
+`;
+      });
+      if (analysis.inputs.length > 5) {
+        output += `> to get list of all inputs add --inputs
+`;
+      }
+    }
   }
   output += `
 `;
+  output += `Total Button Elements: ${analysis.buttons.length}
+`;
+  if (analysis.buttons.length > 0) {
+    if (options.showButtons) {
+      output += `[Showing all buttons]
+`;
+      analysis.buttons.forEach((button) => {
+        output += `- ${button.text || "No text"}
+`;
+      });
+    } else {
+      output += `[Showing top visible 5 buttons]
+`;
+      analysis.buttons.slice(0, 5).forEach((button) => {
+        output += `- ${button.text || "No text"}
+`;
+      });
+      if (analysis.buttons.length > 5) {
+        output += `> to get list of all buttons add --buttons
+`;
+      }
+    }
+  }
+  output += `
+`;
+  output += `Total Link Elements: ${analysis.links.length}
+`;
+  if (analysis.links.length > 0) {
+    if (options.showLinks) {
+      output += `[Showing all links]
+`;
+      analysis.links.forEach((link) => {
+        output += `- ${link.title}
+`;
+      });
+    } else {
+      output += `[Showing top visible 5 links]
+`;
+      analysis.links.slice(0, 5).forEach((link) => {
+        output += `- ${link.title}
+`;
+      });
+      if (analysis.links.length > 5) {
+        output += `> to get list of all links add --links
+`;
+      }
+    }
+  }
+  output += `
+`;
+  if (analysis.plannedActions && analysis.plannedActions.length > 0) {
+    output += `
+Action Results:
+`;
+    output += `================================================================================
+
+`;
+    const printResults = analysis.plannedActions.filter((r) => r.type === "print");
+    const markdownResults = analysis.plannedActions.filter((r) => r.type === "markdown");
+    if (printResults.length > 0) {
+      output += `HTML Output:
+`;
+      printResults.forEach((result) => {
+        if (result.error) {
+          output += `Error capturing ${result.selector}: ${result.error}
+`;
+        } else {
+          output += result.html + `
+`;
+        }
+      });
+      output += `================================================================================
+
+`;
+    }
+    if (markdownResults.length > 0) {
+      output += `Markdown Output:
+`;
+      markdownResults.forEach((result) => {
+        if (result.error) {
+          output += `Error capturing ${result.selector}: ${result.error}
+`;
+        } else {
+          output += result.html + `
+`;
+        }
+      });
+      output += `================================================================================
+
+`;
+    }
+  }
   return output;
 }
 function printActionStatus(status) {
@@ -22624,7 +22587,7 @@ async function executePlan(page, plan, options) {
     if (status.result?.success) {
       plannedActionResults.push({
         type: action.type,
-        selector: Array.isArray(action.elements) ? action.elements[0] : action.element || "",
+        selector: action.type === "wait" || action.type === "print" || action.type === "markdown" ? action.elements[0] : action.type === "click" || action.type === "typing" ? action.element : "",
         html: status.result.message
       });
     }
@@ -22703,9 +22666,91 @@ async function analyzePage(url, options) {
   let actionSucceeded = false;
   const browser = await chromium.launchPersistentContext(userDataDir, {
     headless: options.headless,
-    slowMo: options.slowMo || 0
+    args: ["--disable-web-security", "--disable-features=IsolateOrigins,site-per-process"],
+    bypassCSP: true,
+    permissions: ["clipboard-read", "clipboard-write"]
   });
   const page = await browser.newPage();
+  await page.addInitScript(() => {
+    window.open = function(url2) {
+      if (url2 && url2 !== "about:blank") {
+        window.location.href = url2.toString();
+      }
+      return null;
+    };
+  });
+  page.on("framenavigated", async (frame) => {
+    if (frame === page.mainFrame()) {
+      const frameUrl = frame.url();
+      if (frameUrl !== "about:blank") {
+        console.log(`Navigation to: ${frameUrl}`);
+        await page.waitForTimeout(500);
+        await page.addInitScript(`
+					window.getFullPath = ${getFullPath.toString()};
+					window.checkPageStability = ${checkPageStability.toString()};
+					window.checkLayoutStability = ${checkLayoutStability.toString()};
+					window.stabilityScriptsInjected = true;
+				`);
+      }
+    }
+  });
+  await page.addInitScript(() => {
+    document.addEventListener("click", (e) => {
+      const target = e.target;
+      const link = target.closest("a");
+      if (link) {
+        const href = link.getAttribute("href");
+        if (href && !href.startsWith("javascript:")) {
+          e.preventDefault();
+          window.location.href = href;
+        }
+      }
+    }, true);
+  });
+  page.on("framenavigated", async (frame) => {
+    if (frame === page.mainFrame()) {
+      const frameUrl = frame.url();
+      if (frameUrl !== "about:blank") {
+        console.log(`Navigation to: ${frameUrl}`);
+      }
+    }
+  });
+  browser.on("page", async (newPage) => {
+    const newUrl = newPage.url();
+    if (newUrl && newUrl !== "about:blank") {
+      console.log(`Intercepted popup: ${newUrl}`);
+      try {
+        await page.goto(newUrl);
+      } catch (err) {
+        console.error(`Failed to navigate to: ${newUrl}`, err);
+      }
+    }
+    await newPage.close().catch(() => {
+    });
+  });
+  const wsConnections = new Set;
+  page.on("websocket", (ws) => {
+    wsConnections.add(ws.url());
+    info("WebSocket opened", { url: ws.url() });
+    ws.on("close", () => {
+      wsConnections.delete(ws.url());
+      info("WebSocket closed", { url: ws.url() });
+    });
+  });
+  page.on("request", (request) => {
+    if (request.resourceType() === "xhr" || request.resourceType() === "fetch") {
+      info("API request", {
+        url: request.url(),
+        method: request.method(),
+        resourceType: request.resourceType()
+      });
+    }
+  });
+  page.on("frameattached", async (frame) => {
+    info("Frame attached", { url: frame.url(), name: frame.name() });
+    await frame.waitForLoadState("domcontentloaded").catch(() => {
+    });
+  });
   let plannedActionResults = [];
   try {
     if (options.storageState) {
@@ -22739,6 +22784,110 @@ async function analyzePage(url, options) {
     }
     await page.addInitScript(`
 			window.getFullPath = ${getFullPath.toString()};
+			
+			// Prevent links from opening in new tabs
+			function modifyLinks() {
+				// Function to modify a single link
+				function modifySingleLink(link) {
+					// Remove target and rel attributes
+					link.removeAttribute('target');
+					link.removeAttribute('rel');
+					
+					// Remove existing click listeners
+					const clone = link.cloneNode(true);
+					link.parentNode?.replaceChild(clone, link);
+					
+					// Add our own click handler
+					clone.addEventListener('click', (e) => {
+						const href = clone.getAttribute('href');
+						if (href && !href.startsWith('javascript:')) {
+							e.preventDefault();
+							e.stopPropagation();
+							window.location.href = href;
+						}
+					}, true);  // Use capture to handle event before other listeners
+				}
+
+				// Process all links immediately
+				document.querySelectorAll('a').forEach(modifySingleLink);
+
+				// Override window.open
+				const originalOpen = window.open;
+				window.open = function(url, target, features) {
+					if (url) {
+						window.location.href = url;
+						return null;
+					}
+					return originalOpen.call(window, url, '_self', features);
+				};
+
+				// Watch for new links and modify them
+				const observer = new MutationObserver(mutations => {
+					mutations.forEach(mutation => {
+						// Handle added nodes
+						mutation.addedNodes.forEach(node => {
+							if (node.nodeType === 1) { // ELEMENT_NODE
+								const element = node as Element;
+								// Check the added node itself
+								if (element.tagName === 'A') {
+									modifySingleLink(element);
+								}
+								// Check children of added node
+								element.querySelectorAll('a').forEach(modifySingleLink);
+							}
+						});
+
+						// Also check modified attributes
+						if (mutation.type === 'attributes' && 
+							mutation.target.nodeType === 1 &&
+							(mutation.target as Element).tagName === 'A') {
+							modifySingleLink(mutation.target as HTMLAnchorElement);
+						}
+					});
+				});
+
+				observer.observe(document.body, {
+					childList: true,
+					subtree: true,
+					attributes: true,
+					attributeFilter: ['target', 'href', 'rel']
+				});
+
+				// Override Ctrl/Cmd + Click behavior
+				document.addEventListener('click', (e) => {
+					if (e.ctrlKey || e.metaKey) {
+						const link = (e.target as Element).closest('a');
+						if (link) {
+							e.preventDefault();
+							e.stopPropagation();
+							const href = link.getAttribute('href');
+							if (href) {
+								window.location.href = href;
+							}
+						}
+					}
+				}, true);
+
+				// Specifically for Slack: override their link handling
+				if (window.location.hostname.includes('slack.com')) {
+					// Override Slack's link handler
+					document.addEventListener('click', (e) => {
+						const link = (e.target as Element).closest('a');
+						if (link && !link.getAttribute('href')?.startsWith('javascript:')) {
+							e.preventDefault();
+							e.stopPropagation();
+							const href = link.getAttribute('href');
+							if (href) {
+								window.location.href = href;
+							}
+						}
+					}, true);
+				}
+			}
+
+			// Run immediately and after any navigation
+			modifyLinks();
+			document.addEventListener('DOMContentLoaded', modifyLinks);
 		`);
     info("Starting navigation", { url, options });
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: DEFAULT_TIMEOUT });
@@ -22760,6 +22909,11 @@ async function analyzePage(url, options) {
     }
     await page.addInitScript(`
 			window.getFullPath = ${getFullPath.toString()};
+			
+			// Re-run link modification after navigation
+			if (typeof modifyLinks === 'function') {
+				modifyLinks();
+			}
 		`);
     const analysis = await page.evaluate(({ linkSelectors, buttonSelectors }) => {
       const getAllElements = (selector) => Array.from(document.querySelectorAll(selector));
@@ -22802,10 +22956,68 @@ async function analyzePage(url, options) {
     };
   } catch (err) {
     error("Fatal error during page analysis", { error: err instanceof Error ? err.message : String(err) });
-    throw err;
+    let partialInputs = [];
+    try {
+      const inputElements = await page.$$(INPUT_SELECTORS);
+      partialInputs = await Promise.all(inputElements.map((element) => getElementInfo(page, element)));
+    } catch (e) {
+      error("Failed to get inputs in error handler", { error: e instanceof Error ? e.message : String(e) });
+    }
+    return {
+      title: await page.title().catch(() => "Unknown Title"),
+      inputs: partialInputs,
+      buttons: [],
+      links: [],
+      plannedActions: plannedActionResults.length > 0 ? plannedActionResults : undefined,
+      error: err instanceof Error ? err.message : String(err)
+    };
   } finally {
+    try {
+      const finalUrl = page.url();
+      info("Final URL before closing", { url: finalUrl });
+      info("Final execution state", {
+        url: finalUrl,
+        actionSucceeded,
+        plannedActionsCount: plannedActionResults.length,
+        hasTimeout: options.timeout !== -1
+      });
+    } catch (err) {
+      error("Error in cleanup", { error: err instanceof Error ? err.message : String(err) });
+    }
     if (actionSucceeded || options.timeout !== -1) {
-      await browser.close();
+      try {
+        const state = await browser.storageState();
+        const cookies = state.cookies.map(({
+          name,
+          value,
+          domain,
+          path: path2
+        }) => ({
+          name,
+          value,
+          domain: domain || "",
+          path: path2 || "/"
+        }));
+        const origins = state.origins.map((origin) => {
+          const processedOrigin = {
+            origin: origin.origin
+          };
+          if (origin.localStorage) {
+            processedOrigin.localStorage = Object.fromEntries(origin.localStorage.map((item) => [item.name, item.value]));
+          }
+          if (origin.sessionStorage) {
+            processedOrigin.sessionStorage = Object.fromEntries(origin.sessionStorage.map((item) => [item.name, item.value]));
+          }
+          return processedOrigin;
+        });
+        options.storageState = {
+          cookies,
+          origins
+        };
+        await browser.close();
+      } catch (err) {
+        error("Error in cleanup", { error: err instanceof Error ? err.message : String(err) });
+      }
     }
   }
 }
@@ -23074,7 +23286,8 @@ function setupRequestHandlers(server, tools) {
 
 // src/mcp/server.ts
 async function runServer() {
-  const version = "1.7.0";
+  const name = "ai-tools-browser";
+  const version = "1.16.0";
   const server = new Server({
     name: "@aashari/rag-browser",
     version
