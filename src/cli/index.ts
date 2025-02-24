@@ -5,6 +5,7 @@ import type { Plan } from "../types";
 import { printAnalysis, printPlan } from "./printer";
 import type { OutputFormat } from "./printer";
 import { DEFAULT_TIMEOUT, VISIBLE_MODE_SLOW_MO } from "../config/constants";
+import { fileURLToPath } from 'url';
 
 export async function main(): Promise<void> {
 	const args = process.argv.slice(2);
@@ -70,6 +71,9 @@ export async function main(): Promise<void> {
 }
 
 // Only run main if this file is being executed directly
-if (import.meta.url === process.argv[1]) {
-    main();
+if (fileURLToPath(import.meta.url) === process.argv[1]) {
+    main().catch(error => {
+        console.error("Fatal error:", error instanceof Error ? error.message : String(error));
+        process.exit(1);
+    });
 }
