@@ -21583,7 +21583,7 @@ class StdioServerTransport {
 }
 
 // src/config/version.ts
-var VERSION = "1.17.0";
+var VERSION = "1.18.0";
 var [MAJOR, MINOR, PATCH] = VERSION.split(".").map(Number);
 var GIT_VERSION = `v${VERSION}`;
 var PACKAGE_NAME = "@aashari/rag-browser";
@@ -21670,7 +21670,7 @@ function createToolDefinitions() {
           plan: {
             type: "string",
             description: `A JSON string with an 'actions' array I'll use to interact with the page. If omitted, I'll just analyze the URL. Actions include:
-` + "- `wait`: Waits for elements (e.g., `elements: ['body', '.login']`).\n" + "- `click`: Clicks an element (e.g., `element: 'button.submit'`).\n" + "- `typing`: Types text (e.g., `element: 'input', value: 'hello'`).\n" + "- `keyPress`: Presses a key (e.g., `key: 'Enter'`).\n" + "- `print`: Gets raw HTML from elements.\n" + "- `markdown`: Extracts content as markdown.\n" + "Use CSS selectors (e.g., '#id', '.class'). I'll build this for you based on your request."
+` + "- `wait`: Waits for elements (e.g., `elements: ['body', '.login']`).\n" + "- `click`: Clicks an element (e.g., `element: 'button.submit'`).\n" + "- `typing`: Types text (e.g., `element: 'input', value: 'hello'`).\n" + "- `keyPress`: Presses a key (e.g., `key: 'Enter'`).\n" + "- `print`: Gets content from elements. Use `format: 'html'` for raw HTML or `format: 'markdown'` (default) for markdown.\n" + "Use CSS selectors (e.g., '#id', '.class'). I'll build this for you based on your request."
           }
         },
         required: ["url"]
@@ -21928,9 +21928,11 @@ async function waitForPageStability(page, options = {}) {
     let isKnownDynamicApp = false;
     try {
       const url = page.url();
-      isKnownDynamicApp = url.includes("slack.com") || url.includes("discord.com") || url.includes("teams.microsoft.com");
+      isKnownDynamicApp = await page.evaluate(() => {
+        return window.WebSocket !== undefined && document.querySelector('[data-testid], [role="application"], [role="main"]') !== null;
+      });
     } catch (err) {
-      warn("Failed to check URL", { error: err instanceof Error ? err.message : String(err) });
+      warn("Failed to check dynamic app status", { error: err instanceof Error ? err.message : String(err) });
     }
     if (isKnownDynamicApp) {
       debug("Dynamic app detected, using simplified stability check");
@@ -22193,55 +22195,25 @@ async function executeTypingAction(page, action, options) {
   }
 }
 
-// src/core/handlers/print.ts
-async function executePrintAction(page, action, _options) {
-  const results = [];
-  for (const selector of action.elements) {
-    try {
-      const elements = await page.$$(selector);
-      for (const element of elements) {
-        const html = await element.evaluate((el) => {
-          return {
-            outerHTML: el.outerHTML,
-            structure: {
-              tagName: el.tagName.toLowerCase(),
-              className: el.className,
-              id: el.id,
-              attributes: Array.from(el.attributes).map((attr) => `${attr.name}="${attr.value}"`).join(" ")
-            }
-          };
-        });
-        results.push({
-          selector,
-          html: `HTML Structure:
-${JSON.stringify(html.structure, null, 2)}
-
-HTML Content:
-${html.outerHTML}`,
-          type: "print",
-          metadata: html.structure
-        });
-      }
-    } catch (error2) {
-      results.push({
-        selector,
-        error: error2 instanceof Error ? error2.message : "Element not found or inaccessible",
-        type: "print",
-        html: ""
-      });
-    }
-  }
-  const formattedResults = results.filter((r) => !r.error && r.html).map((r) => `Content from ${r.selector}:
+// src/utils/handlers.ts
+function createActionResult(results, format = "markdown") {
+  const typedResults = results.map((result) => ({
+    ...result,
+    type: "print",
+    format
+  }));
+  const successfulResults = typedResults.filter((r) => !r.error && r.html);
+  const failedResults = typedResults.filter((r) => r.error);
+  return {
+    success: successfulResults.length > 0,
+    message: successfulResults.map((r) => `Content from ${r.selector}:
 =================
 ${r.html}
 =================
-`);
-  return {
-    success: results.some((r) => !r.error),
-    message: formattedResults.length > 0 ? formattedResults.join(`
-`) : "No content captured",
-    warning: results.some((r) => r.error) ? `Failed to capture some elements: ${results.filter((r) => r.error).map((r) => r.selector).join(", ")}` : undefined,
-    data: results
+`).join(`
+`),
+    warning: failedResults.length > 0 ? `Failed to capture some elements: ${failedResults.map((r) => `${r.selector} (${r.error})`).join(", ")}` : undefined,
+    data: typedResults
   };
 }
 
@@ -22250,103 +22222,100 @@ var import_turndown = __toESM(require_turndown_cjs(), 1);
 var turndownService = new import_turndown.default({
   headingStyle: "atx",
   codeBlockStyle: "fenced",
-  emDelimiter: "_",
-  strongDelimiter: "**",
-  bulletListMarker: "-",
-  hr: "---",
-  linkStyle: "referenced",
-  linkReferenceStyle: "full"
+  bulletListMarker: "-"
 });
-turndownService.addRule("preserveStructure", {
-  filter: (node) => {
-    return node instanceof HTMLElement && (node.hasAttribute("data-testid") || node.hasAttribute("role") || node.className.includes("css-"));
-  },
-  replacement: (content, node) => {
-    if (node instanceof HTMLElement) {
-      const attrs = Array.from(node.attributes).map((attr) => `${attr.name}="${attr.value}"`).join(" ");
-      return `<${node.tagName.toLowerCase()} ${attrs}>${content}</${node.tagName.toLowerCase()}>`;
-    }
-    return content;
+function cleanHtml(html) {
+  return html.replace(/ style="[^"]*"/g, "").replace(/<div[^>]*>\s*<\/div>/g, "").replace(/class="[^"]*"/g, "");
+}
+var convertToMarkdown = (html, selector) => {
+  try {
+    const cleanedHtml = cleanHtml(html);
+    const markdown = turndownService.turndown(cleanedHtml).trim();
+    return {
+      selector,
+      html: markdown,
+      type: "print",
+      format: "markdown"
+    };
+  } catch (error2) {
+    return {
+      selector,
+      html,
+      type: "print",
+      format: "html",
+      error: error2 instanceof Error ? error2.message : "Unknown error during markdown conversion"
+    };
   }
-});
-turndownService.addRule("enhancedImage", {
-  filter: ["img"],
-  replacement: (content, node) => {
-    if (node instanceof HTMLImageElement) {
-      const alt = node.alt || "Image";
-      const src = node.src || "";
-      const title = node.title ? ` "${node.title}"` : "";
-      return src ? `![${alt}](${src}${title})` : "";
-    }
-    return content;
-  }
-});
-turndownService.addRule("codeBlock", {
-  filter: (node) => {
-    return node.nodeName === "PRE" && node.firstChild?.nodeName === "CODE";
-  },
-  replacement: (content, node) => {
-    const code = node.firstChild;
-    const language = code.className.replace("language-", "") || "";
-    const fence = "```";
-    return `
+};
 
-${fence}${language}
-${content}
-${fence}
-
-`;
-  }
-});
-
-// src/core/handlers/markdown.ts
-async function executeMarkdownAction(page, action, _options) {
+// src/core/handlers/print.ts
+async function captureElementsHtml(page, selectors, format = "markdown") {
   const results = [];
-  for (const selector of action.elements) {
+  for (const selector of selectors) {
     try {
-      const elements = await page.$$(selector);
-      for (const element of elements) {
-        const html = await element.evaluate((el) => {
-          return {
-            outerHTML: el.outerHTML,
-            structure: {
-              tagName: el.tagName.toLowerCase(),
-              className: el.className,
-              id: el.id,
-              attributes: Array.from(el.attributes).map((attr) => `${attr.name}="${attr.value}"`).join(" ")
-            }
-          };
-        });
-        const markdown = turndownService.turndown(html.outerHTML);
+      info("Searching for elements:", { selector });
+      const content = await page.evaluate((sel) => {
+        const elements = Array.from(document.querySelectorAll(sel));
+        if (elements.length === 0)
+          return "";
+        return elements.map((el) => el.outerHTML).join(`
+`);
+      }, selector);
+      if (!content) {
+        info("No elements found for selector:", { selector });
         results.push({
           selector,
-          html: markdown,
-          type: "markdown",
-          metadata: html.structure
+          error: "No elements found",
+          type: "print",
+          html: "",
+          format
+        });
+        continue;
+      }
+      info("Successfully captured HTML content");
+      if (format === "markdown") {
+        try {
+          const result = convertToMarkdown(content, selector);
+          info("Successfully converted content to markdown");
+          results.push({
+            ...result,
+            type: "print",
+            format
+          });
+        } catch (conversionError) {
+          info("Error converting to markdown, falling back to HTML:", { error: conversionError });
+          results.push({
+            selector,
+            html: content,
+            type: "print",
+            format: "html",
+            error: conversionError instanceof Error ? conversionError.message : "Failed to convert to markdown"
+          });
+        }
+      } else {
+        results.push({
+          selector,
+          html: content,
+          type: "print",
+          format
         });
       }
     } catch (error2) {
-      info("Error in markdown conversion:", error2);
+      info("Error capturing content:", { error: error2 });
       results.push({
         selector,
-        error: error2 instanceof Error ? error2.message : "Element not found or inaccessible",
-        type: "markdown",
-        html: ""
+        error: error2 instanceof Error ? error2.message : "Failed to capture element content",
+        type: "print",
+        html: "",
+        format
       });
     }
   }
-  const successfulResults = results.filter((r) => !r.error);
-  const failedResults = results.filter((r) => r.error);
-  return {
-    success: successfulResults.length > 0,
-    message: successfulResults.map((r) => r.html).join(`
-
----
-
-`),
-    warning: failedResults.length > 0 ? `Failed to capture ${failedResults.length} elements: ${failedResults.map((r) => `${r.selector} (${r.error})`).join(", ")}` : undefined,
-    data: results
-  };
+  return results;
+}
+async function executePrintAction(page, action, _options) {
+  const results = await captureElementsHtml(page, action.elements, action.format);
+  return createActionResult(results, action.format);
 }
 
 // src/core/handlers/keyPress.ts
@@ -22398,11 +22367,6 @@ var actionHandlers = {
     if (action.type !== "print")
       throw new Error("Invalid action type");
     return executePrintAction(page, action, options);
-  },
-  markdown: (page, action, options) => {
-    if (action.type !== "markdown")
-      throw new Error("Invalid action type");
-    return executeMarkdownAction(page, action, options);
   }
 };
 async function executeAction(page, action, options) {
@@ -22554,40 +22518,18 @@ Action Results:
     output += `================================================================================
 
 `;
-    const printResults = analysis.plannedActions.filter((r) => r.type === "print");
-    const markdownResults = analysis.plannedActions.filter((r) => r.type === "markdown");
-    if (printResults.length > 0) {
-      output += `HTML Output:
+    analysis.plannedActions.forEach((result) => {
+      if (result.error) {
+        output += `Error capturing ${result.selector}: ${result.error}
 `;
-      printResults.forEach((result) => {
-        if (result.error) {
-          output += `Error capturing ${result.selector}: ${result.error}
+      } else if (result.html) {
+        output += result.html + `
 `;
-        } else {
-          output += result.html + `
-`;
-        }
-      });
-      output += `================================================================================
+      }
+    });
+    output += `================================================================================
 
 `;
-    }
-    if (markdownResults.length > 0) {
-      output += `Markdown Output:
-`;
-      markdownResults.forEach((result) => {
-        if (result.error) {
-          output += `Error capturing ${result.selector}: ${result.error}
-`;
-        } else {
-          output += result.html + `
-`;
-        }
-      });
-      output += `================================================================================
-
-`;
-    }
   }
   return output;
 }
@@ -22925,21 +22867,18 @@ async function analyzePage(url, options) {
 					}
 				}, true);
 
-				// Specifically for Slack: override their link handling
-				if (window.location.hostname.includes('slack.com')) {
-					// Override Slack's link handler
-					document.addEventListener('click', (e) => {
-						const link = (e.target as Element).closest('a');
-						if (link && !link.getAttribute('href')?.startsWith('javascript:')) {
-							e.preventDefault();
-							e.stopPropagation();
-							const href = link.getAttribute('href');
-							if (href) {
-								window.location.href = href;
-							}
+				// Generic link handler for all sites
+				document.addEventListener('click', (e) => {
+					const link = (e.target as Element).closest('a');
+					if (link && !link.getAttribute('href')?.startsWith('javascript:')) {
+						e.preventDefault();
+						e.stopPropagation();
+						const href = link.getAttribute('href');
+						if (href) {
+							window.location.href = href;
 						}
-					}, true);
-				}
+					}
+				}, true);
 			}
 
 			// Run immediately and after any navigation
