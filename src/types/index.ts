@@ -118,3 +118,9 @@ export interface ActionStatus {
 	description: string;
 	result?: ActionResult;
 }
+
+export interface StoredAnalysis {
+	analysis: PageAnalysis;
+	timestamp: Date;
+	url: string;
+}

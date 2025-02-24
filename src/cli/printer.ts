@@ -1,5 +1,5 @@
 import type { PageAnalysis, Plan, ActionStatus } from "../types";
-import { getActionSymbol, getActionDescription } from "../utils/actions";
+import { getActionSymbol, getActionDescription } from "../utils/printer";
 import chalk from "chalk";
 
 export type OutputFormat = "pretty" | "json";
