@@ -147,24 +147,24 @@ export function printAnalysis(analysis: PageAnalysis, format: OutputFormat = "pr
 			output += `\n\n${chalk.bold("Action Results:")}\n`;
 			output += chalk.yellow("=".repeat(80)) + "\n\n";
 			results.forEach((result) => {
-				if (result.html) {
-					if (result.selector.includes('print')) {
-						// For print action, show both HTML and markdown
+				if (!result.error && result.html) {
+					if (result.type === 'print') {
 						output += chalk.bold("HTML Output:") + "\n";
-						output += chalk.gray(result.rawHtml || '') + "\n\n";
+						output += chalk.gray(result.html) + "\n\n";
+					} else if (result.type === 'markdown') {
 						output += chalk.bold("Markdown Output:") + "\n";
+						// Remove duplicate link references
+						const lines = result.html.split('\n');
+						const seenRefs = new Set<string>();
+						const uniqueLines = lines.filter(line => {
+							if (line.match(/^\[.*\]:/)) {
+								if (seenRefs.has(line)) return false;
+								seenRefs.add(line);
+							}
+							return true;
+						});
+						output += uniqueLines.join('\n') + "\n";
 					}
-					// Remove duplicate link references
-					const lines = result.html.split('\n');
-					const seenRefs = new Set<string>();
-					const uniqueLines = lines.filter(line => {
-						if (line.match(/^\[.*\]:/)) {
-							if (seenRefs.has(line)) return false;
-							seenRefs.add(line);
-						}
-						return true;
-					});
-					output += uniqueLines.join('\n') + "\n";
 				}
 			});
 			output += chalk.yellow("=".repeat(80)) + "\n";

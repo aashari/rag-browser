@@ -68,10 +68,17 @@ export interface Plan {
 
 export type PlannedActionResult = {
 	selector: string;
-	html?: string;
-	rawHtml?: string;
 	error?: string;
-};
+} & (
+	| {
+			type: 'print';
+			html: string;
+	}
+	| {
+			type: 'markdown';
+			html: string;
+	}
+);
 
 export interface PageAnalysis {
 	title: string;

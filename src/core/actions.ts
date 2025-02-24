@@ -145,13 +145,11 @@ export async function executeAction(page: Page, action: Action, options: Browser
 						// Get all matching elements
 						const elements = await page.$$(selector);
 						debugLog(`Found ${elements.length} elements matching ${selector}`);
-						
+
 						for (const element of elements) {
 							const html = await element.evaluate(el => el.outerHTML);
-							debugLog(`Converting HTML to Markdown for print: ${html.substring(0, 100)}...`);
-							const markdown = turndownService.turndown(html);
-							debugLog(`Print markdown result: ${markdown.substring(0, 100)}...`);
-							results.push({ selector, html: markdown, rawHtml: html });
+							debugLog(`Print HTML result: ${html.substring(0, 100)}...`);
+							results.push({ selector, html, type: 'print' as const });
 						}
 					} catch (_error) {
 						debugLog(`Error getting HTML for selector: ${selector} - ${_error instanceof Error ? _error.message : String(_error)}`);
@@ -161,15 +159,15 @@ export async function executeAction(page: Page, action: Action, options: Browser
 				return {
 					success: results.some((r) => !r.error),
 					message: results
-						.filter((r) => !r.error)
-						.map((r) => `HTML captured for ${r.selector}`)
-						.join("\n"),
+							.filter((r) => !r.error)
+							.map((r) => `HTML captured for ${r.selector}`)
+							.join("\n"),
 					warning: results.some((r) => r.error)
-						? `Failed to capture some elements: ${results
-								.filter((r) => r.error)
-								.map((r) => r.selector)
-								.join(", ")}`
-						: undefined,
+							? `Failed to capture some elements: ${results
+									.filter((r) => r.error)
+									.map((r) => r.selector)
+									.join(", ")}`
+							: undefined,
 					data: results,
 				};
 			}

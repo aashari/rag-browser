@@ -23758,30 +23758,31 @@ ${import_chalk2.default.bold("Action Results:")}
 
 `;
       results.forEach((result) => {
-        if (result.html) {
-          if (result.selector.includes("print")) {
+        if (!result.error && result.html) {
+          if (result.type === "print") {
             output += import_chalk2.default.bold("HTML Output:") + `
 `;
-            output += import_chalk2.default.gray(result.rawHtml || "") + `
+            output += import_chalk2.default.gray(result.html) + `
 
 `;
+          } else if (result.type === "markdown") {
             output += import_chalk2.default.bold("Markdown Output:") + `
 `;
-          }
-          const lines = result.html.split(`
+            const lines = result.html.split(`
 `);
-          const seenRefs = new Set;
-          const uniqueLines = lines.filter((line) => {
-            if (line.match(/^\[.*\]:/)) {
-              if (seenRefs.has(line))
-                return false;
-              seenRefs.add(line);
-            }
-            return true;
-          });
-          output += uniqueLines.join(`
+            const seenRefs = new Set;
+            const uniqueLines = lines.filter((line) => {
+              if (line.match(/^\[.*\]:/)) {
+                if (seenRefs.has(line))
+                  return false;
+                seenRefs.add(line);
+              }
+              return true;
+            });
+            output += uniqueLines.join(`
 `) + `
 `;
+          }
         }
       });
       output += import_chalk2.default.yellow("=".repeat(80)) + `
@@ -23930,10 +23931,8 @@ async function executeAction(page, action, options) {
             debugLog(`Found ${elements.length} elements matching ${selector}`);
             for (const element of elements) {
               const html = await element.evaluate((el) => el.outerHTML);
-              debugLog(`Converting HTML to Markdown for print: ${html.substring(0, 100)}...`);
-              const markdown = turndownService.turndown(html);
-              debugLog(`Print markdown result: ${markdown.substring(0, 100)}...`);
-              results.push({ selector, html: markdown, rawHtml: html });
+              debugLog(`Print HTML result: ${html.substring(0, 100)}...`);
+              results.push({ selector, html, type: "print" });
             }
           } catch (_error) {
             debugLog(`Error getting HTML for selector: ${selector} - ${_error instanceof Error ? _error.message : String(_error)}`);
