@@ -65,7 +65,7 @@ function createTool(name: string, description: string, additionalProps: SchemaPr
 	return {
 		name,
 		description,
-		version: "1.12.0",
+		version: "1.13.0",
 		compatibility: {
 			minVersion: "1.0.0",
 			deprecatedFeatures: [], // No deprecated features yet
@@ -306,7 +306,7 @@ export function createToolDefinitions(): EnhancedTool[] {
 				"   ```json\n" +
 				"   {\"type\": \"print\", \"elements\": [\".error-message, .alert, .notification\"]}\n" +
 				"   ```\n",
-			version: "1.12.0",
+			version: "1.13.0",
 			compatibility: {
 				minVersion: "1.0.0",
 				deprecatedFeatures: [],

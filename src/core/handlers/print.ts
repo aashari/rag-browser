@@ -18,12 +18,17 @@ export async function executePrintAction(
             results.push({ selector, error: "Element not found or inaccessible", type: 'print' as const, html: '' });
         }
     }
+
+    // Format the output to show actual content
+    const formattedResults = results
+        .filter(r => !r.error && r.html)
+        .map(r => `Content from ${r.selector}:\n---\n${r.html}\n---\n`);
+
     return {
         success: results.some((r) => !r.error),
-        message: results
-            .filter((r) => !r.error)
-            .map((r) => `${r.html}`)
-            .join("\n"),
+        message: formattedResults.length > 0 
+            ? formattedResults.join("\n")
+            : "No content captured",
         warning: results.some((r) => r.error)
             ? `Failed to capture some elements: ${results
                 .filter((r) => r.error)
