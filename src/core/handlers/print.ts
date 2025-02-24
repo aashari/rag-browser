@@ -11,8 +11,8 @@ export async function executePrintAction(
         try {
             const elements = await page.$$(selector);
             for (const element of elements) {
-                const html = await element.evaluate(el => el.outerHTML);
-                results.push({ selector, html, type: 'print' as const });
+                const text = await element.evaluate(el => el.textContent?.trim() || '');
+                results.push({ selector, html: text, type: 'print' as const });
             }
         } catch (_error) {
             results.push({ selector, error: "Element not found or inaccessible", type: 'print' as const, html: '' });
@@ -22,7 +22,7 @@ export async function executePrintAction(
         success: results.some((r) => !r.error),
         message: results
             .filter((r) => !r.error)
-            .map((r) => `HTML captured for ${r.selector}`)
+            .map((r) => `${r.html}`)
             .join("\n"),
         warning: results.some((r) => r.error)
             ? `Failed to capture some elements: ${results

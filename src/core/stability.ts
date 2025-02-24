@@ -82,20 +82,29 @@ async function injectStabilityScripts(page: Page): Promise<void> {
 
 export async function waitForPageStability(
 	page: Page,
-	options: { timeout?: number; expectNavigation?: boolean } = {}
+	options: { 
+		timeout?: number; 
+		expectNavigation?: boolean;
+		abortSignal?: AbortSignal;
+	} = {}
 ): Promise<boolean> {
 	const startTime = Date.now();
 	const timeout = options.timeout || DEFAULT_TIMEOUT;
 	debug("Starting page stability check", { timeout });
 
 	try {
-		// Wait for initial load state
+		// Wait for initial load state with a shorter timeout
 		await Promise.race([
 			page.waitForLoadState("domcontentloaded"),
 			new Promise((resolve) => setTimeout(resolve, NETWORK_IDLE_TIMEOUT)),
 		]).catch(() => {
 			warn("Initial domcontentloaded wait failed");
 		});
+
+		// Check for abort before continuing
+		if (options.abortSignal?.aborted) {
+			throw new Error("Stability check aborted");
+		}
 
 		// Try to inject scripts, but continue even if it fails
 		try {
@@ -104,34 +113,62 @@ export async function waitForPageStability(
 			warn("Failed to inject stability scripts, will use basic stability check", {
 				error: err instanceof Error ? err.message : String(err),
 			});
-			// If script injection fails, wait for network idle and proceed
-			await page
-				.waitForLoadState("networkidle", { timeout: NETWORK_IDLE_TIMEOUT })
-				.catch(() => warn("Network not idle"));
+			await page.waitForTimeout(NETWORK_IDLE_TIMEOUT);
 			return true;
 		}
 
+		// Check if we're on a known dynamic app
+		let isKnownDynamicApp = false;
+		try {
+			const url = page.url();
+			isKnownDynamicApp = url.includes("slack.com") || 
+							   url.includes("discord.com") || 
+							   url.includes("teams.microsoft.com");
+		} catch (err) {
+			warn("Failed to check URL", { error: err instanceof Error ? err.message : String(err) });
+		}
+
+		// For dynamic apps, we only need basic DOM readiness
+		if (isKnownDynamicApp) {
+			debug("Dynamic app detected, using simplified stability check");
+			try {
+				// Wait for basic DOM readiness
+				await page.waitForFunction(() => {
+					return document.readyState === 'complete' && 
+						   document.body !== null &&
+						   document.body.children.length > 0;
+				}, { timeout: NETWORK_IDLE_TIMEOUT });
+				
+				// Short delay to allow initial content to load
+				await page.waitForTimeout(1000);
+				
+				debug("Dynamic app basic stability confirmed");
+				return true;
+			} catch (err) {
+				warn("Dynamic app stability check failed", { 
+					error: err instanceof Error ? err.message : String(err) 
+				});
+				return true;
+			}
+		}
+
+		// Regular stability check for non-dynamic apps
 		let checkCount = 0;
 		let lastLoadingIndicatorCount = -1;
 		let consecutiveStableChecks = 0;
 
-		while (Date.now() - startTime < timeout) {
+		while (Date.now() - startTime < timeout && !options.abortSignal?.aborted) {
 			checkCount++;
 			debug("Stability check iteration", { iteration: checkCount });
 
 			try {
-				// Check network idle and loading indicators in parallel
-				const [, loadingIndicators] = await Promise.all([
-					page
-						.waitForLoadState("networkidle", { timeout: NETWORK_IDLE_TIMEOUT })
-						.catch(() => warn("Network not idle")),
-					page.$$(LOADING_INDICATORS).catch(() => []),
-				]);
+				await page
+					.waitForLoadState("networkidle", { timeout: NETWORK_IDLE_TIMEOUT })
+					.catch(() => warn("Network not idle"));
 
+				const loadingIndicators = await page.$$(LOADING_INDICATORS).catch(() => []);
 				const currentLoadingCount = loadingIndicators.length;
-				debug("Loading indicators check", { count: currentLoadingCount });
 
-				// If loading indicators are changing, wait for them to stabilize
 				if (currentLoadingCount !== lastLoadingIndicatorCount) {
 					lastLoadingIndicatorCount = currentLoadingCount;
 					consecutiveStableChecks = 0;
@@ -140,7 +177,7 @@ export async function waitForPageStability(
 				}
 
 				if (currentLoadingCount === 0) {
-					debug("No loading indicators, checking page stability");
+					debug("Checking page stability");
 					const isStable = await page
 						.evaluate((timeout) => {
 							return window.checkPageStability?.(timeout) ?? true;
@@ -164,10 +201,8 @@ export async function waitForPageStability(
 					}
 				}
 			} catch (err) {
-				if (
-					err instanceof Error &&
-					(err.message.includes("Target closed") || err.message.includes("context was destroyed"))
-				) {
+				if (err instanceof Error &&
+					(err.message.includes("Target closed") || err.message.includes("context was destroyed"))) {
 					debug("Page context destroyed", { error: err.message });
 					if (options.expectNavigation) {
 						return true;
@@ -180,7 +215,11 @@ export async function waitForPageStability(
 			await page.waitForTimeout(MUTATION_CHECK_INTERVAL);
 		}
 
-		warn("Stability check timed out", { duration: Date.now() - startTime });
+		if (options.abortSignal?.aborted) {
+			debug("Stability check aborted");
+		} else {
+			warn("Stability check timed out", { duration: Date.now() - startTime });
+		}
 		return true;
 	} catch (err) {
 		error("Fatal error in stability check", { error: err instanceof Error ? err.message : String(err) });
@@ -190,7 +229,11 @@ export async function waitForPageStability(
 
 export async function waitForActionStability(
 	page: Page,
-	options: { timeout?: number; expectNavigation?: boolean } = {}
+	options: { 
+		timeout?: number; 
+		expectNavigation?: boolean;
+		abortSignal?: AbortSignal;
+	} = {}
 ): Promise<boolean> {
 	const timeout = options.timeout || ACTION_STABILITY_TIMEOUT;
 	const startTime = Date.now();
@@ -223,7 +266,7 @@ export async function waitForActionStability(
 	let consecutiveStableChecks = 0;
 	let lastContent = "";
 
-	while (Date.now() - startTime < timeout) {
+	while (Date.now() - startTime < timeout && !options.abortSignal?.aborted) {
 		try {
 			// Check layout stability
 			const isLayoutStable = await page
@@ -272,7 +315,11 @@ export async function waitForActionStability(
 		await page.waitForTimeout(MUTATION_CHECK_INTERVAL);
 	}
 
-	warn("Action stability check timed out", { duration: Date.now() - startTime });
+	if (options.abortSignal?.aborted) {
+		debug("Action stability check aborted");
+	} else {
+		warn("Action stability check timed out", { duration: Date.now() - startTime });
+	}
 	return true;
 }
 

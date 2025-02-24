@@ -6,7 +6,7 @@ import { createToolDefinitions } from "./tools.js";
 import { setupRequestHandlers } from "./requestHandler.js";
 
 export async function runServer(): Promise<void> {
-	const version = "1.7.0";
+	const version = "1.11.0";
 	const server = new Server(
 		{
 			name: "@aashari/rag-browser",

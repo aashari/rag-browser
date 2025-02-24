@@ -65,7 +65,7 @@ function createTool(name: string, description: string, additionalProps: SchemaPr
 	return {
 		name,
 		description,
-		version: "1.7.0", // Current version
+		version: "1.11.0",
 		compatibility: {
 			minVersion: "1.0.0",
 			deprecatedFeatures: [], // No deprecated features yet
@@ -79,136 +79,234 @@ export function createToolDefinitions(): EnhancedTool[] {
 		{
 			name: "action",
 			description:
-				"Analyzes and interacts with a webpage. This tool combines page analysis and action execution capabilities.\n\n" +
-				"### Process:\n" +
-				"1. **Loads the Webpage**: Opens the provided URL in a browser instance.\n" +
-				"2. **Optional Plan Execution**: If a plan is provided, executes each action sequentially.\n" +
-				"3. **Ensures Stability**: Monitors page stability during loading and after each action.\n" +
-				"4. **Analyzes State**: Returns a structured analysis of the page's current state.\n\n" +
-				"### When to Use:\n" +
-				"- **Static Analysis**: To explore a webpage's structure and elements (without a plan).\n" +
-				"- **Automation**: To perform tasks like form filling, clicking, or searching (with a plan).\n" +
-				"- **Information Retrieval**: To extract page content or element details.\n" +
-				"- **Multi-step Workflows**: To navigate through processes like login or checkout.\n" +
-				"- **Interactive Sessions**: To handle user authentication or manual intervention.\n\n" +
-				"### Debugging Tips:\n" +
-				"1. **Element Not Found**: Use `print` action to inspect the page structure:\n" +
+				"A powerful web automation tool for analyzing and interacting with webpages. This guide will help you (AI) effectively use this tool for various web automation tasks.\n\n" +
+				"### Understanding the Tool:\n" +
+				"This tool allows you to:\n" +
+				"1. Analyze webpage structure and content\n" +
+				"2. Extract specific information\n" +
+				"3. Automate user interactions\n" +
+				"4. Handle dynamic content and authentication\n\n" +
+				"### Basic Usage Patterns:\n\n" +
+				"1. **Simple Page Analysis**:\n" +
+				"   ```json\n" +
+				"   {\n" +
+				"     \"url\": \"https://example.com\",\n" +
+				"     \"inputs\": \"true\",\n" +
+				"     \"buttons\": \"true\",\n" +
+				"     \"links\": \"true\"\n" +
+				"   }\n" +
+				"   ```\n" +
+				"   This returns all interactive elements on the page.\n\n" +
+				"2. **Content Extraction**:\n" +
+				"   ```json\n" +
+				"   {\n" +
+				"     \"url\": \"https://example.com/article\",\n" +
+				"     \"plan\": {\n" +
+				"       \"actions\": [\n" +
+				"         {\"type\": \"markdown\", \"elements\": [\"article\"]}\n" +
+				"       ]\n" +
+				"     }\n" +
+				"   }\n" +
+				"   ```\n\n" +
+				"### Finding Elements - A Step-by-Step Guide:\n\n" +
+				"When elements aren't immediately found, follow this process:\n\n" +
+				"1. **Start Broad**:\n" +
+				"   ```json\n" +
+				"   {\"type\": \"print\", \"elements\": [\"body\"]}\n" +
+				"   ```\n" +
+				"   This gives you the full page content to analyze.\n\n" +
+				"2. **Narrow Down**:\n" +
+				"   ```json\n" +
+				"   {\"type\": \"print\", \"elements\": [\".main-content *\"]}\n" +
+				"   ```\n" +
+				"   Look for relevant container classes or IDs.\n\n" +
+				"3. **Check Visibility**:\n" +
+				"   ```json\n" +
+				"   {\"type\": \"wait\", \"elements\": [\"button:not([style*='display: none']):not([style*='visibility: hidden'])\"]}\n" +
+				"   ```\n" +
+				"   Elements might be hidden.\n\n" +
+				"4. **Try Alternative Attributes**:\n" +
+				"   ```json\n" +
+				"   {\"type\": \"wait\", \"elements\": [\"[aria-label*='search' i], [placeholder*='search' i], input[type='search']\"]}\n" +
+				"   ```\n" +
+				"   Use multiple attribute combinations.\n\n" +
+				"### Common Use Cases with Solutions:\n\n" +
+				"1. **Login Flows**:\n" +
+				"   ```json\n" +
+				"   {\n" +
+				"     \"url\": \"https://example.com/login\",\n" +
+				"     \"plan\": {\n" +
+				"       \"actions\": [\n" +
+				"         // First, verify we're on login page\n" +
+				"         {\"type\": \"wait\", \"elements\": [\"form input[type='password'], .login-form, .sign-in-form\"]},\n" +
+				"         // Try multiple possible username field selectors\n" +
+				"         {\"type\": \"typing\", \"element\": \"input[type='email'], input[type='text'], #username, [name='username']\", \"value\": \"user@example.com\"},\n" +
+				"         // Try multiple possible password field selectors\n" +
+				"         {\"type\": \"typing\", \"element\": \"input[type='password'], #password, [name='password']\", \"value\": \"password123\"},\n" +
+				"         // Try multiple possible submit button selectors\n" +
+				"         {\"type\": \"click\", \"element\": \"button[type='submit'], input[type='submit'], .login-button, .sign-in-button\"},\n" +
+				"         // Wait for either success or error\n" +
+				"         {\"type\": \"wait\", \"elements\": [\".dashboard, .home-feed, .error-message, .alert-error\"]},\n" +
+				"         // Print the result\n" +
+				"         {\"type\": \"print\", \"elements\": [\".error-message, .alert-error, .dashboard-welcome, .feed-header\"]}\n" +
+				"       ]\n" +
+				"     }\n" +
+				"   }\n" +
+				"   ```\n\n" +
+				"2. **Search and Extract**:\n" +
 				"   ```json\n" +
 				"   {\n" +
 				"     \"url\": \"https://example.com\",\n" +
 				"     \"plan\": {\n" +
 				"       \"actions\": [\n" +
-				"         {\"type\": \"print\", \"elements\": [\"body\"]}\n" +
-				"       ]\n" +
-				"     }\n" +
-				"   }\n" +
-				"   ```\n" +
-				"2. **Dynamic Content**: Add wait actions before interactions:\n" +
-				"   ```json\n" +
-				"   {\"type\": \"wait\", \"elements\": [\"#dynamic-content\"]}\n" +
-				"   ```\n" +
-				"3. **Authentication**: Use infinite wait for user login:\n" +
-				"   ```json\n" +
-				"   {\"type\": \"wait\", \"elements\": [\"[aria-label='Timeline']\"], \"timeout\": -1}\n" +
-				"   ```\n\n" +
-				"### Common Scenarios:\n\n" +
-				"1. **Wikipedia Search and Extract**:\n" +
-				"   ```json\n" +
-				"   {\n" +
-				"     \"url\": \"https://wikipedia.org\",\n" +
-				"     \"plan\": {\n" +
-				"       \"actions\": [\n" +
-				"         {\"type\": \"wait\", \"elements\": [\"#searchInput\"]},\n" +
-				"         {\"type\": \"typing\", \"element\": \"#searchInput\", \"value\": \"Prabowo Subianto\"},\n" +
+				"         // Find search input using multiple common patterns\n" +
+				"         {\"type\": \"wait\", \"elements\": [\"input[type='search'], [aria-label*='search' i], [placeholder*='search' i]\"]},\n" +
+				"         // Type search query\n" +
+				"         {\"type\": \"typing\", \"element\": \"input[type='search'], [aria-label*='search' i], [placeholder*='search' i]\", \"value\": \"search term\"},\n" +
+				"         // Try different ways to submit search\n" +
 				"         {\"type\": \"keyPress\", \"key\": \"Enter\"},\n" +
-				"         {\"type\": \"wait\", \"elements\": [\".mw-search-results\"]},\n" +
-				"         {\"type\": \"print\", \"elements\": [\".mw-search-results\"]},\n" +
-				"         {\"type\": \"click\", \"element\": \".mw-search-result:first-child a\"},\n" +
-				"         {\"type\": \"wait\", \"elements\": [\"#mw-content-text\"]},\n" +
-				"         {\"type\": \"markdown\", \"elements\": [\"#mw-content-text\"]}\n" +
+				"         // Wait for results using multiple possible selectors\n" +
+				"         {\"type\": \"wait\", \"elements\": [\".search-results, .results-list, #search-results\"]},\n" +
+				"         // Extract results\n" +
+				"         {\"type\": \"markdown\", \"elements\": [\".search-results, .results-list, #search-results\"]}\n" +
 				"       ]\n" +
 				"     }\n" +
 				"   }\n" +
 				"   ```\n\n" +
-				"2. **Twitter Authentication Flow**:\n" +
+				"3. **Handling Dynamic Content**:\n" +
 				"   ```json\n" +
 				"   {\n" +
-				"     \"url\": \"https://x.com\",\n" +
+				"     \"url\": \"https://example.com/feed\",\n" +
 				"     \"plan\": {\n" +
 				"       \"actions\": [\n" +
-				"         {\"type\": \"wait\", \"elements\": [\"[aria-label='Timeline: Your Home Timeline']\"], \"timeout\": -1},\n" +
-				"         {\"type\": \"markdown\", \"elements\": [\".timeline\"]}\n" +
+				"         // Wait for initial content\n" +
+				"         {\"type\": \"wait\", \"elements\": [\".feed-item, .post, .article\"]},\n" +
+				"         // Wait for loading to complete\n" +
+				"         {\"type\": \"wait\", \"elements\": [\"body:not(:has(.loading-spinner)):not(:has([aria-busy='true']))\"]},\n" +
+				"         // Extract first batch\n" +
+				"         {\"type\": \"markdown\", \"elements\": [\".feed-item, .post, .article\"]},\n" +
+				"         // Click load more if it exists\n" +
+				"         {\"type\": \"click\", \"element\": \".load-more, .show-more, button:has-text('Load more')\"},\n" +
+				"         // Wait for new items\n" +
+				"         {\"type\": \"wait\", \"elements\": [\".feed-item:nth-child(20), .post:nth-child(20), .article:nth-child(20)\"]},\n" +
+				"         // Extract new items\n" +
+				"         {\"type\": \"markdown\", \"elements\": [\".feed-item:nth-child(n+11), .post:nth-child(n+11), .article:nth-child(n+11)\"]}\n" +
 				"       ]\n" +
 				"     }\n" +
 				"   }\n" +
 				"   ```\n\n" +
-				"3. **Form Filling with Validation**:\n" +
+				"### Debugging Guide:\n\n" +
+				"When elements aren't found or actions fail, follow these steps:\n\n" +
+				"1. **Verify Page State**:\n" +
+				"   ```json\n" +
+				"   {\"type\": \"print\", \"elements\": [\"body\"]}\n" +
+				"   ```\n" +
+				"   - Check if content is present\n" +
+				"   - Look for error messages\n" +
+				"   - Verify page structure\n\n" +
+				"2. **Check Loading State**:\n" +
+				"   ```json\n" +
+				"   {\"type\": \"wait\", \"elements\": [\"body:not(:has(.loading-spinner)):not(:has([aria-busy='true'])):not(:has(.skeleton-loader))\"]}\n" +
+				"   ```\n" +
+				"   - Wait for loading indicators to disappear\n" +
+				"   - Check for AJAX activity\n\n" +
+				"3. **Try Multiple Selector Patterns**:\n" +
+				"   ```json\n" +
+				"   {\"type\": \"wait\", \"elements\": [\n" +
+				"     \"#specific-id\",\n" +
+				"     \"[data-testid='element']\",\n" +
+				"     \"[aria-label='Element']\",\n" +
+				"     \".fallback-class\"\n" +
+				"   ]}\n" +
+				"   ```\n" +
+				"   - Start with specific selectors\n" +
+				"   - Fall back to more general ones\n\n" +
+				"4. **Handle Iframes and Shadow DOM**:\n" +
+				"   ```json\n" +
+				"   {\"type\": \"wait\", \"elements\": [\"iframe, [data-iframe], .frame-container\"]}\n" +
+				"   ```\n" +
+				"   - Check for embedded content\n" +
+				"   - Look for shadow roots\n\n" +
+				"### Selector Strategies:\n\n" +
+				"1. **Priority Order** (try in this sequence):\n" +
+				"   ```typescript\n" +
+				"   - data-testid=\"element\"           // Test IDs\n" +
+				"   - #unique-id                     // IDs\n" +
+				"   - [aria-label=\"Element\"]         // Accessibility attributes\n" +
+				"   - input[name=\"field\"]           // Form attributes\n" +
+				"   - .specific-class               // Unique classes\n" +
+				"   - tag[type=\"value\"]             // Element attributes\n" +
+				"   - :has() > :nth-child()         // Structural\n" +
+				"   ```\n\n" +
+				"2. **Resilient Selectors**:\n" +
+				"   ```typescript\n" +
+				"   - button:has-text(\"Submit\")      // Text content\n" +
+				"   - [class*=\"submit\"]             // Partial class\n" +
+				"   - div:has(> button)             // Parent-child\n" +
+				"   - :not([aria-hidden=\"true\"])    // Visibility\n" +
+				"   ```\n\n" +
+				"### Error Recovery Patterns:\n\n" +
+				"1. **Element Not Found**:\n" +
 				"   ```json\n" +
 				"   {\n" +
-				"     \"url\": \"https://example.com/form\",\n" +
-				"     \"plan\": {\n" +
-				"       \"actions\": [\n" +
-				"         {\"type\": \"wait\", \"elements\": [\"form\"]},\n" +
-				"         {\"type\": \"typing\", \"element\": \"#username\", \"value\": \"user123\"},\n" +
-				"         {\"type\": \"typing\", \"element\": \"#password\", \"value\": \"pass123\"},\n" +
-				"         {\"type\": \"click\", \"element\": \"button[type='submit']\"},\n" +
-				"         {\"type\": \"wait\", \"elements\": [\".success-message, .error-message\"]},\n" +
-				"         {\"type\": \"print\", \"elements\": [\".success-message, .error-message\"]}\n" +
-				"       ]\n" +
-				"     }\n" +
+				"     \"actions\": [\n" +
+				"       {\"type\": \"wait\", \"elements\": [\"#specific-id\"], \"timeout\": 5000},\n" +
+				"       {\"type\": \"wait\", \"elements\": [\"[data-testid='element']\"], \"timeout\": 5000},\n" +
+				"       {\"type\": \"wait\", \"elements\": [\".fallback-class\"], \"timeout\": 5000}\n" +
+				"     ]\n" +
 				"   }\n" +
 				"   ```\n\n" +
-				"4. **Dynamic Content Navigation**:\n" +
+				"2. **Navigation Issues**:\n" +
 				"   ```json\n" +
 				"   {\n" +
-				"     \"url\": \"https://example.com/products\",\n" +
-				"     \"plan\": {\n" +
-				"       \"actions\": [\n" +
-				"         {\"type\": \"wait\", \"elements\": [\".product-grid\"]},\n" +
-				"         {\"type\": \"print\", \"elements\": [\".product-grid\"]},\n" +
-				"         {\"type\": \"click\", \"element\": \".load-more\"},\n" +
-				"         {\"type\": \"wait\", \"elements\": [\".product-grid .product:nth-child(20)\"]},\n" +
-				"         {\"type\": \"markdown\", \"elements\": [\".product-grid\"]}\n" +
-				"       ]\n" +
-				"     }\n" +
+				"     \"actions\": [\n" +
+				"       {\"type\": \"wait\", \"elements\": [\"body:not(.loading)\"]},\n" +
+				"       {\"type\": \"wait\", \"elements\": [\"#main-content, .error-page\"]},\n" +
+				"       {\"type\": \"print\", \"elements\": [\"#main-content, .error-page, .error-message\"]}\n" +
+				"     ]\n" +
 				"   }\n" +
 				"   ```\n\n" +
-				"### Action Types:\n" +
-				"1. **wait**: Waits for elements to appear.\n" +
-				"   - Required: `elements` (array of CSS selectors)\n" +
-				"   - Optional: `timeout` (number, -1 for infinite wait)\n" +
-				"   - Use for: Dynamic content, authentication, ensuring elements are ready\n" +
-				"   - Example: `{\"type\": \"wait\", \"elements\": [\"#content\"], \"timeout\": -1}`\n\n" +
-				"2. **click**: Clicks a single element.\n" +
-				"   - Required: `element` (CSS selector)\n" +
-				"   - Use for: Navigation, form submission, triggering actions\n" +
-				"   - Example: `{\"type\": \"click\", \"element\": \".submit-btn\"}`\n\n" +
-				"3. **typing**: Types text into an input field.\n" +
-				"   - Required: `element` (CSS selector), `value` (text to type)\n" +
-				"   - Optional: `delay` (ms between keystrokes)\n" +
-				"   - Use for: Form filling, search inputs\n" +
-				"   - Example: `{\"type\": \"typing\", \"element\": \"#search\", \"value\": \"query\", \"delay\": 100}`\n\n" +
-				"4. **keyPress**: Simulates a keyboard key press.\n" +
-				"   - Required: `key` (key name)\n" +
-				"   - Optional: `element` (CSS selector to focus)\n" +
-				"   - Use for: Form submission, keyboard shortcuts\n" +
-				"   - Example: `{\"type\": \"keyPress\", \"key\": \"Enter\", \"element\": \"#search\"}`\n\n" +
-				"5. **print**: Captures raw HTML.\n" +
-				"   - Required: `elements` (array of CSS selectors)\n" +
-				"   - Use for: Debugging, inspecting page structure\n" +
-				"   - Example: `{\"type\": \"print\", \"elements\": [\"#main-content\"]}`\n\n" +
-				"6. **markdown**: Converts content to markdown.\n" +
-				"   - Required: `elements` (array of CSS selectors)\n" +
-				"   - Use for: Content extraction, readable output\n" +
-				"   - Example: `{\"type\": \"markdown\", \"elements\": [\"article\"]}`\n\n" +
-				"### Best Practices:\n" +
-				"1. Always start with a `wait` action before interacting with elements\n" +
-				"2. Use `print` for debugging when elements aren't found\n" +
-				"3. Prefer `markdown` over `print` for content extraction\n" +
-				"4. Add appropriate timeouts for dynamic content\n" +
-				"5. Chain actions logically (wait → interact → verify)\n" +
-				"6. Handle errors gracefully with alternative selectors\n",
-			version: "1.8.0",
+				"3. **Form Validation**:\n" +
+				"   ```json\n" +
+				"   {\n" +
+				"     \"actions\": [\n" +
+				"       {\"type\": \"typing\", \"element\": \"#input-field\", \"value\": \"test\"},\n" +
+				"       {\"type\": \"wait\", \"elements\": [\"#input-field:valid, #input-field:invalid, .error-message\"]},\n" +
+				"       {\"type\": \"print\", \"elements\": [\".error-message, .validation-message\"]}\n" +
+				"     ]\n" +
+				"   }\n" +
+				"   ```\n\n" +
+				"### Performance Tips:\n\n" +
+				"1. **Efficient Waiting**:\n" +
+				"   - Use specific selectors when possible\n" +
+				"   - Combine multiple conditions in one wait\n" +
+				"   - Set appropriate timeouts\n\n" +
+				"2. **Batch Operations**:\n" +
+				"   - Combine multiple prints/markdown actions\n" +
+				"   - Use comma-separated selectors\n" +
+				"   - Group related actions\n\n" +
+				"3. **Minimize Retries**:\n" +
+				"   - Use precise selectors first\n" +
+				"   - Fall back to broader ones\n" +
+				"   - Cache selector results\n\n" +
+				"### Best Practices:\n\n" +
+				"1. **Always Start With**:\n" +
+				"   ```json\n" +
+				"   {\"type\": \"wait\", \"elements\": [\"body:not(.loading):not(.initializing)\"]}\n" +
+				"   ```\n\n" +
+				"2. **Before Interactions**:\n" +
+				"   ```json\n" +
+				"   {\"type\": \"wait\", \"elements\": [\"button:not([disabled]):not([aria-disabled='true'])\"]}\n" +
+				"   ```\n\n" +
+				"3. **After Actions**:\n" +
+				"   ```json\n" +
+				"   {\"type\": \"wait\", \"elements\": [\"body:not(:has(.loading-spinner)):not(:has([aria-busy='true']))\"]}\n" +
+				"   ```\n\n" +
+				"4. **Error Checking**:\n" +
+				"   ```json\n" +
+				"   {\"type\": \"print\", \"elements\": [\".error-message, .alert, .notification\"]}\n" +
+				"   ```\n",
+			version: "1.11.0",
 			compatibility: {
 				minVersion: "1.0.0",
 				deprecatedFeatures: [],

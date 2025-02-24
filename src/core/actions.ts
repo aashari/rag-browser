@@ -30,7 +30,11 @@ export async function executePlan(
         if (status.result?.success) {
             plannedActionResults.push({
                 type: action.type as "print" | "markdown",
-                selector: Array.isArray(action.elements) ? action.elements[0] : action.element || "",
+                selector: action.type === "wait" || action.type === "print" || action.type === "markdown" 
+                    ? action.elements[0] 
+                    : action.type === "click" || action.type === "typing"
+                    ? action.element
+                    : "",
                 html: status.result.message
             });
         }

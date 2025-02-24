@@ -98,6 +98,7 @@ export interface BrowserOptions {
 			sessionStorage?: Record<string, string>;
 		}[];
 	};
+	abortSignal?: AbortSignal;
 }
 
 export type ActionResult = {

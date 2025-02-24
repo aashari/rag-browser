@@ -11,6 +11,7 @@ export async function executeWaitAction(
     // Use action-specific timeout if provided, otherwise use global options
     const isInfiniteWait = action.timeout === -1 || options.timeout === -1;
     const timeout = isInfiniteWait ? 0 : (action.timeout || options.timeout || DEFAULT_TIMEOUT);
+    let abortController: AbortController | undefined;
 
     try {
         if (!isInfiniteWait) {
@@ -22,7 +23,10 @@ export async function executeWaitAction(
             );
         } else {
             // Infinite wait - keep retrying until element is found
-            while (true) {
+            abortController = new AbortController();
+            const signal = abortController.signal;
+
+            while (!signal.aborted) {
                 try {
                     await Promise.all(
                         action.elements.map(async (selector) => {
@@ -32,6 +36,9 @@ export async function executeWaitAction(
                     // If we get here, all elements were found
                     break;
                 } catch (err) {
+                    if (signal.aborted) {
+                        throw new Error("Wait operation interrupted");
+                    }
                     // Element not found, wait a bit and retry
                     await page.waitForTimeout(1000);
                     continue;
@@ -39,7 +46,11 @@ export async function executeWaitAction(
             }
         }
 
-        const isStable = await waitForActionStability(page, { timeout: timeout || undefined }).catch(() => false);
+        const isStable = await waitForActionStability(page, { 
+            timeout: isInfiniteWait ? undefined : timeout,
+            abortSignal: abortController?.signal
+        }).catch(() => false);
+
         return {
             success: true,
             message: "Elements found and stable",
@@ -47,7 +58,6 @@ export async function executeWaitAction(
         };
     } catch (error) {
         if (isInfiniteWait) {
-            // Should never get here with infinite wait
             return {
                 success: false,
                 message: "Infinite wait interrupted",
@@ -59,5 +69,10 @@ export async function executeWaitAction(
             message: "Failed to find elements",
             error: error instanceof Error ? error.message : "Unknown error occurred",
         };
+    } finally {
+        // Clean up abort controller
+        if (abortController) {
+            abortController.abort();
+        }
     }
 } 
