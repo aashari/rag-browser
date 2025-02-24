@@ -20,6 +20,7 @@ export type Input = {
 export type WaitAction = {
 	type: "wait";
 	elements: string[];
+	timeout?: number;
 };
 
 export type ClickAction = {
@@ -83,6 +84,20 @@ export interface BrowserOptions {
 	timeout?: number;
 	selectorMode?: SelectorMode;
 	plan?: Plan;
+	userDataDir?: string;
+	storageState?: {
+		cookies?: {
+			name: string;
+			value: string;
+			domain: string;
+			path: string;
+		}[];
+		origins?: {
+			origin: string;
+			localStorage?: Record<string, string>;
+			sessionStorage?: Record<string, string>;
+		}[];
+	};
 }
 
 export type ActionResult = {

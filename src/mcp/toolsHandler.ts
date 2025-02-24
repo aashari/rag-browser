@@ -105,14 +105,14 @@ export async function handleToolCall(
 		} = {
 			headless: args.headless === "true",
 			slowMo: VISIBLE_MODE_SLOW_MO,
-			timeout: parseInt(args.timeout) || DEFAULT_TIMEOUT,
+			timeout: args.timeout ? parseInt(args.timeout, 10) : DEFAULT_TIMEOUT,
 			selectorMode: args.selectorMode as "full" | "simple" || "full"
 		};
 
 		if (name === "action") {
 			await server.sendLoggingMessage({
 				level: "info",
-				data: `Action tool called with URL: ${args.url}${args.plan ? " and plan" : ""}`
+				data: `Action tool called with URL: ${args.url}${args.plan ? " and plan" : ""}${args.timeout === "-1" ? " (infinite wait)" : ""}`
 			});
 
 			// If plan is provided, validate it

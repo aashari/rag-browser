@@ -10,6 +10,7 @@ export async function main(): Promise<void> {
 	const args = process.argv.slice(2);
 	const urlIndex = args.indexOf("--url") + 1;
 	const planIndex = args.indexOf("--plan") + 1;
+	const timeoutIndex = args.indexOf("--timeout") + 1;
 	const headless = args.includes("--headless");
 	const format = (args.includes("--json") ? "json" : "pretty") as OutputFormat;
 	const selectorMode = args.includes("--simple-selectors") ? "simple" : "full";
@@ -29,6 +30,7 @@ export async function main(): Promise<void> {
 		console.error("  --json             Output in JSON format (optional, default: pretty print)");
 		console.error("  --simple-selectors Use simple selectors without full paths (optional, default: full paths)");
 		console.error("  --plan             JSON string defining actions to perform (optional)");
+		console.error("  --timeout          Timeout in ms, use -1 for infinite wait (optional, default: 30000)");
 		console.error("\nDisplay Options:");
 		console.error("  --inputs           Show all input elements (optional, default: top 5)");
 		console.error("  --buttons          Show all buttons (optional, default: top 5)");
@@ -38,6 +40,15 @@ export async function main(): Promise<void> {
 
 	const url = args[urlIndex];
 	let plan: Plan | undefined;
+	let timeout = DEFAULT_TIMEOUT;
+
+	if (timeoutIndex > 0 && timeoutIndex < args.length) {
+		timeout = parseInt(args[timeoutIndex], 10);
+		if (isNaN(timeout)) {
+			console.error("Invalid timeout value. Must be a number or -1 for infinite wait.");
+			process.exit(1);
+		}
+	}
 
 	if (planIndex > 0 && planIndex < args.length) {
 		try {
@@ -58,7 +69,7 @@ export async function main(): Promise<void> {
 		const analysis = await analyzePage(url, {
 			headless,
 			slowMo: headless ? 0 : VISIBLE_MODE_SLOW_MO,
-			timeout: DEFAULT_TIMEOUT,
+			timeout,
 			selectorMode,
 			plan,
 		});

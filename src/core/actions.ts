@@ -26,8 +26,13 @@ export async function executePlan(
         console.warn(printActionStatus(status));
         actionStatuses.push(status);
 
-        if ((action.type === "print" || action.type === "markdown") && status.result?.data) {
-            plannedActionResults.push(...status.result.data);
+        // Track success for all actions
+        if (status.result?.success) {
+            plannedActionResults.push({
+                type: action.type as "print" | "markdown",
+                selector: Array.isArray(action.elements) ? action.elements[0] : action.element || "",
+                html: status.result.message
+            });
         }
 
         if (!status.result?.success) break;

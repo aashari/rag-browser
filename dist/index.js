@@ -21622,45 +21622,95 @@ function createToolDefinitions() {
 ` + `- **Automation**: To perform tasks like form filling, clicking, or searching (with a plan).
 ` + `- **Information Retrieval**: To extract page content or element details.
 ` + `- **Multi-step Workflows**: To navigate through processes like login or checkout.
+` + `- **Interactive Sessions**: To handle user authentication or manual intervention.
 
-` + `### Usage Guidelines:
-` + `- Always requires a valid 'url'.
-` + `- Optional 'plan' parameter for executing actions.
-` + `- Set 'inputs', 'buttons', or 'links' to 'true' for detailed element analysis.
-` + `- Results are stored as an MCP resource for later retrieval.
-
-` + `### Action Types (when using plan):
-` + `1. **wait**: Waits for elements to appear.
-` + "   - Required: `elements` (array of CSS selectors)\n" + "   - Example: `{'type': 'wait', 'elements': ['input#search']}`\n" + `2. **click**: Clicks a single element.
-` + "   - Required: `element` (CSS selector)\n" + "   - Example: `{'type': 'click', 'element': '.submit-btn'}`\n" + `3. **typing**: Types text into an input field.
-` + "   - Required: `element` (CSS selector), `value` (text to type)\n" + "   - Optional: `delay` (ms between keystrokes)\n" + "   - Example: `{'type': 'typing', 'element': '#username', 'value': 'user123'}`\n" + `4. **keyPress**: Simulates a key press.
-` + "   - Required: `key` (key name)\n" + "   - Optional: `element` (CSS selector to focus)\n" + "   - Example: `{'type': 'keyPress', 'key': 'Enter', 'element': '#search'}`\n" + `5. **print**: Captures raw HTML of specified elements.
-` + "   - Required: `elements` (array of CSS selectors)\n" + "   - Example: `{'type': 'print', 'elements': ['#content']}`\n" + `   - Use when HTML structure analysis is needed
-` + `6. **markdown**: Converts elements to markdown format.
-` + "   - Required: `elements` (array of CSS selectors)\n" + "   - Example: `{'type': 'markdown', 'elements': ['#content']}`\n" + `   - Preferred for content extraction (cleaner output)
-
-` + `### Example Scenarios:
-` + `1. **Simple Analysis**: Just explore a page
-` + "   ```json\n" + `   {
-` + `     "url": "https://www.wikipedia.org",
-` + `     "inputs": "true",
-` + `     "links": "true"
-` + `   }
-` + "   ```\n\n" + `2. **Search Workflow**: Analyze and perform search
-` + "   ```json\n" + `   {
-` + `     "url": "https://www.wikipedia.org",
+` + `### Debugging Tips:
+` + "1. **Element Not Found**: Use `print` action to inspect the page structure:\n" + "   ```json\n" + `   {
+` + `     "url": "https://example.com",
 ` + `     "plan": {
 ` + `       "actions": [
-` + `         {"type": "wait", "elements": ["#searchInput"]},
-` + `         {"type": "typing", "element": "#searchInput", "value": "AI Tools"},
-` + `         {"type": "keyPress", "key": "Enter"},
-` + `         {"type": "wait", "elements": [".mw-search-results-container"]},
-` + `         {"type": "markdown", "elements": [".mw-search-result"]}
+` + `         {"type": "print", "elements": ["body"]}
 ` + `       ]
 ` + `     }
 ` + `   }
-` + "   ```",
-      version: "1.7.0",
+` + "   ```\n" + `2. **Dynamic Content**: Add wait actions before interactions:
+` + "   ```json\n" + `   {"type": "wait", "elements": ["#dynamic-content"]}
+` + "   ```\n" + `3. **Authentication**: Use infinite wait for user login:
+` + "   ```json\n" + `   {"type": "wait", "elements": ["[aria-label='Timeline']"], "timeout": -1}
+` + "   ```\n\n" + `### Common Scenarios:
+
+` + `1. **Wikipedia Search and Extract**:
+` + "   ```json\n" + `   {
+` + `     "url": "https://wikipedia.org",
+` + `     "plan": {
+` + `       "actions": [
+` + `         {"type": "wait", "elements": ["#searchInput"]},
+` + `         {"type": "typing", "element": "#searchInput", "value": "Prabowo Subianto"},
+` + `         {"type": "keyPress", "key": "Enter"},
+` + `         {"type": "wait", "elements": [".mw-search-results"]},
+` + `         {"type": "print", "elements": [".mw-search-results"]},
+` + `         {"type": "click", "element": ".mw-search-result:first-child a"},
+` + `         {"type": "wait", "elements": ["#mw-content-text"]},
+` + `         {"type": "markdown", "elements": ["#mw-content-text"]}
+` + `       ]
+` + `     }
+` + `   }
+` + "   ```\n\n" + `2. **Twitter Authentication Flow**:
+` + "   ```json\n" + `   {
+` + `     "url": "https://x.com",
+` + `     "plan": {
+` + `       "actions": [
+` + `         {"type": "wait", "elements": ["[aria-label='Timeline: Your Home Timeline']"], "timeout": -1},
+` + `         {"type": "markdown", "elements": [".timeline"]}
+` + `       ]
+` + `     }
+` + `   }
+` + "   ```\n\n" + `3. **Form Filling with Validation**:
+` + "   ```json\n" + `   {
+` + `     "url": "https://example.com/form",
+` + `     "plan": {
+` + `       "actions": [
+` + `         {"type": "wait", "elements": ["form"]},
+` + `         {"type": "typing", "element": "#username", "value": "user123"},
+` + `         {"type": "typing", "element": "#password", "value": "pass123"},
+` + `         {"type": "click", "element": "button[type='submit']"},
+` + `         {"type": "wait", "elements": [".success-message, .error-message"]},
+` + `         {"type": "print", "elements": [".success-message, .error-message"]}
+` + `       ]
+` + `     }
+` + `   }
+` + "   ```\n\n" + `4. **Dynamic Content Navigation**:
+` + "   ```json\n" + `   {
+` + `     "url": "https://example.com/products",
+` + `     "plan": {
+` + `       "actions": [
+` + `         {"type": "wait", "elements": [".product-grid"]},
+` + `         {"type": "print", "elements": [".product-grid"]},
+` + `         {"type": "click", "element": ".load-more"},
+` + `         {"type": "wait", "elements": [".product-grid .product:nth-child(20)"]},
+` + `         {"type": "markdown", "elements": [".product-grid"]}
+` + `       ]
+` + `     }
+` + `   }
+` + "   ```\n\n" + `### Action Types:
+` + `1. **wait**: Waits for elements to appear.
+` + "   - Required: `elements` (array of CSS selectors)\n" + "   - Optional: `timeout` (number, -1 for infinite wait)\n" + `   - Use for: Dynamic content, authentication, ensuring elements are ready
+` + '   - Example: `{"type": "wait", "elements": ["#content"], "timeout": -1}`\n\n' + `2. **click**: Clicks a single element.
+` + "   - Required: `element` (CSS selector)\n" + `   - Use for: Navigation, form submission, triggering actions
+` + '   - Example: `{"type": "click", "element": ".submit-btn"}`\n\n' + `3. **typing**: Types text into an input field.
+` + "   - Required: `element` (CSS selector), `value` (text to type)\n" + "   - Optional: `delay` (ms between keystrokes)\n" + `   - Use for: Form filling, search inputs
+` + '   - Example: `{"type": "typing", "element": "#search", "value": "query", "delay": 100}`\n\n' + `4. **keyPress**: Simulates a keyboard key press.
+` + "   - Required: `key` (key name)\n" + "   - Optional: `element` (CSS selector to focus)\n" + `   - Use for: Form submission, keyboard shortcuts
+` + '   - Example: `{"type": "keyPress", "key": "Enter", "element": "#search"}`\n\n' + `5. **print**: Captures raw HTML.
+` + "   - Required: `elements` (array of CSS selectors)\n" + `   - Use for: Debugging, inspecting page structure
+` + '   - Example: `{"type": "print", "elements": ["#main-content"]}`\n\n' + `6. **markdown**: Converts content to markdown.
+` + "   - Required: `elements` (array of CSS selectors)\n" + `   - Use for: Content extraction, readable output
+` + '   - Example: `{"type": "markdown", "elements": ["article"]}`\n\n' + `### Best Practices:
+` + "1. Always start with a `wait` action before interacting with elements\n" + "2. Use `print` for debugging when elements aren't found\n" + "3. Prefer `markdown` over `print` for content extraction\n" + `4. Add appropriate timeouts for dynamic content
+` + `5. Chain actions logically (wait → interact → verify)
+` + `6. Handle errors gracefully with alternative selectors
+`,
+      version: "1.8.0",
       compatibility: {
         minVersion: "1.0.0",
         deprecatedFeatures: []
@@ -22054,15 +22104,40 @@ async function waitForActionStability(page, options = {}) {
 
 // src/core/handlers/wait.ts
 async function executeWaitAction(page, action, options) {
+  const isInfiniteWait = action.timeout === -1 || options.timeout === -1;
+  const timeout = isInfiniteWait ? 0 : action.timeout || options.timeout || DEFAULT_TIMEOUT;
   try {
-    await Promise.all(action.elements.map((selector) => page.waitForSelector(selector, { timeout: options.timeout || DEFAULT_TIMEOUT })));
-    const isStable = await waitForActionStability(page).catch(() => false);
+    if (!isInfiniteWait) {
+      await Promise.all(action.elements.map(async (selector) => {
+        await page.waitForSelector(selector, { timeout });
+      }));
+    } else {
+      while (true) {
+        try {
+          await Promise.all(action.elements.map(async (selector) => {
+            await page.waitForSelector(selector, { timeout: 1000 });
+          }));
+          break;
+        } catch (err) {
+          await page.waitForTimeout(1000);
+          continue;
+        }
+      }
+    }
+    const isStable = await waitForActionStability(page, { timeout: timeout || undefined }).catch(() => false);
     return {
       success: true,
       message: "Elements found and stable",
       warning: !isStable ? "Page not fully stable, but elements are present" : undefined
     };
   } catch (error2) {
+    if (isInfiniteWait) {
+      return {
+        success: false,
+        message: "Infinite wait interrupted",
+        error: error2 instanceof Error ? error2.message : "Unknown error occurred"
+      };
+    }
     return {
       success: false,
       message: "Failed to find elements",
@@ -22546,8 +22621,12 @@ async function executePlan(page, plan, options) {
     status.result = await executeAction(page, action, options);
     console.warn(printActionStatus(status));
     actionStatuses.push(status);
-    if ((action.type === "print" || action.type === "markdown") && status.result?.data) {
-      plannedActionResults.push(...status.result.data);
+    if (status.result?.success) {
+      plannedActionResults.push({
+        type: action.type,
+        selector: Array.isArray(action.elements) ? action.elements[0] : action.element || "",
+        html: status.result.message
+      });
     }
     if (!status.result?.success)
       break;
@@ -22614,19 +22693,55 @@ async function getElementInfo(page, element) {
 }
 
 // src/core/browser.ts
+import * as path from "path";
+import * as os from "os";
+function getDefaultUserDataDir() {
+  return path.join(os.homedir(), ".playwright-user-data");
+}
 async function analyzePage(url, options) {
-  const browser = await chromium.launch({
+  const userDataDir = options.userDataDir || getDefaultUserDataDir();
+  let actionSucceeded = false;
+  const browser = await chromium.launchPersistentContext(userDataDir, {
     headless: options.headless,
     slowMo: options.slowMo || 0
   });
   const page = await browser.newPage();
   let plannedActionResults = [];
   try {
+    if (options.storageState) {
+      if (options.storageState.cookies) {
+        await page.context().addCookies(options.storageState.cookies);
+      }
+      if (options.storageState.origins) {
+        for (const origin of options.storageState.origins) {
+          if (origin.localStorage && Object.keys(origin.localStorage).length > 0) {
+            await page.route("**/*", async (route) => {
+              await page.evaluate((storage) => {
+                for (const [key, value] of Object.entries(storage)) {
+                  window.localStorage.setItem(key, value);
+                }
+              }, origin.localStorage);
+              await route.continue();
+            });
+          }
+          if (origin.sessionStorage && Object.keys(origin.sessionStorage).length > 0) {
+            await page.route("**/*", async (route) => {
+              await page.evaluate((storage) => {
+                for (const [key, value] of Object.entries(storage)) {
+                  window.sessionStorage.setItem(key, value);
+                }
+              }, origin.sessionStorage);
+              await route.continue();
+            });
+          }
+        }
+      }
+    }
     await page.addInitScript(`
-      window.getFullPath = ${getFullPath.toString()};
-    `);
+			window.getFullPath = ${getFullPath.toString()};
+		`);
     info("Starting navigation", { url, options });
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: options.timeout || DEFAULT_TIMEOUT });
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: DEFAULT_TIMEOUT });
     info("Initial page load complete");
     await waitForPageStability(page);
     info("Page stability confirmed");
@@ -22635,13 +22750,17 @@ async function analyzePage(url, options) {
     info("Input elements extracted", { count: inputs.length });
     if (options.plan) {
       info("Executing action plan", { plan: options.plan });
-      const { plannedActionResults: results } = await executePlan(page, options.plan, options);
+      const { plannedActionResults: results, actionStatuses } = await executePlan(page, options.plan, {
+        ...options,
+        timeout: options.timeout
+      });
       plannedActionResults = results;
+      actionSucceeded = actionStatuses.every((status) => status.result?.success);
       info("Action plan execution complete", { results });
     }
     await page.addInitScript(`
-      window.getFullPath = ${getFullPath.toString()};
-    `);
+			window.getFullPath = ${getFullPath.toString()};
+		`);
     const analysis = await page.evaluate(({ linkSelectors, buttonSelectors }) => {
       const getAllElements = (selector) => Array.from(document.querySelectorAll(selector));
       const title = document.title;
@@ -22685,7 +22804,9 @@ async function analyzePage(url, options) {
     error("Fatal error during page analysis", { error: err instanceof Error ? err.message : String(err) });
     throw err;
   } finally {
-    await browser.close();
+    if (actionSucceeded || options.timeout !== -1) {
+      await browser.close();
+    }
   }
 }
 
@@ -22866,13 +22987,13 @@ async function handleToolCall(name, args, server) {
     const options = {
       headless: args.headless === "true",
       slowMo: VISIBLE_MODE_SLOW_MO,
-      timeout: parseInt(args.timeout) || DEFAULT_TIMEOUT,
+      timeout: args.timeout ? parseInt(args.timeout, 10) : DEFAULT_TIMEOUT,
       selectorMode: args.selectorMode || "full"
     };
     if (name === "action") {
       await server.sendLoggingMessage({
         level: "info",
-        data: `Action tool called with URL: ${args.url}${args.plan ? " and plan" : ""}`
+        data: `Action tool called with URL: ${args.url}${args.plan ? " and plan" : ""}${args.timeout === "-1" ? " (infinite wait)" : ""}`
       });
       if (args.plan) {
         const planValidation = validatePlan(args.plan);
@@ -23002,6 +23123,7 @@ async function main() {
   const args = process.argv.slice(2);
   const urlIndex = args.indexOf("--url") + 1;
   const planIndex = args.indexOf("--plan") + 1;
+  const timeoutIndex = args.indexOf("--timeout") + 1;
   const headless = args.includes("--headless");
   const format = args.includes("--json") ? "json" : "pretty";
   const selectorMode = args.includes("--simple-selectors") ? "simple" : "full";
@@ -23017,6 +23139,7 @@ Options:`);
     console.error("  --json             Output in JSON format (optional, default: pretty print)");
     console.error("  --simple-selectors Use simple selectors without full paths (optional, default: full paths)");
     console.error("  --plan             JSON string defining actions to perform (optional)");
+    console.error("  --timeout          Timeout in ms, use -1 for infinite wait (optional, default: 30000)");
     console.error(`
 Display Options:`);
     console.error("  --inputs           Show all input elements (optional, default: top 5)");
@@ -23026,6 +23149,14 @@ Display Options:`);
   }
   const url = args[urlIndex];
   let plan;
+  let timeout = DEFAULT_TIMEOUT;
+  if (timeoutIndex > 0 && timeoutIndex < args.length) {
+    timeout = parseInt(args[timeoutIndex], 10);
+    if (isNaN(timeout)) {
+      console.error("Invalid timeout value. Must be a number or -1 for infinite wait.");
+      process.exit(1);
+    }
+  }
   if (planIndex > 0 && planIndex < args.length) {
     try {
       plan = JSON.parse(args[planIndex]);
@@ -23043,7 +23174,7 @@ Display Options:`);
     const analysis = await analyzePage(url, {
       headless,
       slowMo: headless ? 0 : VISIBLE_MODE_SLOW_MO,
-      timeout: DEFAULT_TIMEOUT,
+      timeout,
       selectorMode,
       plan
     });

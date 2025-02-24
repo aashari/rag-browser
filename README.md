@@ -104,6 +104,13 @@ rag-browser --url "https://wikipedia.org" --plan '{
     {"type": "markdown", "elements": [".mw-search-result"]}
   ]
 }'
+
+# Wait indefinitely for authentication
+rag-browser --url "https://x.com" --plan '{
+  "actions": [
+    {"type": "wait", "elements": ["[aria-label=\"Timeline: Your Home Timeline\"]"], "timeout": -1}
+  ]
+}' --timeout -1
 ```
 
 ### CLI Options
@@ -118,6 +125,7 @@ rag-browser --url "https://wikipedia.org" --plan '{
 | `--inputs`           | Show all input elements    | false (top 5)        |
 | `--buttons`          | Show all buttons           | false (top 5)        |
 | `--links`            | Show all links             | false (top 5)        |
+| `--timeout`          | Action timeout in ms       | 30000 (-1 for infinite) |
 
 ## 🤖 MCP Server Mode
 
@@ -160,14 +168,14 @@ A unified tool for both analysis and automation:
 
 ### Supported Actions
 
-| Action     | Description                                                           | Required Fields                    | Optional Fields   |
-| ---------- | --------------------------------------------------------------------- | ---------------------------------- | ----------------- |
-| `wait`     | Wait for elements                                                     | `elements: string[]`               | -                 |
-| `click`    | Click element                                                         | `element: string`                  | -                 |
+| Action     | Description                                                           | Required Fields                 | Optional Fields   |
+| ---------- | --------------------------------------------------------------------- | ------------------------------ | ----------------- |
+| `wait`     | Wait for elements to appear (supports infinite wait with timeout: -1) | `elements: string[]`           | `timeout: number` |
+| `click`    | Click element                                                         | `element: string`              | -                 |
 | `typing`   | Type text                                                             | `element: string`, `value: string` | `delay: number`   |
-| `keyPress` | Press keyboard key                                                    | `key: string`                      | `element: string` |
-| `print`    | Capture raw HTML (use only when HTML structure analysis is needed)    | `elements: string[]`               | -                 |
-| `markdown` | Convert content to markdown format (preferred for content extraction) | `elements: string[]`               | -                 |
+| `keyPress` | Press keyboard key                                                    | `key: string`                  | `element: string` |
+| `print`    | Capture raw HTML (use only when HTML structure analysis is needed)    | `elements: string[]`           | -                 |
+| `markdown` | Convert content to markdown format (preferred for content extraction)  | `elements: string[]`           | -                 |
 
 ### Claude Desktop Integration
 

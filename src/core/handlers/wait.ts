@@ -8,19 +8,52 @@ export async function executeWaitAction(
     action: WaitAction,
     options: BrowserOptions
 ): Promise<ActionResult> {
+    // Use action-specific timeout if provided, otherwise use global options
+    const isInfiniteWait = action.timeout === -1 || options.timeout === -1;
+    const timeout = isInfiniteWait ? 0 : (action.timeout || options.timeout || DEFAULT_TIMEOUT);
+
     try {
-        await Promise.all(
-            action.elements.map((selector) =>
-                page.waitForSelector(selector, { timeout: options.timeout || DEFAULT_TIMEOUT })
-            )
-        );
-        const isStable = await waitForActionStability(page).catch(() => false);
+        if (!isInfiniteWait) {
+            // Normal wait with timeout
+            await Promise.all(
+                action.elements.map(async (selector) => {
+                    await page.waitForSelector(selector, { timeout });
+                })
+            );
+        } else {
+            // Infinite wait - keep retrying until element is found
+            while (true) {
+                try {
+                    await Promise.all(
+                        action.elements.map(async (selector) => {
+                            await page.waitForSelector(selector, { timeout: 1000 });
+                        })
+                    );
+                    // If we get here, all elements were found
+                    break;
+                } catch (err) {
+                    // Element not found, wait a bit and retry
+                    await page.waitForTimeout(1000);
+                    continue;
+                }
+            }
+        }
+
+        const isStable = await waitForActionStability(page, { timeout: timeout || undefined }).catch(() => false);
         return {
             success: true,
             message: "Elements found and stable",
             warning: !isStable ? "Page not fully stable, but elements are present" : undefined,
         };
     } catch (error) {
+        if (isInfiniteWait) {
+            // Should never get here with infinite wait
+            return {
+                success: false,
+                message: "Infinite wait interrupted",
+                error: error instanceof Error ? error.message : "Unknown error occurred",
+            };
+        }
         return {
             success: false,
             message: "Failed to find elements",

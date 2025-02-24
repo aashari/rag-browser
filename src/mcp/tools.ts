@@ -89,60 +89,126 @@ export function createToolDefinitions(): EnhancedTool[] {
 				"- **Static Analysis**: To explore a webpage's structure and elements (without a plan).\n" +
 				"- **Automation**: To perform tasks like form filling, clicking, or searching (with a plan).\n" +
 				"- **Information Retrieval**: To extract page content or element details.\n" +
-				"- **Multi-step Workflows**: To navigate through processes like login or checkout.\n\n" +
-				"### Usage Guidelines:\n" +
-				"- Always requires a valid 'url'.\n" +
-				"- Optional 'plan' parameter for executing actions.\n" +
-				"- Set 'inputs', 'buttons', or 'links' to 'true' for detailed element analysis.\n" +
-				"- Results are stored as an MCP resource for later retrieval.\n\n" +
-				"### Action Types (when using plan):\n" +
-				"1. **wait**: Waits for elements to appear.\n" +
-				"   - Required: `elements` (array of CSS selectors)\n" +
-				"   - Example: `{'type': 'wait', 'elements': ['input#search']}`\n" +
-				"2. **click**: Clicks a single element.\n" +
-				"   - Required: `element` (CSS selector)\n" +
-				"   - Example: `{'type': 'click', 'element': '.submit-btn'}`\n" +
-				"3. **typing**: Types text into an input field.\n" +
-				"   - Required: `element` (CSS selector), `value` (text to type)\n" +
-				"   - Optional: `delay` (ms between keystrokes)\n" +
-				"   - Example: `{'type': 'typing', 'element': '#username', 'value': 'user123'}`\n" +
-				"4. **keyPress**: Simulates a key press.\n" +
-				"   - Required: `key` (key name)\n" +
-				"   - Optional: `element` (CSS selector to focus)\n" +
-				"   - Example: `{'type': 'keyPress', 'key': 'Enter', 'element': '#search'}`\n" +
-				"5. **print**: Captures raw HTML of specified elements.\n" +
-				"   - Required: `elements` (array of CSS selectors)\n" +
-				"   - Example: `{'type': 'print', 'elements': ['#content']}`\n" +
-				"   - Use when HTML structure analysis is needed\n" +
-				"6. **markdown**: Converts elements to markdown format.\n" +
-				"   - Required: `elements` (array of CSS selectors)\n" +
-				"   - Example: `{'type': 'markdown', 'elements': ['#content']}`\n" +
-				"   - Preferred for content extraction (cleaner output)\n\n" +
-				"### Example Scenarios:\n" +
-				"1. **Simple Analysis**: Just explore a page\n" +
+				"- **Multi-step Workflows**: To navigate through processes like login or checkout.\n" +
+				"- **Interactive Sessions**: To handle user authentication or manual intervention.\n\n" +
+				"### Debugging Tips:\n" +
+				"1. **Element Not Found**: Use `print` action to inspect the page structure:\n" +
 				"   ```json\n" +
 				"   {\n" +
-				"     \"url\": \"https://www.wikipedia.org\",\n" +
-				"     \"inputs\": \"true\",\n" +
-				"     \"links\": \"true\"\n" +
-				"   }\n" +
-				"   ```\n\n" +
-				"2. **Search Workflow**: Analyze and perform search\n" +
-				"   ```json\n" +
-				"   {\n" +
-				"     \"url\": \"https://www.wikipedia.org\",\n" +
+				"     \"url\": \"https://example.com\",\n" +
 				"     \"plan\": {\n" +
 				"       \"actions\": [\n" +
-				"         {\"type\": \"wait\", \"elements\": [\"#searchInput\"]},\n" +
-				"         {\"type\": \"typing\", \"element\": \"#searchInput\", \"value\": \"AI Tools\"},\n" +
-				"         {\"type\": \"keyPress\", \"key\": \"Enter\"},\n" +
-				"         {\"type\": \"wait\", \"elements\": [\".mw-search-results-container\"]},\n" +
-				"         {\"type\": \"markdown\", \"elements\": [\".mw-search-result\"]}\n" +
+				"         {\"type\": \"print\", \"elements\": [\"body\"]}\n" +
 				"       ]\n" +
 				"     }\n" +
 				"   }\n" +
-				"   ```",
-			version: "1.7.0",
+				"   ```\n" +
+				"2. **Dynamic Content**: Add wait actions before interactions:\n" +
+				"   ```json\n" +
+				"   {\"type\": \"wait\", \"elements\": [\"#dynamic-content\"]}\n" +
+				"   ```\n" +
+				"3. **Authentication**: Use infinite wait for user login:\n" +
+				"   ```json\n" +
+				"   {\"type\": \"wait\", \"elements\": [\"[aria-label='Timeline']\"], \"timeout\": -1}\n" +
+				"   ```\n\n" +
+				"### Common Scenarios:\n\n" +
+				"1. **Wikipedia Search and Extract**:\n" +
+				"   ```json\n" +
+				"   {\n" +
+				"     \"url\": \"https://wikipedia.org\",\n" +
+				"     \"plan\": {\n" +
+				"       \"actions\": [\n" +
+				"         {\"type\": \"wait\", \"elements\": [\"#searchInput\"]},\n" +
+				"         {\"type\": \"typing\", \"element\": \"#searchInput\", \"value\": \"Prabowo Subianto\"},\n" +
+				"         {\"type\": \"keyPress\", \"key\": \"Enter\"},\n" +
+				"         {\"type\": \"wait\", \"elements\": [\".mw-search-results\"]},\n" +
+				"         {\"type\": \"print\", \"elements\": [\".mw-search-results\"]},\n" +
+				"         {\"type\": \"click\", \"element\": \".mw-search-result:first-child a\"},\n" +
+				"         {\"type\": \"wait\", \"elements\": [\"#mw-content-text\"]},\n" +
+				"         {\"type\": \"markdown\", \"elements\": [\"#mw-content-text\"]}\n" +
+				"       ]\n" +
+				"     }\n" +
+				"   }\n" +
+				"   ```\n\n" +
+				"2. **Twitter Authentication Flow**:\n" +
+				"   ```json\n" +
+				"   {\n" +
+				"     \"url\": \"https://x.com\",\n" +
+				"     \"plan\": {\n" +
+				"       \"actions\": [\n" +
+				"         {\"type\": \"wait\", \"elements\": [\"[aria-label='Timeline: Your Home Timeline']\"], \"timeout\": -1},\n" +
+				"         {\"type\": \"markdown\", \"elements\": [\".timeline\"]}\n" +
+				"       ]\n" +
+				"     }\n" +
+				"   }\n" +
+				"   ```\n\n" +
+				"3. **Form Filling with Validation**:\n" +
+				"   ```json\n" +
+				"   {\n" +
+				"     \"url\": \"https://example.com/form\",\n" +
+				"     \"plan\": {\n" +
+				"       \"actions\": [\n" +
+				"         {\"type\": \"wait\", \"elements\": [\"form\"]},\n" +
+				"         {\"type\": \"typing\", \"element\": \"#username\", \"value\": \"user123\"},\n" +
+				"         {\"type\": \"typing\", \"element\": \"#password\", \"value\": \"pass123\"},\n" +
+				"         {\"type\": \"click\", \"element\": \"button[type='submit']\"},\n" +
+				"         {\"type\": \"wait\", \"elements\": [\".success-message, .error-message\"]},\n" +
+				"         {\"type\": \"print\", \"elements\": [\".success-message, .error-message\"]}\n" +
+				"       ]\n" +
+				"     }\n" +
+				"   }\n" +
+				"   ```\n\n" +
+				"4. **Dynamic Content Navigation**:\n" +
+				"   ```json\n" +
+				"   {\n" +
+				"     \"url\": \"https://example.com/products\",\n" +
+				"     \"plan\": {\n" +
+				"       \"actions\": [\n" +
+				"         {\"type\": \"wait\", \"elements\": [\".product-grid\"]},\n" +
+				"         {\"type\": \"print\", \"elements\": [\".product-grid\"]},\n" +
+				"         {\"type\": \"click\", \"element\": \".load-more\"},\n" +
+				"         {\"type\": \"wait\", \"elements\": [\".product-grid .product:nth-child(20)\"]},\n" +
+				"         {\"type\": \"markdown\", \"elements\": [\".product-grid\"]}\n" +
+				"       ]\n" +
+				"     }\n" +
+				"   }\n" +
+				"   ```\n\n" +
+				"### Action Types:\n" +
+				"1. **wait**: Waits for elements to appear.\n" +
+				"   - Required: `elements` (array of CSS selectors)\n" +
+				"   - Optional: `timeout` (number, -1 for infinite wait)\n" +
+				"   - Use for: Dynamic content, authentication, ensuring elements are ready\n" +
+				"   - Example: `{\"type\": \"wait\", \"elements\": [\"#content\"], \"timeout\": -1}`\n\n" +
+				"2. **click**: Clicks a single element.\n" +
+				"   - Required: `element` (CSS selector)\n" +
+				"   - Use for: Navigation, form submission, triggering actions\n" +
+				"   - Example: `{\"type\": \"click\", \"element\": \".submit-btn\"}`\n\n" +
+				"3. **typing**: Types text into an input field.\n" +
+				"   - Required: `element` (CSS selector), `value` (text to type)\n" +
+				"   - Optional: `delay` (ms between keystrokes)\n" +
+				"   - Use for: Form filling, search inputs\n" +
+				"   - Example: `{\"type\": \"typing\", \"element\": \"#search\", \"value\": \"query\", \"delay\": 100}`\n\n" +
+				"4. **keyPress**: Simulates a keyboard key press.\n" +
+				"   - Required: `key` (key name)\n" +
+				"   - Optional: `element` (CSS selector to focus)\n" +
+				"   - Use for: Form submission, keyboard shortcuts\n" +
+				"   - Example: `{\"type\": \"keyPress\", \"key\": \"Enter\", \"element\": \"#search\"}`\n\n" +
+				"5. **print**: Captures raw HTML.\n" +
+				"   - Required: `elements` (array of CSS selectors)\n" +
+				"   - Use for: Debugging, inspecting page structure\n" +
+				"   - Example: `{\"type\": \"print\", \"elements\": [\"#main-content\"]}`\n\n" +
+				"6. **markdown**: Converts content to markdown.\n" +
+				"   - Required: `elements` (array of CSS selectors)\n" +
+				"   - Use for: Content extraction, readable output\n" +
+				"   - Example: `{\"type\": \"markdown\", \"elements\": [\"article\"]}`\n\n" +
+				"### Best Practices:\n" +
+				"1. Always start with a `wait` action before interacting with elements\n" +
+				"2. Use `print` for debugging when elements aren't found\n" +
+				"3. Prefer `markdown` over `print` for content extraction\n" +
+				"4. Add appropriate timeouts for dynamic content\n" +
+				"5. Chain actions logically (wait → interact → verify)\n" +
+				"6. Handle errors gracefully with alternative selectors\n",
+			version: "1.8.0",
 			compatibility: {
 				minVersion: "1.0.0",
 				deprecatedFeatures: [],
