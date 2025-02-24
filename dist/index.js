@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { createRequire } from "node:module";
 var __create = Object.create;
 var __getProtoOf = Object.getPrototypeOf;
 var __defProp = Object.defineProperty;
@@ -17,1525 +16,6 @@ var __toESM = (mod, isNodeMode, target) => {
   return to;
 };
 var __commonJS = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
-var __require = /* @__PURE__ */ createRequire(import.meta.url);
-
-// node_modules/color-name/index.js
-var require_color_name = __commonJS((exports, module) => {
-  module.exports = {
-    aliceblue: [240, 248, 255],
-    antiquewhite: [250, 235, 215],
-    aqua: [0, 255, 255],
-    aquamarine: [127, 255, 212],
-    azure: [240, 255, 255],
-    beige: [245, 245, 220],
-    bisque: [255, 228, 196],
-    black: [0, 0, 0],
-    blanchedalmond: [255, 235, 205],
-    blue: [0, 0, 255],
-    blueviolet: [138, 43, 226],
-    brown: [165, 42, 42],
-    burlywood: [222, 184, 135],
-    cadetblue: [95, 158, 160],
-    chartreuse: [127, 255, 0],
-    chocolate: [210, 105, 30],
-    coral: [255, 127, 80],
-    cornflowerblue: [100, 149, 237],
-    cornsilk: [255, 248, 220],
-    crimson: [220, 20, 60],
-    cyan: [0, 255, 255],
-    darkblue: [0, 0, 139],
-    darkcyan: [0, 139, 139],
-    darkgoldenrod: [184, 134, 11],
-    darkgray: [169, 169, 169],
-    darkgreen: [0, 100, 0],
-    darkgrey: [169, 169, 169],
-    darkkhaki: [189, 183, 107],
-    darkmagenta: [139, 0, 139],
-    darkolivegreen: [85, 107, 47],
-    darkorange: [255, 140, 0],
-    darkorchid: [153, 50, 204],
-    darkred: [139, 0, 0],
-    darksalmon: [233, 150, 122],
-    darkseagreen: [143, 188, 143],
-    darkslateblue: [72, 61, 139],
-    darkslategray: [47, 79, 79],
-    darkslategrey: [47, 79, 79],
-    darkturquoise: [0, 206, 209],
-    darkviolet: [148, 0, 211],
-    deeppink: [255, 20, 147],
-    deepskyblue: [0, 191, 255],
-    dimgray: [105, 105, 105],
-    dimgrey: [105, 105, 105],
-    dodgerblue: [30, 144, 255],
-    firebrick: [178, 34, 34],
-    floralwhite: [255, 250, 240],
-    forestgreen: [34, 139, 34],
-    fuchsia: [255, 0, 255],
-    gainsboro: [220, 220, 220],
-    ghostwhite: [248, 248, 255],
-    gold: [255, 215, 0],
-    goldenrod: [218, 165, 32],
-    gray: [128, 128, 128],
-    green: [0, 128, 0],
-    greenyellow: [173, 255, 47],
-    grey: [128, 128, 128],
-    honeydew: [240, 255, 240],
-    hotpink: [255, 105, 180],
-    indianred: [205, 92, 92],
-    indigo: [75, 0, 130],
-    ivory: [255, 255, 240],
-    khaki: [240, 230, 140],
-    lavender: [230, 230, 250],
-    lavenderblush: [255, 240, 245],
-    lawngreen: [124, 252, 0],
-    lemonchiffon: [255, 250, 205],
-    lightblue: [173, 216, 230],
-    lightcoral: [240, 128, 128],
-    lightcyan: [224, 255, 255],
-    lightgoldenrodyellow: [250, 250, 210],
-    lightgray: [211, 211, 211],
-    lightgreen: [144, 238, 144],
-    lightgrey: [211, 211, 211],
-    lightpink: [255, 182, 193],
-    lightsalmon: [255, 160, 122],
-    lightseagreen: [32, 178, 170],
-    lightskyblue: [135, 206, 250],
-    lightslategray: [119, 136, 153],
-    lightslategrey: [119, 136, 153],
-    lightsteelblue: [176, 196, 222],
-    lightyellow: [255, 255, 224],
-    lime: [0, 255, 0],
-    limegreen: [50, 205, 50],
-    linen: [250, 240, 230],
-    magenta: [255, 0, 255],
-    maroon: [128, 0, 0],
-    mediumaquamarine: [102, 205, 170],
-    mediumblue: [0, 0, 205],
-    mediumorchid: [186, 85, 211],
-    mediumpurple: [147, 112, 219],
-    mediumseagreen: [60, 179, 113],
-    mediumslateblue: [123, 104, 238],
-    mediumspringgreen: [0, 250, 154],
-    mediumturquoise: [72, 209, 204],
-    mediumvioletred: [199, 21, 133],
-    midnightblue: [25, 25, 112],
-    mintcream: [245, 255, 250],
-    mistyrose: [255, 228, 225],
-    moccasin: [255, 228, 181],
-    navajowhite: [255, 222, 173],
-    navy: [0, 0, 128],
-    oldlace: [253, 245, 230],
-    olive: [128, 128, 0],
-    olivedrab: [107, 142, 35],
-    orange: [255, 165, 0],
-    orangered: [255, 69, 0],
-    orchid: [218, 112, 214],
-    palegoldenrod: [238, 232, 170],
-    palegreen: [152, 251, 152],
-    paleturquoise: [175, 238, 238],
-    palevioletred: [219, 112, 147],
-    papayawhip: [255, 239, 213],
-    peachpuff: [255, 218, 185],
-    peru: [205, 133, 63],
-    pink: [255, 192, 203],
-    plum: [221, 160, 221],
-    powderblue: [176, 224, 230],
-    purple: [128, 0, 128],
-    rebeccapurple: [102, 51, 153],
-    red: [255, 0, 0],
-    rosybrown: [188, 143, 143],
-    royalblue: [65, 105, 225],
-    saddlebrown: [139, 69, 19],
-    salmon: [250, 128, 114],
-    sandybrown: [244, 164, 96],
-    seagreen: [46, 139, 87],
-    seashell: [255, 245, 238],
-    sienna: [160, 82, 45],
-    silver: [192, 192, 192],
-    skyblue: [135, 206, 235],
-    slateblue: [106, 90, 205],
-    slategray: [112, 128, 144],
-    slategrey: [112, 128, 144],
-    snow: [255, 250, 250],
-    springgreen: [0, 255, 127],
-    steelblue: [70, 130, 180],
-    tan: [210, 180, 140],
-    teal: [0, 128, 128],
-    thistle: [216, 191, 216],
-    tomato: [255, 99, 71],
-    turquoise: [64, 224, 208],
-    violet: [238, 130, 238],
-    wheat: [245, 222, 179],
-    white: [255, 255, 255],
-    whitesmoke: [245, 245, 245],
-    yellow: [255, 255, 0],
-    yellowgreen: [154, 205, 50]
-  };
-});
-
-// node_modules/color-convert/conversions.js
-var require_conversions = __commonJS((exports, module) => {
-  var cssKeywords = require_color_name();
-  var reverseKeywords = {};
-  for (const key of Object.keys(cssKeywords)) {
-    reverseKeywords[cssKeywords[key]] = key;
-  }
-  var convert = {
-    rgb: { channels: 3, labels: "rgb" },
-    hsl: { channels: 3, labels: "hsl" },
-    hsv: { channels: 3, labels: "hsv" },
-    hwb: { channels: 3, labels: "hwb" },
-    cmyk: { channels: 4, labels: "cmyk" },
-    xyz: { channels: 3, labels: "xyz" },
-    lab: { channels: 3, labels: "lab" },
-    lch: { channels: 3, labels: "lch" },
-    hex: { channels: 1, labels: ["hex"] },
-    keyword: { channels: 1, labels: ["keyword"] },
-    ansi16: { channels: 1, labels: ["ansi16"] },
-    ansi256: { channels: 1, labels: ["ansi256"] },
-    hcg: { channels: 3, labels: ["h", "c", "g"] },
-    apple: { channels: 3, labels: ["r16", "g16", "b16"] },
-    gray: { channels: 1, labels: ["gray"] }
-  };
-  module.exports = convert;
-  for (const model of Object.keys(convert)) {
-    if (!("channels" in convert[model])) {
-      throw new Error("missing channels property: " + model);
-    }
-    if (!("labels" in convert[model])) {
-      throw new Error("missing channel labels property: " + model);
-    }
-    if (convert[model].labels.length !== convert[model].channels) {
-      throw new Error("channel and label counts mismatch: " + model);
-    }
-    const { channels, labels } = convert[model];
-    delete convert[model].channels;
-    delete convert[model].labels;
-    Object.defineProperty(convert[model], "channels", { value: channels });
-    Object.defineProperty(convert[model], "labels", { value: labels });
-  }
-  convert.rgb.hsl = function(rgb) {
-    const r = rgb[0] / 255;
-    const g = rgb[1] / 255;
-    const b = rgb[2] / 255;
-    const min = Math.min(r, g, b);
-    const max = Math.max(r, g, b);
-    const delta = max - min;
-    let h;
-    let s;
-    if (max === min) {
-      h = 0;
-    } else if (r === max) {
-      h = (g - b) / delta;
-    } else if (g === max) {
-      h = 2 + (b - r) / delta;
-    } else if (b === max) {
-      h = 4 + (r - g) / delta;
-    }
-    h = Math.min(h * 60, 360);
-    if (h < 0) {
-      h += 360;
-    }
-    const l = (min + max) / 2;
-    if (max === min) {
-      s = 0;
-    } else if (l <= 0.5) {
-      s = delta / (max + min);
-    } else {
-      s = delta / (2 - max - min);
-    }
-    return [h, s * 100, l * 100];
-  };
-  convert.rgb.hsv = function(rgb) {
-    let rdif;
-    let gdif;
-    let bdif;
-    let h;
-    let s;
-    const r = rgb[0] / 255;
-    const g = rgb[1] / 255;
-    const b = rgb[2] / 255;
-    const v = Math.max(r, g, b);
-    const diff = v - Math.min(r, g, b);
-    const diffc = function(c) {
-      return (v - c) / 6 / diff + 1 / 2;
-    };
-    if (diff === 0) {
-      h = 0;
-      s = 0;
-    } else {
-      s = diff / v;
-      rdif = diffc(r);
-      gdif = diffc(g);
-      bdif = diffc(b);
-      if (r === v) {
-        h = bdif - gdif;
-      } else if (g === v) {
-        h = 1 / 3 + rdif - bdif;
-      } else if (b === v) {
-        h = 2 / 3 + gdif - rdif;
-      }
-      if (h < 0) {
-        h += 1;
-      } else if (h > 1) {
-        h -= 1;
-      }
-    }
-    return [
-      h * 360,
-      s * 100,
-      v * 100
-    ];
-  };
-  convert.rgb.hwb = function(rgb) {
-    const r = rgb[0];
-    const g = rgb[1];
-    let b = rgb[2];
-    const h = convert.rgb.hsl(rgb)[0];
-    const w = 1 / 255 * Math.min(r, Math.min(g, b));
-    b = 1 - 1 / 255 * Math.max(r, Math.max(g, b));
-    return [h, w * 100, b * 100];
-  };
-  convert.rgb.cmyk = function(rgb) {
-    const r = rgb[0] / 255;
-    const g = rgb[1] / 255;
-    const b = rgb[2] / 255;
-    const k = Math.min(1 - r, 1 - g, 1 - b);
-    const c = (1 - r - k) / (1 - k) || 0;
-    const m = (1 - g - k) / (1 - k) || 0;
-    const y = (1 - b - k) / (1 - k) || 0;
-    return [c * 100, m * 100, y * 100, k * 100];
-  };
-  function comparativeDistance(x, y) {
-    return (x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2 + (x[2] - y[2]) ** 2;
-  }
-  convert.rgb.keyword = function(rgb) {
-    const reversed = reverseKeywords[rgb];
-    if (reversed) {
-      return reversed;
-    }
-    let currentClosestDistance = Infinity;
-    let currentClosestKeyword;
-    for (const keyword of Object.keys(cssKeywords)) {
-      const value = cssKeywords[keyword];
-      const distance = comparativeDistance(rgb, value);
-      if (distance < currentClosestDistance) {
-        currentClosestDistance = distance;
-        currentClosestKeyword = keyword;
-      }
-    }
-    return currentClosestKeyword;
-  };
-  convert.keyword.rgb = function(keyword) {
-    return cssKeywords[keyword];
-  };
-  convert.rgb.xyz = function(rgb) {
-    let r = rgb[0] / 255;
-    let g = rgb[1] / 255;
-    let b = rgb[2] / 255;
-    r = r > 0.04045 ? ((r + 0.055) / 1.055) ** 2.4 : r / 12.92;
-    g = g > 0.04045 ? ((g + 0.055) / 1.055) ** 2.4 : g / 12.92;
-    b = b > 0.04045 ? ((b + 0.055) / 1.055) ** 2.4 : b / 12.92;
-    const x = r * 0.4124 + g * 0.3576 + b * 0.1805;
-    const y = r * 0.2126 + g * 0.7152 + b * 0.0722;
-    const z2 = r * 0.0193 + g * 0.1192 + b * 0.9505;
-    return [x * 100, y * 100, z2 * 100];
-  };
-  convert.rgb.lab = function(rgb) {
-    const xyz = convert.rgb.xyz(rgb);
-    let x = xyz[0];
-    let y = xyz[1];
-    let z2 = xyz[2];
-    x /= 95.047;
-    y /= 100;
-    z2 /= 108.883;
-    x = x > 0.008856 ? x ** (1 / 3) : 7.787 * x + 16 / 116;
-    y = y > 0.008856 ? y ** (1 / 3) : 7.787 * y + 16 / 116;
-    z2 = z2 > 0.008856 ? z2 ** (1 / 3) : 7.787 * z2 + 16 / 116;
-    const l = 116 * y - 16;
-    const a = 500 * (x - y);
-    const b = 200 * (y - z2);
-    return [l, a, b];
-  };
-  convert.hsl.rgb = function(hsl) {
-    const h = hsl[0] / 360;
-    const s = hsl[1] / 100;
-    const l = hsl[2] / 100;
-    let t2;
-    let t3;
-    let val;
-    if (s === 0) {
-      val = l * 255;
-      return [val, val, val];
-    }
-    if (l < 0.5) {
-      t2 = l * (1 + s);
-    } else {
-      t2 = l + s - l * s;
-    }
-    const t1 = 2 * l - t2;
-    const rgb = [0, 0, 0];
-    for (let i = 0;i < 3; i++) {
-      t3 = h + 1 / 3 * -(i - 1);
-      if (t3 < 0) {
-        t3++;
-      }
-      if (t3 > 1) {
-        t3--;
-      }
-      if (6 * t3 < 1) {
-        val = t1 + (t2 - t1) * 6 * t3;
-      } else if (2 * t3 < 1) {
-        val = t2;
-      } else if (3 * t3 < 2) {
-        val = t1 + (t2 - t1) * (2 / 3 - t3) * 6;
-      } else {
-        val = t1;
-      }
-      rgb[i] = val * 255;
-    }
-    return rgb;
-  };
-  convert.hsl.hsv = function(hsl) {
-    const h = hsl[0];
-    let s = hsl[1] / 100;
-    let l = hsl[2] / 100;
-    let smin = s;
-    const lmin = Math.max(l, 0.01);
-    l *= 2;
-    s *= l <= 1 ? l : 2 - l;
-    smin *= lmin <= 1 ? lmin : 2 - lmin;
-    const v = (l + s) / 2;
-    const sv = l === 0 ? 2 * smin / (lmin + smin) : 2 * s / (l + s);
-    return [h, sv * 100, v * 100];
-  };
-  convert.hsv.rgb = function(hsv) {
-    const h = hsv[0] / 60;
-    const s = hsv[1] / 100;
-    let v = hsv[2] / 100;
-    const hi = Math.floor(h) % 6;
-    const f = h - Math.floor(h);
-    const p = 255 * v * (1 - s);
-    const q = 255 * v * (1 - s * f);
-    const t = 255 * v * (1 - s * (1 - f));
-    v *= 255;
-    switch (hi) {
-      case 0:
-        return [v, t, p];
-      case 1:
-        return [q, v, p];
-      case 2:
-        return [p, v, t];
-      case 3:
-        return [p, q, v];
-      case 4:
-        return [t, p, v];
-      case 5:
-        return [v, p, q];
-    }
-  };
-  convert.hsv.hsl = function(hsv) {
-    const h = hsv[0];
-    const s = hsv[1] / 100;
-    const v = hsv[2] / 100;
-    const vmin = Math.max(v, 0.01);
-    let sl;
-    let l;
-    l = (2 - s) * v;
-    const lmin = (2 - s) * vmin;
-    sl = s * vmin;
-    sl /= lmin <= 1 ? lmin : 2 - lmin;
-    sl = sl || 0;
-    l /= 2;
-    return [h, sl * 100, l * 100];
-  };
-  convert.hwb.rgb = function(hwb) {
-    const h = hwb[0] / 360;
-    let wh = hwb[1] / 100;
-    let bl = hwb[2] / 100;
-    const ratio = wh + bl;
-    let f;
-    if (ratio > 1) {
-      wh /= ratio;
-      bl /= ratio;
-    }
-    const i = Math.floor(6 * h);
-    const v = 1 - bl;
-    f = 6 * h - i;
-    if ((i & 1) !== 0) {
-      f = 1 - f;
-    }
-    const n = wh + f * (v - wh);
-    let r;
-    let g;
-    let b;
-    switch (i) {
-      default:
-      case 6:
-      case 0:
-        r = v;
-        g = n;
-        b = wh;
-        break;
-      case 1:
-        r = n;
-        g = v;
-        b = wh;
-        break;
-      case 2:
-        r = wh;
-        g = v;
-        b = n;
-        break;
-      case 3:
-        r = wh;
-        g = n;
-        b = v;
-        break;
-      case 4:
-        r = n;
-        g = wh;
-        b = v;
-        break;
-      case 5:
-        r = v;
-        g = wh;
-        b = n;
-        break;
-    }
-    return [r * 255, g * 255, b * 255];
-  };
-  convert.cmyk.rgb = function(cmyk) {
-    const c = cmyk[0] / 100;
-    const m = cmyk[1] / 100;
-    const y = cmyk[2] / 100;
-    const k = cmyk[3] / 100;
-    const r = 1 - Math.min(1, c * (1 - k) + k);
-    const g = 1 - Math.min(1, m * (1 - k) + k);
-    const b = 1 - Math.min(1, y * (1 - k) + k);
-    return [r * 255, g * 255, b * 255];
-  };
-  convert.xyz.rgb = function(xyz) {
-    const x = xyz[0] / 100;
-    const y = xyz[1] / 100;
-    const z2 = xyz[2] / 100;
-    let r;
-    let g;
-    let b;
-    r = x * 3.2406 + y * -1.5372 + z2 * -0.4986;
-    g = x * -0.9689 + y * 1.8758 + z2 * 0.0415;
-    b = x * 0.0557 + y * -0.204 + z2 * 1.057;
-    r = r > 0.0031308 ? 1.055 * r ** (1 / 2.4) - 0.055 : r * 12.92;
-    g = g > 0.0031308 ? 1.055 * g ** (1 / 2.4) - 0.055 : g * 12.92;
-    b = b > 0.0031308 ? 1.055 * b ** (1 / 2.4) - 0.055 : b * 12.92;
-    r = Math.min(Math.max(0, r), 1);
-    g = Math.min(Math.max(0, g), 1);
-    b = Math.min(Math.max(0, b), 1);
-    return [r * 255, g * 255, b * 255];
-  };
-  convert.xyz.lab = function(xyz) {
-    let x = xyz[0];
-    let y = xyz[1];
-    let z2 = xyz[2];
-    x /= 95.047;
-    y /= 100;
-    z2 /= 108.883;
-    x = x > 0.008856 ? x ** (1 / 3) : 7.787 * x + 16 / 116;
-    y = y > 0.008856 ? y ** (1 / 3) : 7.787 * y + 16 / 116;
-    z2 = z2 > 0.008856 ? z2 ** (1 / 3) : 7.787 * z2 + 16 / 116;
-    const l = 116 * y - 16;
-    const a = 500 * (x - y);
-    const b = 200 * (y - z2);
-    return [l, a, b];
-  };
-  convert.lab.xyz = function(lab) {
-    const l = lab[0];
-    const a = lab[1];
-    const b = lab[2];
-    let x;
-    let y;
-    let z2;
-    y = (l + 16) / 116;
-    x = a / 500 + y;
-    z2 = y - b / 200;
-    const y2 = y ** 3;
-    const x2 = x ** 3;
-    const z22 = z2 ** 3;
-    y = y2 > 0.008856 ? y2 : (y - 16 / 116) / 7.787;
-    x = x2 > 0.008856 ? x2 : (x - 16 / 116) / 7.787;
-    z2 = z22 > 0.008856 ? z22 : (z2 - 16 / 116) / 7.787;
-    x *= 95.047;
-    y *= 100;
-    z2 *= 108.883;
-    return [x, y, z2];
-  };
-  convert.lab.lch = function(lab) {
-    const l = lab[0];
-    const a = lab[1];
-    const b = lab[2];
-    let h;
-    const hr = Math.atan2(b, a);
-    h = hr * 360 / 2 / Math.PI;
-    if (h < 0) {
-      h += 360;
-    }
-    const c = Math.sqrt(a * a + b * b);
-    return [l, c, h];
-  };
-  convert.lch.lab = function(lch) {
-    const l = lch[0];
-    const c = lch[1];
-    const h = lch[2];
-    const hr = h / 360 * 2 * Math.PI;
-    const a = c * Math.cos(hr);
-    const b = c * Math.sin(hr);
-    return [l, a, b];
-  };
-  convert.rgb.ansi16 = function(args, saturation = null) {
-    const [r, g, b] = args;
-    let value = saturation === null ? convert.rgb.hsv(args)[2] : saturation;
-    value = Math.round(value / 50);
-    if (value === 0) {
-      return 30;
-    }
-    let ansi = 30 + (Math.round(b / 255) << 2 | Math.round(g / 255) << 1 | Math.round(r / 255));
-    if (value === 2) {
-      ansi += 60;
-    }
-    return ansi;
-  };
-  convert.hsv.ansi16 = function(args) {
-    return convert.rgb.ansi16(convert.hsv.rgb(args), args[2]);
-  };
-  convert.rgb.ansi256 = function(args) {
-    const r = args[0];
-    const g = args[1];
-    const b = args[2];
-    if (r === g && g === b) {
-      if (r < 8) {
-        return 16;
-      }
-      if (r > 248) {
-        return 231;
-      }
-      return Math.round((r - 8) / 247 * 24) + 232;
-    }
-    const ansi = 16 + 36 * Math.round(r / 255 * 5) + 6 * Math.round(g / 255 * 5) + Math.round(b / 255 * 5);
-    return ansi;
-  };
-  convert.ansi16.rgb = function(args) {
-    let color = args % 10;
-    if (color === 0 || color === 7) {
-      if (args > 50) {
-        color += 3.5;
-      }
-      color = color / 10.5 * 255;
-      return [color, color, color];
-    }
-    const mult = (~~(args > 50) + 1) * 0.5;
-    const r = (color & 1) * mult * 255;
-    const g = (color >> 1 & 1) * mult * 255;
-    const b = (color >> 2 & 1) * mult * 255;
-    return [r, g, b];
-  };
-  convert.ansi256.rgb = function(args) {
-    if (args >= 232) {
-      const c = (args - 232) * 10 + 8;
-      return [c, c, c];
-    }
-    args -= 16;
-    let rem;
-    const r = Math.floor(args / 36) / 5 * 255;
-    const g = Math.floor((rem = args % 36) / 6) / 5 * 255;
-    const b = rem % 6 / 5 * 255;
-    return [r, g, b];
-  };
-  convert.rgb.hex = function(args) {
-    const integer = ((Math.round(args[0]) & 255) << 16) + ((Math.round(args[1]) & 255) << 8) + (Math.round(args[2]) & 255);
-    const string = integer.toString(16).toUpperCase();
-    return "000000".substring(string.length) + string;
-  };
-  convert.hex.rgb = function(args) {
-    const match = args.toString(16).match(/[a-f0-9]{6}|[a-f0-9]{3}/i);
-    if (!match) {
-      return [0, 0, 0];
-    }
-    let colorString = match[0];
-    if (match[0].length === 3) {
-      colorString = colorString.split("").map((char) => {
-        return char + char;
-      }).join("");
-    }
-    const integer = parseInt(colorString, 16);
-    const r = integer >> 16 & 255;
-    const g = integer >> 8 & 255;
-    const b = integer & 255;
-    return [r, g, b];
-  };
-  convert.rgb.hcg = function(rgb) {
-    const r = rgb[0] / 255;
-    const g = rgb[1] / 255;
-    const b = rgb[2] / 255;
-    const max = Math.max(Math.max(r, g), b);
-    const min = Math.min(Math.min(r, g), b);
-    const chroma = max - min;
-    let grayscale;
-    let hue;
-    if (chroma < 1) {
-      grayscale = min / (1 - chroma);
-    } else {
-      grayscale = 0;
-    }
-    if (chroma <= 0) {
-      hue = 0;
-    } else if (max === r) {
-      hue = (g - b) / chroma % 6;
-    } else if (max === g) {
-      hue = 2 + (b - r) / chroma;
-    } else {
-      hue = 4 + (r - g) / chroma;
-    }
-    hue /= 6;
-    hue %= 1;
-    return [hue * 360, chroma * 100, grayscale * 100];
-  };
-  convert.hsl.hcg = function(hsl) {
-    const s = hsl[1] / 100;
-    const l = hsl[2] / 100;
-    const c = l < 0.5 ? 2 * s * l : 2 * s * (1 - l);
-    let f = 0;
-    if (c < 1) {
-      f = (l - 0.5 * c) / (1 - c);
-    }
-    return [hsl[0], c * 100, f * 100];
-  };
-  convert.hsv.hcg = function(hsv) {
-    const s = hsv[1] / 100;
-    const v = hsv[2] / 100;
-    const c = s * v;
-    let f = 0;
-    if (c < 1) {
-      f = (v - c) / (1 - c);
-    }
-    return [hsv[0], c * 100, f * 100];
-  };
-  convert.hcg.rgb = function(hcg) {
-    const h = hcg[0] / 360;
-    const c = hcg[1] / 100;
-    const g = hcg[2] / 100;
-    if (c === 0) {
-      return [g * 255, g * 255, g * 255];
-    }
-    const pure = [0, 0, 0];
-    const hi = h % 1 * 6;
-    const v = hi % 1;
-    const w = 1 - v;
-    let mg = 0;
-    switch (Math.floor(hi)) {
-      case 0:
-        pure[0] = 1;
-        pure[1] = v;
-        pure[2] = 0;
-        break;
-      case 1:
-        pure[0] = w;
-        pure[1] = 1;
-        pure[2] = 0;
-        break;
-      case 2:
-        pure[0] = 0;
-        pure[1] = 1;
-        pure[2] = v;
-        break;
-      case 3:
-        pure[0] = 0;
-        pure[1] = w;
-        pure[2] = 1;
-        break;
-      case 4:
-        pure[0] = v;
-        pure[1] = 0;
-        pure[2] = 1;
-        break;
-      default:
-        pure[0] = 1;
-        pure[1] = 0;
-        pure[2] = w;
-    }
-    mg = (1 - c) * g;
-    return [
-      (c * pure[0] + mg) * 255,
-      (c * pure[1] + mg) * 255,
-      (c * pure[2] + mg) * 255
-    ];
-  };
-  convert.hcg.hsv = function(hcg) {
-    const c = hcg[1] / 100;
-    const g = hcg[2] / 100;
-    const v = c + g * (1 - c);
-    let f = 0;
-    if (v > 0) {
-      f = c / v;
-    }
-    return [hcg[0], f * 100, v * 100];
-  };
-  convert.hcg.hsl = function(hcg) {
-    const c = hcg[1] / 100;
-    const g = hcg[2] / 100;
-    const l = g * (1 - c) + 0.5 * c;
-    let s = 0;
-    if (l > 0 && l < 0.5) {
-      s = c / (2 * l);
-    } else if (l >= 0.5 && l < 1) {
-      s = c / (2 * (1 - l));
-    }
-    return [hcg[0], s * 100, l * 100];
-  };
-  convert.hcg.hwb = function(hcg) {
-    const c = hcg[1] / 100;
-    const g = hcg[2] / 100;
-    const v = c + g * (1 - c);
-    return [hcg[0], (v - c) * 100, (1 - v) * 100];
-  };
-  convert.hwb.hcg = function(hwb) {
-    const w = hwb[1] / 100;
-    const b = hwb[2] / 100;
-    const v = 1 - b;
-    const c = v - w;
-    let g = 0;
-    if (c < 1) {
-      g = (v - c) / (1 - c);
-    }
-    return [hwb[0], c * 100, g * 100];
-  };
-  convert.apple.rgb = function(apple) {
-    return [apple[0] / 65535 * 255, apple[1] / 65535 * 255, apple[2] / 65535 * 255];
-  };
-  convert.rgb.apple = function(rgb) {
-    return [rgb[0] / 255 * 65535, rgb[1] / 255 * 65535, rgb[2] / 255 * 65535];
-  };
-  convert.gray.rgb = function(args) {
-    return [args[0] / 100 * 255, args[0] / 100 * 255, args[0] / 100 * 255];
-  };
-  convert.gray.hsl = function(args) {
-    return [0, 0, args[0]];
-  };
-  convert.gray.hsv = convert.gray.hsl;
-  convert.gray.hwb = function(gray) {
-    return [0, 100, gray[0]];
-  };
-  convert.gray.cmyk = function(gray) {
-    return [0, 0, 0, gray[0]];
-  };
-  convert.gray.lab = function(gray) {
-    return [gray[0], 0, 0];
-  };
-  convert.gray.hex = function(gray) {
-    const val = Math.round(gray[0] / 100 * 255) & 255;
-    const integer = (val << 16) + (val << 8) + val;
-    const string = integer.toString(16).toUpperCase();
-    return "000000".substring(string.length) + string;
-  };
-  convert.rgb.gray = function(rgb) {
-    const val = (rgb[0] + rgb[1] + rgb[2]) / 3;
-    return [val / 255 * 100];
-  };
-});
-
-// node_modules/color-convert/route.js
-var require_route = __commonJS((exports, module) => {
-  var conversions = require_conversions();
-  function buildGraph() {
-    const graph = {};
-    const models = Object.keys(conversions);
-    for (let len = models.length, i = 0;i < len; i++) {
-      graph[models[i]] = {
-        distance: -1,
-        parent: null
-      };
-    }
-    return graph;
-  }
-  function deriveBFS(fromModel) {
-    const graph = buildGraph();
-    const queue = [fromModel];
-    graph[fromModel].distance = 0;
-    while (queue.length) {
-      const current = queue.pop();
-      const adjacents = Object.keys(conversions[current]);
-      for (let len = adjacents.length, i = 0;i < len; i++) {
-        const adjacent = adjacents[i];
-        const node = graph[adjacent];
-        if (node.distance === -1) {
-          node.distance = graph[current].distance + 1;
-          node.parent = current;
-          queue.unshift(adjacent);
-        }
-      }
-    }
-    return graph;
-  }
-  function link(from, to) {
-    return function(args) {
-      return to(from(args));
-    };
-  }
-  function wrapConversion(toModel, graph) {
-    const path = [graph[toModel].parent, toModel];
-    let fn = conversions[graph[toModel].parent][toModel];
-    let cur = graph[toModel].parent;
-    while (graph[cur].parent) {
-      path.unshift(graph[cur].parent);
-      fn = link(conversions[graph[cur].parent][cur], fn);
-      cur = graph[cur].parent;
-    }
-    fn.conversion = path;
-    return fn;
-  }
-  module.exports = function(fromModel) {
-    const graph = deriveBFS(fromModel);
-    const conversion = {};
-    const models = Object.keys(graph);
-    for (let len = models.length, i = 0;i < len; i++) {
-      const toModel = models[i];
-      const node = graph[toModel];
-      if (node.parent === null) {
-        continue;
-      }
-      conversion[toModel] = wrapConversion(toModel, graph);
-    }
-    return conversion;
-  };
-});
-
-// node_modules/color-convert/index.js
-var require_color_convert = __commonJS((exports, module) => {
-  var conversions = require_conversions();
-  var route = require_route();
-  var convert = {};
-  var models = Object.keys(conversions);
-  function wrapRaw(fn) {
-    const wrappedFn = function(...args) {
-      const arg0 = args[0];
-      if (arg0 === undefined || arg0 === null) {
-        return arg0;
-      }
-      if (arg0.length > 1) {
-        args = arg0;
-      }
-      return fn(args);
-    };
-    if ("conversion" in fn) {
-      wrappedFn.conversion = fn.conversion;
-    }
-    return wrappedFn;
-  }
-  function wrapRounded(fn) {
-    const wrappedFn = function(...args) {
-      const arg0 = args[0];
-      if (arg0 === undefined || arg0 === null) {
-        return arg0;
-      }
-      if (arg0.length > 1) {
-        args = arg0;
-      }
-      const result = fn(args);
-      if (typeof result === "object") {
-        for (let len = result.length, i = 0;i < len; i++) {
-          result[i] = Math.round(result[i]);
-        }
-      }
-      return result;
-    };
-    if ("conversion" in fn) {
-      wrappedFn.conversion = fn.conversion;
-    }
-    return wrappedFn;
-  }
-  models.forEach((fromModel) => {
-    convert[fromModel] = {};
-    Object.defineProperty(convert[fromModel], "channels", { value: conversions[fromModel].channels });
-    Object.defineProperty(convert[fromModel], "labels", { value: conversions[fromModel].labels });
-    const routes = route(fromModel);
-    const routeModels = Object.keys(routes);
-    routeModels.forEach((toModel) => {
-      const fn = routes[toModel];
-      convert[fromModel][toModel] = wrapRounded(fn);
-      convert[fromModel][toModel].raw = wrapRaw(fn);
-    });
-  });
-  module.exports = convert;
-});
-
-// node_modules/ansi-styles/index.js
-var require_ansi_styles = __commonJS((exports, module) => {
-  var wrapAnsi16 = (fn, offset) => (...args) => {
-    const code = fn(...args);
-    return `\x1B[${code + offset}m`;
-  };
-  var wrapAnsi256 = (fn, offset) => (...args) => {
-    const code = fn(...args);
-    return `\x1B[${38 + offset};5;${code}m`;
-  };
-  var wrapAnsi16m = (fn, offset) => (...args) => {
-    const rgb = fn(...args);
-    return `\x1B[${38 + offset};2;${rgb[0]};${rgb[1]};${rgb[2]}m`;
-  };
-  var ansi2ansi = (n) => n;
-  var rgb2rgb = (r, g, b) => [r, g, b];
-  var setLazyProperty = (object, property, get) => {
-    Object.defineProperty(object, property, {
-      get: () => {
-        const value = get();
-        Object.defineProperty(object, property, {
-          value,
-          enumerable: true,
-          configurable: true
-        });
-        return value;
-      },
-      enumerable: true,
-      configurable: true
-    });
-  };
-  var colorConvert;
-  var makeDynamicStyles = (wrap, targetSpace, identity, isBackground) => {
-    if (colorConvert === undefined) {
-      colorConvert = require_color_convert();
-    }
-    const offset = isBackground ? 10 : 0;
-    const styles = {};
-    for (const [sourceSpace, suite] of Object.entries(colorConvert)) {
-      const name = sourceSpace === "ansi16" ? "ansi" : sourceSpace;
-      if (sourceSpace === targetSpace) {
-        styles[name] = wrap(identity, offset);
-      } else if (typeof suite === "object") {
-        styles[name] = wrap(suite[targetSpace], offset);
-      }
-    }
-    return styles;
-  };
-  function assembleStyles() {
-    const codes = new Map;
-    const styles = {
-      modifier: {
-        reset: [0, 0],
-        bold: [1, 22],
-        dim: [2, 22],
-        italic: [3, 23],
-        underline: [4, 24],
-        inverse: [7, 27],
-        hidden: [8, 28],
-        strikethrough: [9, 29]
-      },
-      color: {
-        black: [30, 39],
-        red: [31, 39],
-        green: [32, 39],
-        yellow: [33, 39],
-        blue: [34, 39],
-        magenta: [35, 39],
-        cyan: [36, 39],
-        white: [37, 39],
-        blackBright: [90, 39],
-        redBright: [91, 39],
-        greenBright: [92, 39],
-        yellowBright: [93, 39],
-        blueBright: [94, 39],
-        magentaBright: [95, 39],
-        cyanBright: [96, 39],
-        whiteBright: [97, 39]
-      },
-      bgColor: {
-        bgBlack: [40, 49],
-        bgRed: [41, 49],
-        bgGreen: [42, 49],
-        bgYellow: [43, 49],
-        bgBlue: [44, 49],
-        bgMagenta: [45, 49],
-        bgCyan: [46, 49],
-        bgWhite: [47, 49],
-        bgBlackBright: [100, 49],
-        bgRedBright: [101, 49],
-        bgGreenBright: [102, 49],
-        bgYellowBright: [103, 49],
-        bgBlueBright: [104, 49],
-        bgMagentaBright: [105, 49],
-        bgCyanBright: [106, 49],
-        bgWhiteBright: [107, 49]
-      }
-    };
-    styles.color.gray = styles.color.blackBright;
-    styles.bgColor.bgGray = styles.bgColor.bgBlackBright;
-    styles.color.grey = styles.color.blackBright;
-    styles.bgColor.bgGrey = styles.bgColor.bgBlackBright;
-    for (const [groupName, group] of Object.entries(styles)) {
-      for (const [styleName, style] of Object.entries(group)) {
-        styles[styleName] = {
-          open: `\x1B[${style[0]}m`,
-          close: `\x1B[${style[1]}m`
-        };
-        group[styleName] = styles[styleName];
-        codes.set(style[0], style[1]);
-      }
-      Object.defineProperty(styles, groupName, {
-        value: group,
-        enumerable: false
-      });
-    }
-    Object.defineProperty(styles, "codes", {
-      value: codes,
-      enumerable: false
-    });
-    styles.color.close = "\x1B[39m";
-    styles.bgColor.close = "\x1B[49m";
-    setLazyProperty(styles.color, "ansi", () => makeDynamicStyles(wrapAnsi16, "ansi16", ansi2ansi, false));
-    setLazyProperty(styles.color, "ansi256", () => makeDynamicStyles(wrapAnsi256, "ansi256", ansi2ansi, false));
-    setLazyProperty(styles.color, "ansi16m", () => makeDynamicStyles(wrapAnsi16m, "rgb", rgb2rgb, false));
-    setLazyProperty(styles.bgColor, "ansi", () => makeDynamicStyles(wrapAnsi16, "ansi16", ansi2ansi, true));
-    setLazyProperty(styles.bgColor, "ansi256", () => makeDynamicStyles(wrapAnsi256, "ansi256", ansi2ansi, true));
-    setLazyProperty(styles.bgColor, "ansi16m", () => makeDynamicStyles(wrapAnsi16m, "rgb", rgb2rgb, true));
-    return styles;
-  }
-  Object.defineProperty(module, "exports", {
-    enumerable: true,
-    get: assembleStyles
-  });
-});
-
-// node_modules/has-flag/index.js
-var require_has_flag = __commonJS((exports, module) => {
-  module.exports = (flag, argv = process.argv) => {
-    const prefix = flag.startsWith("-") ? "" : flag.length === 1 ? "-" : "--";
-    const position = argv.indexOf(prefix + flag);
-    const terminatorPosition = argv.indexOf("--");
-    return position !== -1 && (terminatorPosition === -1 || position < terminatorPosition);
-  };
-});
-
-// node_modules/supports-color/index.js
-var require_supports_color = __commonJS((exports, module) => {
-  var os = __require("os");
-  var tty = __require("tty");
-  var hasFlag = require_has_flag();
-  var { env } = process;
-  var forceColor;
-  if (hasFlag("no-color") || hasFlag("no-colors") || hasFlag("color=false") || hasFlag("color=never")) {
-    forceColor = 0;
-  } else if (hasFlag("color") || hasFlag("colors") || hasFlag("color=true") || hasFlag("color=always")) {
-    forceColor = 1;
-  }
-  if ("FORCE_COLOR" in env) {
-    if (env.FORCE_COLOR === "true") {
-      forceColor = 1;
-    } else if (env.FORCE_COLOR === "false") {
-      forceColor = 0;
-    } else {
-      forceColor = env.FORCE_COLOR.length === 0 ? 1 : Math.min(parseInt(env.FORCE_COLOR, 10), 3);
-    }
-  }
-  function translateLevel(level) {
-    if (level === 0) {
-      return false;
-    }
-    return {
-      level,
-      hasBasic: true,
-      has256: level >= 2,
-      has16m: level >= 3
-    };
-  }
-  function supportsColor(haveStream, streamIsTTY) {
-    if (forceColor === 0) {
-      return 0;
-    }
-    if (hasFlag("color=16m") || hasFlag("color=full") || hasFlag("color=truecolor")) {
-      return 3;
-    }
-    if (hasFlag("color=256")) {
-      return 2;
-    }
-    if (haveStream && !streamIsTTY && forceColor === undefined) {
-      return 0;
-    }
-    const min = forceColor || 0;
-    if (env.TERM === "dumb") {
-      return min;
-    }
-    if (process.platform === "win32") {
-      const osRelease = os.release().split(".");
-      if (Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
-        return Number(osRelease[2]) >= 14931 ? 3 : 2;
-      }
-      return 1;
-    }
-    if ("CI" in env) {
-      if (["TRAVIS", "CIRCLECI", "APPVEYOR", "GITLAB_CI", "GITHUB_ACTIONS", "BUILDKITE"].some((sign) => (sign in env)) || env.CI_NAME === "codeship") {
-        return 1;
-      }
-      return min;
-    }
-    if ("TEAMCITY_VERSION" in env) {
-      return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
-    }
-    if (env.COLORTERM === "truecolor") {
-      return 3;
-    }
-    if ("TERM_PROGRAM" in env) {
-      const version = parseInt((env.TERM_PROGRAM_VERSION || "").split(".")[0], 10);
-      switch (env.TERM_PROGRAM) {
-        case "iTerm.app":
-          return version >= 3 ? 3 : 2;
-        case "Apple_Terminal":
-          return 2;
-      }
-    }
-    if (/-256(color)?$/i.test(env.TERM)) {
-      return 2;
-    }
-    if (/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
-      return 1;
-    }
-    if ("COLORTERM" in env) {
-      return 1;
-    }
-    return min;
-  }
-  function getSupportLevel(stream) {
-    const level = supportsColor(stream, stream && stream.isTTY);
-    return translateLevel(level);
-  }
-  module.exports = {
-    supportsColor: getSupportLevel,
-    stdout: translateLevel(supportsColor(true, tty.isatty(1))),
-    stderr: translateLevel(supportsColor(true, tty.isatty(2)))
-  };
-});
-
-// node_modules/chalk/source/util.js
-var require_util = __commonJS((exports, module) => {
-  var stringReplaceAll = (string, substring, replacer) => {
-    let index = string.indexOf(substring);
-    if (index === -1) {
-      return string;
-    }
-    const substringLength = substring.length;
-    let endIndex = 0;
-    let returnValue = "";
-    do {
-      returnValue += string.substr(endIndex, index - endIndex) + substring + replacer;
-      endIndex = index + substringLength;
-      index = string.indexOf(substring, endIndex);
-    } while (index !== -1);
-    returnValue += string.substr(endIndex);
-    return returnValue;
-  };
-  var stringEncaseCRLFWithFirstIndex = (string, prefix, postfix, index) => {
-    let endIndex = 0;
-    let returnValue = "";
-    do {
-      const gotCR = string[index - 1] === "\r";
-      returnValue += string.substr(endIndex, (gotCR ? index - 1 : index) - endIndex) + prefix + (gotCR ? `\r
-` : `
-`) + postfix;
-      endIndex = index + 1;
-      index = string.indexOf(`
-`, endIndex);
-    } while (index !== -1);
-    returnValue += string.substr(endIndex);
-    return returnValue;
-  };
-  module.exports = {
-    stringReplaceAll,
-    stringEncaseCRLFWithFirstIndex
-  };
-});
-
-// node_modules/chalk/source/templates.js
-var require_templates = __commonJS((exports, module) => {
-  var TEMPLATE_REGEX = /(?:\\(u(?:[a-f\d]{4}|\{[a-f\d]{1,6}\})|x[a-f\d]{2}|.))|(?:\{(~)?(\w+(?:\([^)]*\))?(?:\.\w+(?:\([^)]*\))?)*)(?:[ \t]|(?=\r?\n)))|(\})|((?:.|[\r\n\f])+?)/gi;
-  var STYLE_REGEX = /(?:^|\.)(\w+)(?:\(([^)]*)\))?/g;
-  var STRING_REGEX = /^(['"])((?:\\.|(?!\1)[^\\])*)\1$/;
-  var ESCAPE_REGEX = /\\(u(?:[a-f\d]{4}|{[a-f\d]{1,6}})|x[a-f\d]{2}|.)|([^\\])/gi;
-  var ESCAPES = new Map([
-    ["n", `
-`],
-    ["r", "\r"],
-    ["t", "\t"],
-    ["b", "\b"],
-    ["f", "\f"],
-    ["v", "\v"],
-    ["0", "\x00"],
-    ["\\", "\\"],
-    ["e", "\x1B"],
-    ["a", "\x07"]
-  ]);
-  function unescape(c) {
-    const u = c[0] === "u";
-    const bracket = c[1] === "{";
-    if (u && !bracket && c.length === 5 || c[0] === "x" && c.length === 3) {
-      return String.fromCharCode(parseInt(c.slice(1), 16));
-    }
-    if (u && bracket) {
-      return String.fromCodePoint(parseInt(c.slice(2, -1), 16));
-    }
-    return ESCAPES.get(c) || c;
-  }
-  function parseArguments(name, arguments_) {
-    const results = [];
-    const chunks = arguments_.trim().split(/\s*,\s*/g);
-    let matches;
-    for (const chunk of chunks) {
-      const number = Number(chunk);
-      if (!Number.isNaN(number)) {
-        results.push(number);
-      } else if (matches = chunk.match(STRING_REGEX)) {
-        results.push(matches[2].replace(ESCAPE_REGEX, (m, escape, character) => escape ? unescape(escape) : character));
-      } else {
-        throw new Error(`Invalid Chalk template style argument: ${chunk} (in style '${name}')`);
-      }
-    }
-    return results;
-  }
-  function parseStyle(style) {
-    STYLE_REGEX.lastIndex = 0;
-    const results = [];
-    let matches;
-    while ((matches = STYLE_REGEX.exec(style)) !== null) {
-      const name = matches[1];
-      if (matches[2]) {
-        const args = parseArguments(name, matches[2]);
-        results.push([name].concat(args));
-      } else {
-        results.push([name]);
-      }
-    }
-    return results;
-  }
-  function buildStyle(chalk, styles) {
-    const enabled = {};
-    for (const layer of styles) {
-      for (const style of layer.styles) {
-        enabled[style[0]] = layer.inverse ? null : style.slice(1);
-      }
-    }
-    let current = chalk;
-    for (const [styleName, styles2] of Object.entries(enabled)) {
-      if (!Array.isArray(styles2)) {
-        continue;
-      }
-      if (!(styleName in current)) {
-        throw new Error(`Unknown Chalk style: ${styleName}`);
-      }
-      current = styles2.length > 0 ? current[styleName](...styles2) : current[styleName];
-    }
-    return current;
-  }
-  module.exports = (chalk, temporary) => {
-    const styles = [];
-    const chunks = [];
-    let chunk = [];
-    temporary.replace(TEMPLATE_REGEX, (m, escapeCharacter, inverse, style, close, character) => {
-      if (escapeCharacter) {
-        chunk.push(unescape(escapeCharacter));
-      } else if (style) {
-        const string = chunk.join("");
-        chunk = [];
-        chunks.push(styles.length === 0 ? string : buildStyle(chalk, styles)(string));
-        styles.push({ inverse, styles: parseStyle(style) });
-      } else if (close) {
-        if (styles.length === 0) {
-          throw new Error("Found extraneous } in Chalk template literal");
-        }
-        chunks.push(buildStyle(chalk, styles)(chunk.join("")));
-        chunk = [];
-        styles.pop();
-      } else {
-        chunk.push(character);
-      }
-    });
-    chunks.push(chunk.join(""));
-    if (styles.length > 0) {
-      const errMessage = `Chalk template literal is missing ${styles.length} closing bracket${styles.length === 1 ? "" : "s"} (\`}\`)`;
-      throw new Error(errMessage);
-    }
-    return chunks.join("");
-  };
-});
-
-// node_modules/chalk/source/index.js
-var require_source = __commonJS((exports, module) => {
-  var ansiStyles = require_ansi_styles();
-  var { stdout: stdoutColor, stderr: stderrColor } = require_supports_color();
-  var {
-    stringReplaceAll,
-    stringEncaseCRLFWithFirstIndex
-  } = require_util();
-  var { isArray } = Array;
-  var levelMapping = [
-    "ansi",
-    "ansi",
-    "ansi256",
-    "ansi16m"
-  ];
-  var styles = Object.create(null);
-  var applyOptions = (object, options = {}) => {
-    if (options.level && !(Number.isInteger(options.level) && options.level >= 0 && options.level <= 3)) {
-      throw new Error("The `level` option should be an integer from 0 to 3");
-    }
-    const colorLevel = stdoutColor ? stdoutColor.level : 0;
-    object.level = options.level === undefined ? colorLevel : options.level;
-  };
-
-  class ChalkClass {
-    constructor(options) {
-      return chalkFactory(options);
-    }
-  }
-  var chalkFactory = (options) => {
-    const chalk2 = {};
-    applyOptions(chalk2, options);
-    chalk2.template = (...arguments_) => chalkTag(chalk2.template, ...arguments_);
-    Object.setPrototypeOf(chalk2, Chalk.prototype);
-    Object.setPrototypeOf(chalk2.template, chalk2);
-    chalk2.template.constructor = () => {
-      throw new Error("`chalk.constructor()` is deprecated. Use `new chalk.Instance()` instead.");
-    };
-    chalk2.template.Instance = ChalkClass;
-    return chalk2.template;
-  };
-  function Chalk(options) {
-    return chalkFactory(options);
-  }
-  for (const [styleName, style] of Object.entries(ansiStyles)) {
-    styles[styleName] = {
-      get() {
-        const builder = createBuilder(this, createStyler(style.open, style.close, this._styler), this._isEmpty);
-        Object.defineProperty(this, styleName, { value: builder });
-        return builder;
-      }
-    };
-  }
-  styles.visible = {
-    get() {
-      const builder = createBuilder(this, this._styler, true);
-      Object.defineProperty(this, "visible", { value: builder });
-      return builder;
-    }
-  };
-  var usedModels = ["rgb", "hex", "keyword", "hsl", "hsv", "hwb", "ansi", "ansi256"];
-  for (const model of usedModels) {
-    styles[model] = {
-      get() {
-        const { level } = this;
-        return function(...arguments_) {
-          const styler = createStyler(ansiStyles.color[levelMapping[level]][model](...arguments_), ansiStyles.color.close, this._styler);
-          return createBuilder(this, styler, this._isEmpty);
-        };
-      }
-    };
-  }
-  for (const model of usedModels) {
-    const bgModel = "bg" + model[0].toUpperCase() + model.slice(1);
-    styles[bgModel] = {
-      get() {
-        const { level } = this;
-        return function(...arguments_) {
-          const styler = createStyler(ansiStyles.bgColor[levelMapping[level]][model](...arguments_), ansiStyles.bgColor.close, this._styler);
-          return createBuilder(this, styler, this._isEmpty);
-        };
-      }
-    };
-  }
-  var proto = Object.defineProperties(() => {
-  }, {
-    ...styles,
-    level: {
-      enumerable: true,
-      get() {
-        return this._generator.level;
-      },
-      set(level) {
-        this._generator.level = level;
-      }
-    }
-  });
-  var createStyler = (open, close, parent) => {
-    let openAll;
-    let closeAll;
-    if (parent === undefined) {
-      openAll = open;
-      closeAll = close;
-    } else {
-      openAll = parent.openAll + open;
-      closeAll = close + parent.closeAll;
-    }
-    return {
-      open,
-      close,
-      openAll,
-      closeAll,
-      parent
-    };
-  };
-  var createBuilder = (self, _styler, _isEmpty) => {
-    const builder = (...arguments_) => {
-      if (isArray(arguments_[0]) && isArray(arguments_[0].raw)) {
-        return applyStyle(builder, chalkTag(builder, ...arguments_));
-      }
-      return applyStyle(builder, arguments_.length === 1 ? "" + arguments_[0] : arguments_.join(" "));
-    };
-    Object.setPrototypeOf(builder, proto);
-    builder._generator = self;
-    builder._styler = _styler;
-    builder._isEmpty = _isEmpty;
-    return builder;
-  };
-  var applyStyle = (self, string) => {
-    if (self.level <= 0 || !string) {
-      return self._isEmpty ? "" : string;
-    }
-    let styler = self._styler;
-    if (styler === undefined) {
-      return string;
-    }
-    const { openAll, closeAll } = styler;
-    if (string.indexOf("\x1B") !== -1) {
-      while (styler !== undefined) {
-        string = stringReplaceAll(string, styler.close, styler.open);
-        styler = styler.parent;
-      }
-    }
-    const lfIndex = string.indexOf(`
-`);
-    if (lfIndex !== -1) {
-      string = stringEncaseCRLFWithFirstIndex(string, closeAll, openAll, lfIndex);
-    }
-    return openAll + string + closeAll;
-  };
-  var template;
-  var chalkTag = (chalk2, ...strings) => {
-    const [firstString] = strings;
-    if (!isArray(firstString) || !isArray(firstString.raw)) {
-      return strings.join(" ");
-    }
-    const arguments_ = strings.slice(1);
-    const parts = [firstString.raw[0]];
-    for (let i = 1;i < firstString.length; i++) {
-      parts.push(String(arguments_[i - 1]).replace(/[{}\\]/g, "\\$&"), String(firstString.raw[i]));
-    }
-    if (template === undefined) {
-      template = require_templates();
-    }
-    return template(chalk2, parts.join(""));
-  };
-  Object.defineProperties(Chalk.prototype, styles);
-  var chalk = Chalk();
-  chalk.supportsColor = stdoutColor;
-  chalk.stderr = Chalk({ level: stderrColor ? stderrColor.level : 0 });
-  chalk.stderr.supportsColor = stderrColor;
-  module.exports = chalk;
-});
 
 // node_modules/@mixmark-io/domino/lib/Event.js
 var require_Event = __commonJS((exports, module) => {
@@ -6789,7 +5269,7 @@ var require_htmlelts = __commonJS((exports) => {
     TEXTAREA: true,
     COMMAND: true
   };
-  var HTMLFormElement2 = function(doc, localName, prefix) {
+  var HTMLFormElement = function(doc, localName, prefix) {
     HTMLElement2.call(this, doc, localName, prefix);
     this._form = null;
   };
@@ -7058,7 +5538,7 @@ var require_htmlelts = __commonJS((exports) => {
     tag: "button",
     name: "HTMLButtonElement",
     ctor: function HTMLButtonElement(doc, localName, prefix) {
-      HTMLFormElement2.call(this, doc, localName, prefix);
+      HTMLFormElement.call(this, doc, localName, prefix);
     },
     props: formAssociatedProps,
     attributes: {
@@ -7140,7 +5620,7 @@ var require_htmlelts = __commonJS((exports) => {
     tag: "fieldset",
     name: "HTMLFieldSetElement",
     ctor: function HTMLFieldSetElement(doc, localName, prefix) {
-      HTMLFormElement2.call(this, doc, localName, prefix);
+      HTMLFormElement.call(this, doc, localName, prefix);
     },
     props: formAssociatedProps,
     attributes: {
@@ -7266,7 +5746,7 @@ var require_htmlelts = __commonJS((exports) => {
     tag: "input",
     name: "HTMLInputElement",
     ctor: function HTMLInputElement(doc, localName, prefix) {
-      HTMLFormElement2.call(this, doc, localName, prefix);
+      HTMLFormElement.call(this, doc, localName, prefix);
     },
     props: {
       form: formAssociatedProps.form,
@@ -7349,7 +5829,7 @@ var require_htmlelts = __commonJS((exports) => {
     tag: "keygen",
     name: "HTMLKeygenElement",
     ctor: function HTMLKeygenElement(doc, localName, prefix) {
-      HTMLFormElement2.call(this, doc, localName, prefix);
+      HTMLFormElement.call(this, doc, localName, prefix);
     },
     props: formAssociatedProps,
     attributes: {
@@ -7375,7 +5855,7 @@ var require_htmlelts = __commonJS((exports) => {
     tag: "label",
     name: "HTMLLabelElement",
     ctor: function HTMLLabelElement(doc, localName, prefix) {
-      HTMLFormElement2.call(this, doc, localName, prefix);
+      HTMLFormElement.call(this, doc, localName, prefix);
     },
     props: formAssociatedProps,
     attributes: {
@@ -7454,7 +5934,7 @@ var require_htmlelts = __commonJS((exports) => {
     tag: "meter",
     name: "HTMLMeterElement",
     ctor: function HTMLMeterElement(doc, localName, prefix) {
-      HTMLFormElement2.call(this, doc, localName, prefix);
+      HTMLFormElement.call(this, doc, localName, prefix);
     },
     props: formAssociatedProps
   });
@@ -7504,7 +5984,7 @@ var require_htmlelts = __commonJS((exports) => {
     tag: "object",
     name: "HTMLObjectElement",
     ctor: function HTMLObjectElement(doc, localName, prefix) {
-      HTMLFormElement2.call(this, doc, localName, prefix);
+      HTMLFormElement.call(this, doc, localName, prefix);
     },
     props: formAssociatedProps,
     attributes: {
@@ -7580,7 +6060,7 @@ var require_htmlelts = __commonJS((exports) => {
     tag: "output",
     name: "HTMLOutputElement",
     ctor: function HTMLOutputElement(doc, localName, prefix) {
-      HTMLFormElement2.call(this, doc, localName, prefix);
+      HTMLFormElement.call(this, doc, localName, prefix);
     },
     props: formAssociatedProps,
     attributes: {
@@ -7624,7 +6104,7 @@ var require_htmlelts = __commonJS((exports) => {
     tag: "progress",
     name: "HTMLProgressElement",
     ctor: function HTMLProgressElement(doc, localName, prefix) {
-      HTMLFormElement2.call(this, doc, localName, prefix);
+      HTMLFormElement.call(this, doc, localName, prefix);
     },
     props: formAssociatedProps,
     attributes: {
@@ -7683,7 +6163,7 @@ var require_htmlelts = __commonJS((exports) => {
     tag: "select",
     name: "HTMLSelectElement",
     ctor: function HTMLSelectElement(doc, localName, prefix) {
-      HTMLFormElement2.call(this, doc, localName, prefix);
+      HTMLFormElement.call(this, doc, localName, prefix);
     },
     props: {
       form: formAssociatedProps.form,
@@ -7846,7 +6326,7 @@ var require_htmlelts = __commonJS((exports) => {
     tag: "textarea",
     name: "HTMLTextAreaElement",
     ctor: function HTMLTextAreaElement(doc, localName, prefix) {
-      HTMLFormElement2.call(this, doc, localName, prefix);
+      HTMLFormElement.call(this, doc, localName, prefix);
     },
     props: {
       form: formAssociatedProps.form,
@@ -23154,10 +21634,9 @@ function createToolDefinitions() {
 ` + "   - Required: `elements` (array of CSS selectors)\n" + "   - Example: `{'type': 'wait', 'elements': ['input#search']}`\n" + `2. **click**: Clicks a single element.
 ` + "   - Required: `element` (CSS selector)\n" + "   - Example: `{'type': 'click', 'element': '.submit-btn'}`\n" + `3. **typing**: Types text into an input field.
 ` + "   - Required: `element` (CSS selector), `value` (text to type)\n" + "   - Optional: `delay` (ms between keystrokes)\n" + "   - Example: `{'type': 'typing', 'element': '#username', 'value': 'user123'}`\n" + `4. **keyPress**: Simulates a key press.
-` + "   - Required: `key` (key name)\n" + "   - Optional: `element` (CSS selector to focus)\n" + "   - Example: `{'type': 'keyPress', 'key': 'Enter', 'element': '#search'}`\n" + `5. **submit**: Submits a form or clicks a submit-like element.
-` + "   - Required: `element` (CSS selector)\n" + "   - Example: `{'type': 'submit', 'element': 'form#login'}`\n" + `6. **print**: Captures raw HTML of specified elements.
+` + "   - Required: `key` (key name)\n" + "   - Optional: `element` (CSS selector to focus)\n" + "   - Example: `{'type': 'keyPress', 'key': 'Enter', 'element': '#search'}`\n" + `5. **print**: Captures raw HTML of specified elements.
 ` + "   - Required: `elements` (array of CSS selectors)\n" + "   - Example: `{'type': 'print', 'elements': ['#content']}`\n" + `   - Use when HTML structure analysis is needed
-` + `7. **markdown**: Converts elements to markdown format.
+` + `6. **markdown**: Converts elements to markdown format.
 ` + "   - Required: `elements` (array of CSS selectors)\n" + "   - Example: `{'type': 'markdown', 'elements': ['#content']}`\n" + `   - Preferred for content extraction (cleaner output)
 
 ` + `### Example Scenarios:
@@ -23181,6 +21660,11 @@ function createToolDefinitions() {
 ` + `     }
 ` + `   }
 ` + "   ```",
+      version: "1.7.0",
+      compatibility: {
+        minVersion: "1.0.0",
+        deprecatedFeatures: []
+      },
       inputSchema: {
         type: "object",
         properties: {
@@ -23188,7 +21672,7 @@ function createToolDefinitions() {
           plan: {
             type: "string",
             description: `Optional JSON string defining actions to execute. When omitted, performs page analysis only. Must be a valid JSON object with an 'actions' array when provided. Each action requires a 'type' field and additional fields based on the type:
-` + "- **wait**: `elements` (string[]) - Waits for all listed CSS selectors to be present.\n" + "- **click**: `element` (string) - Clicks the specified CSS selector.\n" + "- **typing**: `element` (string), `value` (string), `delay?` (number) - Types the value into the element.\n" + "- **keyPress**: `key` (string), `element?` (string) - Presses the key, optionally focusing an element first.\n" + "- **submit**: `element` (string) - Submits the form or clicks the element.\n" + "- **print**: `elements` (string[]) - Captures raw HTML of the listed selectors. Use only when HTML structure analysis is needed.\n" + "- **markdown**: `elements` (string[]) - Converts content to markdown format. Preferred for content extraction.\n\n" + `### Guidelines:
+` + "- **wait**: `elements` (string[]) - Waits for all listed CSS selectors to be present.\n" + "- **click**: `element` (string) - Clicks the specified CSS selector.\n" + "- **typing**: `element` (string), `value` (string), `delay?` (number) - Types the value into the element.\n" + "- **keyPress**: `key` (string), `element?` (string) - Presses the key, optionally focusing an element first.\n" + "- **print**: `elements` (string[]) - Captures raw HTML of the listed selectors. Use only when HTML structure analysis is needed.\n" + "- **markdown**: `elements` (string[]) - Converts content to markdown format. Preferred for content extraction.\n\n" + `### Guidelines:
 ` + `- Use valid CSS selectors (e.g., '#id', '.class', 'input[name="field"]').
 ` + `- Escape quotes in JSON correctly.
 ` + "- Include 'wait' before interactions for async elements."
@@ -23212,11 +21696,48 @@ var VISIBLE_MODE_SLOW_MO = 50;
 var MUTATION_STABILITY_TIMEOUT = 300;
 var LAYOUT_STABILITY_TIMEOUT = 200;
 var ACTION_STABILITY_TIMEOUT = 2000;
-var DEFAULT_TYPING_DELAY = 50;
 var LOADING_INDICATORS = '[aria-busy="true"], [class*="loading"], [id*="loading"]';
 var INPUT_SELECTORS = 'input, textarea, select, [role="textbox"], [role="searchbox"], [role="combobox"], [contenteditable="true"], .QueryBuilder-Input';
 var BUTTON_SELECTORS = 'button, [role="button"]';
 var LINK_SELECTORS = "a[href]";
+
+// src/utils/actions.ts
+function getActionSymbol(action) {
+  switch (action.type) {
+    case "wait":
+      return "⏳";
+    case "click":
+      return "\uD83D\uDDB1️";
+    case "typing":
+      return "⌨️";
+    case "keyPress":
+      return "\uD83D\uDD24";
+    case "print":
+      return "\uD83D\uDCDD";
+    case "markdown":
+      return "\uD83D\uDCC4";
+    default:
+      return "❓";
+  }
+}
+function getActionDescription(action) {
+  switch (action.type) {
+    case "wait":
+      return `Wait for elements: ${action.elements.join(", ")}`;
+    case "click":
+      return `Click element: ${action.element}`;
+    case "typing":
+      return `Type "${action.value}" into: ${action.element}`;
+    case "keyPress":
+      return `Press ${action.key}${action.element ? ` on ${action.element}` : ""}`;
+    case "print":
+      return `Print HTML content of: ${action.elements.join(", ")}`;
+    case "markdown":
+      return `Convert HTML to Markdown: ${action.elements.join(", ")}`;
+    default:
+      return "Unknown action";
+  }
+}
 
 // src/core/scripts.ts
 function getFullPath(element) {
@@ -23531,282 +22052,90 @@ async function waitForActionStability(page, options = {}) {
   return true;
 }
 
-// src/utils/actions.ts
-var import_chalk = __toESM(require_source(), 1);
-function getActionSymbol(action) {
-  switch (action.type) {
-    case "wait":
-      return "⏳";
-    case "click":
-      return "\uD83D\uDDB1️";
-    case "typing":
-      return "⌨️";
-    case "keyPress":
-      return "\uD83D\uDD24";
-    case "submit":
-      return "\uD83D\uDCE4";
-    case "print":
-      return "\uD83D\uDCDD";
-    case "markdown":
-      return "\uD83D\uDCC4";
-    default:
-      return "❓";
-  }
-}
-function getActionDescription(action) {
-  switch (action.type) {
-    case "wait":
-      return `Wait for elements: ${import_chalk.default.cyan(action.elements.join(", "))}`;
-    case "click":
-      return `Click element: ${import_chalk.default.cyan(action.element)}`;
-    case "typing":
-      const extraInfo = action.delay ? import_chalk.default.gray(` (delay ${action.delay}ms)`) : "";
-      return `Type ${import_chalk.default.green(`"${action.value}"`)} into ${import_chalk.default.cyan(action.element)}${extraInfo}`;
-    case "keyPress":
-      return `Press ${import_chalk.default.yellow(action.key)}${action.element ? ` on ${import_chalk.default.cyan(action.element)}` : ""}`;
-    case "submit":
-      return `Submit form: ${import_chalk.default.cyan(action.element)}`;
-    case "print":
-      return `Print HTML for: ${import_chalk.default.cyan(action.elements.join(", "))}`;
-    case "markdown":
-      return `Convert to Markdown: ${import_chalk.default.cyan(action.elements.join(", "))}`;
-    default:
-      return "Unknown action";
+// src/core/handlers/wait.ts
+async function executeWaitAction(page, action, options) {
+  try {
+    await Promise.all(action.elements.map((selector) => page.waitForSelector(selector, { timeout: options.timeout || DEFAULT_TIMEOUT })));
+    const isStable = await waitForActionStability(page).catch(() => false);
+    return {
+      success: true,
+      message: "Elements found and stable",
+      warning: !isStable ? "Page not fully stable, but elements are present" : undefined
+    };
+  } catch (error2) {
+    return {
+      success: false,
+      message: "Failed to find elements",
+      error: error2 instanceof Error ? error2.message : "Unknown error occurred"
+    };
   }
 }
 
-// src/cli/printer.ts
-var import_chalk2 = __toESM(require_source(), 1);
-function printPlan(plan) {
-  let output = "";
-  output += `
-\uD83D\uDCCB ${import_chalk2.default.bold("Plan to Execute:")}
-`;
-  output += "=".repeat(50) + `
-`;
-  plan.actions.forEach((action, index) => {
-    const symbol = getActionSymbol(action);
-    output += `${symbol} Step ${index + 1}/${plan.actions.length}: ${getActionDescription(action)}
-`;
-  });
-  output += "=".repeat(50) + `
-
-`;
-  return output;
-}
-function printActionStatus(status) {
-  const { step, totalSteps, symbol, description, result } = status;
-  let output = "";
-  output += `
-${symbol} [${step}/${totalSteps}] ${description}
-`;
-  if (result) {
-    if (result.success) {
-      output += import_chalk2.default.green(`✅ ${result.message}
-`);
+// src/core/handlers/click.ts
+async function executeClickAction(page, action, options) {
+  try {
+    await page.click(action.element);
+    const isStable = await waitForActionStability(page, { expectNavigation: true }).catch(() => false);
+    return {
+      success: true,
+      message: "Click successful",
+      warning: !isStable ? "Page not fully stable after click" : undefined
+    };
+  } catch (error2) {
+    if (error2 instanceof Error && error2.message.includes("context was destroyed")) {
+      return { success: true, message: "Click completed", warning: "Page navigation occurred" };
     }
-    if (result.warning) {
-      output += import_chalk2.default.yellow(`⚠️  ${result.warning}
-`);
-    }
-    if (result.error) {
-      output += import_chalk2.default.red(`❌ ${result.error}
-`);
-    }
+    return {
+      success: false,
+      message: "Failed to click element",
+      error: error2 instanceof Error ? error2.message : "Unknown error occurred"
+    };
   }
-  return output;
 }
-function printActionSummary(statuses) {
-  const total = statuses.length;
-  const successful = statuses.filter((s) => s.result?.success).length;
-  const failed = total - successful;
-  let output = "";
-  output += `
-\uD83D\uDCCA ${import_chalk2.default.bold("Action Summary:")}
-`;
-  output += "=".repeat(50) + `
-`;
-  output += `Total Actions: ${total}
-`;
-  output += `Successful: ${import_chalk2.default.green(successful)}
-`;
-  if (failed > 0) {
-    output += `Failed: ${import_chalk2.default.red(failed)}
-`;
-  }
-  output += "=".repeat(50) + `
 
-`;
-  return output;
+// src/core/handlers/typing.ts
+async function executeTypingAction(page, action, options) {
+  try {
+    await page.fill(action.element, action.value);
+    const isStable = await waitForActionStability(page).catch(() => false);
+    return {
+      success: true,
+      message: "Text input successful",
+      warning: !isStable ? "Page not fully stable after typing" : undefined
+    };
+  } catch (error2) {
+    return {
+      success: false,
+      message: "Failed to input text",
+      error: error2 instanceof Error ? error2.message : "Unknown error occurred"
+    };
+  }
 }
-function printAnalysis(analysis, format = "pretty", options = {}) {
-  if (format === "json") {
-    return JSON.stringify(analysis, null, 2);
-  }
-  let output = "";
-  output += `
-\uD83D\uDCC4 ${import_chalk2.default.bold("Page Analysis:")}
 
-`;
-  output += `${import_chalk2.default.bold("Title:")} ${import_chalk2.default.cyan(analysis.title)}
-`;
-  if (analysis.description) {
-    output += `${import_chalk2.default.bold("Description:")} ${import_chalk2.default.gray(analysis.description)}
-`;
-  }
-  output += `
-${import_chalk2.default.bold("Page Elements Summary:")}
-`;
-  output += import_chalk2.default.gray("=".repeat(50)) + `
-`;
-  if (analysis.inputs?.length) {
-    output += `${import_chalk2.default.bold("Total Input Elements:")} ${import_chalk2.default.cyan(analysis.inputs.length)}
-`;
-    if (options.showInputs) {
-      analysis.inputs.forEach((input) => {
-        output += `
-\uD83D\uDD24 ${import_chalk2.default.bold(input.label || input.type)}
-`;
-        output += import_chalk2.default.gray(`  Type: ${input.type}
-`);
-        if (input.id)
-          output += import_chalk2.default.gray(`  ID: ${input.id}
-`);
-        if (!input.isVisible)
-          output += import_chalk2.default.yellow(`  Hidden: true
-`);
-        output += import_chalk2.default.gray(`  Selector: ${input.selector}
-`);
-      });
-    } else {
-      const visibleInputs = analysis.inputs.filter((i) => i.isVisible).slice(0, 5);
-      if (visibleInputs.length) {
-        output += `[Showing top visible 5 inputs]
-`;
-        visibleInputs.forEach((input) => {
-          output += `- ${import_chalk2.default.cyan(input.label || input.type)}
-`;
-        });
-        output += import_chalk2.default.gray(`> to get list of all inputs add --inputs
-`);
+// src/core/handlers/print.ts
+async function executePrintAction(page, action, _options) {
+  const results = [];
+  for (const selector of action.elements) {
+    try {
+      const elements = await page.$$(selector);
+      for (const element of elements) {
+        const html = await element.evaluate((el) => el.outerHTML);
+        results.push({ selector, html, type: "print" });
       }
+    } catch (_error) {
+      results.push({ selector, error: "Element not found or inaccessible", type: "print", html: "" });
     }
   }
-  if (analysis.buttons?.length) {
-    output += `
-${import_chalk2.default.bold("Total Button Elements:")} ${import_chalk2.default.cyan(analysis.buttons.length)}
-`;
-    if (options.showButtons) {
-      analysis.buttons.forEach((button) => {
-        output += `
-\uD83D\uDD18 ${import_chalk2.default.bold(button.text || "No text")}
-`;
-        output += import_chalk2.default.gray(`  Selector: ${button.selector}
-`);
-      });
-    } else {
-      const topButtons = analysis.buttons.slice(0, 5);
-      if (topButtons.length) {
-        output += `[Showing top visible 5 buttons]
-`;
-        topButtons.forEach((button) => {
-          output += `- ${import_chalk2.default.cyan(button.text || "No text")}
-`;
-        });
-        output += import_chalk2.default.gray(`> to get list of all buttons add --buttons
-`);
-      }
-    }
-  }
-  if (analysis.links?.length) {
-    output += `
-${import_chalk2.default.bold("Total Link Elements:")} ${import_chalk2.default.cyan(analysis.links.length)}
-`;
-    if (options.showLinks) {
-      analysis.links.forEach((link) => {
-        output += `
-\uD83D\uDD17 ${import_chalk2.default.bold(link.title || "No title")}
-`;
-        output += import_chalk2.default.gray(`  URL: ${link.url}
-`);
-        output += import_chalk2.default.gray(`  Selector: ${link.selector}
-`);
-      });
-    } else {
-      const topLinks = analysis.links.slice(0, 5);
-      if (topLinks.length) {
-        output += `[Showing top visible 5 links]
-`;
-        topLinks.forEach((link) => {
-          output += `- ${import_chalk2.default.cyan(link.title || "No title")}
-`;
-        });
-        output += import_chalk2.default.gray(`> to get list of all links add --links
-`);
-      }
-    }
-  }
-  if (analysis.plannedActions?.length) {
-    const results = analysis.plannedActions.filter((r) => !r.error);
-    const errorResults = analysis.plannedActions.filter((r) => r.error);
-    if (results.length) {
-      output += `
-
-${import_chalk2.default.bold("Action Results:")}
-`;
-      output += import_chalk2.default.yellow("=".repeat(80)) + `
-
-`;
-      results.forEach((result) => {
-        if (!result.error && result.html) {
-          if (result.type === "print") {
-            output += import_chalk2.default.bold("HTML Output:") + `
-`;
-            output += import_chalk2.default.gray(result.html) + `
-
-`;
-          } else if (result.type === "markdown") {
-            output += import_chalk2.default.bold("Markdown Output:") + `
-`;
-            const lines = result.html.split(`
-`);
-            const seenRefs = new Set;
-            const uniqueLines = lines.filter((line) => {
-              if (line.match(/^\[.*\]:/)) {
-                if (seenRefs.has(line))
-                  return false;
-                seenRefs.add(line);
-              }
-              return true;
-            });
-            output += uniqueLines.join(`
-`) + `
-`;
-          }
-        }
-      });
-      output += import_chalk2.default.yellow("=".repeat(80)) + `
-`;
-    }
-    if (errorResults.length) {
-      output += `
-${import_chalk2.default.bold("Action Errors:")}
-`;
-      errorResults.forEach((result) => {
-        output += `
-❌ ${import_chalk2.default.bold(result.selector)}
-`;
-        output += import_chalk2.default.red(`  Error: ${result.error}
-`);
-      });
-    }
-  }
-  output += `
-`;
-  return output;
+  return {
+    success: results.some((r) => !r.error),
+    message: results.filter((r) => !r.error).map((r) => `HTML captured for ${r.selector}`).join(`
+`),
+    warning: results.some((r) => r.error) ? `Failed to capture some elements: ${results.filter((r) => r.error).map((r) => r.selector).join(", ")}` : undefined,
+    data: results
+  };
 }
 
-// src/core/actions.ts
+// src/utils/markdown.ts
 var import_turndown = __toESM(require_turndown_cjs(), 1);
 var turndownService = new import_turndown.default({
   headingStyle: "atx",
@@ -23826,11 +22155,6 @@ turndownService.addRule("searchResult", {
       const heading = turndownService.turndown(headingEl?.innerHTML || "");
       const snippet = element.querySelector(".searchresult")?.textContent?.trim() || "";
       const metadata = element.querySelector(".mw-search-result-data")?.textContent?.trim() || "";
-      debugLog(`Processing search result:`);
-      debugLog(`- Heading HTML: ${headingEl?.innerHTML}`);
-      debugLog(`- Heading MD: ${heading}`);
-      debugLog(`- Snippet: ${snippet}`);
-      debugLog(`- Metadata: ${metadata}`);
       return `## ${heading}
 
 ${snippet}
@@ -23843,153 +22167,116 @@ ${snippet}
     return content;
   }
 });
-function debugLog(message) {
-  process.stderr.write(`[Debug] ${message}
-`);
-}
-async function executeAction(page, action, options) {
-  try {
-    switch (action.type) {
-      case "wait": {
-        await Promise.all(action.elements.map((selector) => page.waitForSelector(selector, { timeout: options.timeout || 30000 })));
-        const isStable = await waitForActionStability(page).catch(() => false);
-        return {
-          success: true,
-          message: "Elements found and stable",
-          warning: !isStable ? "Page not fully stable, but elements are present" : undefined
-        };
-      }
-      case "click": {
-        await page.click(action.element);
-        const isStable = await waitForActionStability(page, { expectNavigation: true }).catch(() => false);
-        return {
-          success: true,
-          message: "Click successful",
-          warning: !isStable ? "Page not fully stable after click" : undefined
-        };
-      }
-      case "typing": {
-        const element = await page.waitForSelector(action.element);
-        if (!element) {
-          return {
-            success: false,
-            message: "Element not found",
-            error: `Element not found: ${action.element}`
-          };
-        }
-        await element.evaluate((el) => {
-          if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
-            el.value = "";
-          }
+
+// src/core/handlers/markdown.ts
+async function executeMarkdownAction(page, action, _options) {
+  const results = [];
+  for (const selector of action.elements) {
+    try {
+      const elements = await page.$$(selector);
+      for (const element of elements) {
+        const html = await element.evaluate((el) => {
+          const outerHTML = el.outerHTML;
+          const innerText = el.textContent || "";
+          const attributes = Array.from(el.attributes).map((attr) => `${attr.name}="${attr.value}"`).join(" ");
+          return { outerHTML, innerText, attributes };
         });
-        await page.type(action.element, action.value, { delay: action.delay || DEFAULT_TYPING_DELAY });
-        const stabilityTimeout = options.headless ? 2000 : ACTION_STABILITY_TIMEOUT;
-        const isStable = await waitForActionStability(page, { timeout: stabilityTimeout }).catch(() => false);
-        return {
-          success: true,
-          message: "Text entered",
-          warning: !isStable ? "Page not fully stable after typing" : undefined
-        };
-      }
-      case "keyPress": {
-        if (action.element) {
-          await page.focus(action.element);
+        let markdown = turndownService.turndown(html.outerHTML);
+        if (html.attributes) {
+          markdown = `<!-- ${html.attributes} -->
+${markdown}`;
         }
-        await page.keyboard.press(action.key);
-        const stabilityTimeout = options.headless ? 2000 : ACTION_STABILITY_TIMEOUT;
-        const isStable = await waitForActionStability(page, { timeout: stabilityTimeout }).catch(() => false);
-        return {
-          success: true,
-          message: "Key pressed",
-          warning: !isStable ? "Page not fully stable after key press" : undefined
-        };
+        results.push({
+          selector,
+          html: markdown,
+          type: "markdown"
+        });
       }
-      case "submit": {
-        await page.evaluate((selector) => {
-          const element = document.querySelector(selector);
-          if (element) {
-            if (element instanceof HTMLFormElement) {
-              element.submit();
-            } else if (element instanceof HTMLElement) {
-              element.click();
-            }
-          }
-        }, action.element);
-        const isStable = await waitForActionStability(page).catch(() => false);
-        return {
-          success: true,
-          message: "Form submitted",
-          warning: !isStable ? "Page not fully stable after submission" : undefined
-        };
-      }
-      case "print": {
-        const results = [];
-        for (const selector of action.elements) {
-          try {
-            debugLog(`Getting HTML for selector: ${selector}`);
-            const elements = await page.$$(selector);
-            debugLog(`Found ${elements.length} elements matching ${selector}`);
-            for (const element of elements) {
-              const html = await element.evaluate((el) => el.outerHTML);
-              debugLog(`Print HTML result: ${html.substring(0, 100)}...`);
-              results.push({ selector, html, type: "print" });
-            }
-          } catch (_error) {
-            debugLog(`Error getting HTML for selector: ${selector} - ${_error instanceof Error ? _error.message : String(_error)}`);
-            results.push({ selector, error: "Element not found or inaccessible" });
-          }
-        }
-        return {
-          success: results.some((r) => !r.error),
-          message: results.filter((r) => !r.error).map((r) => `HTML captured for ${r.selector}`).join(`
-`),
-          warning: results.some((r) => r.error) ? `Failed to capture some elements: ${results.filter((r) => r.error).map((r) => r.selector).join(", ")}` : undefined,
-          data: results
-        };
-      }
-      case "markdown": {
-        const results = [];
-        for (const selector of action.elements) {
-          try {
-            debugLog(`Getting HTML for selector: ${selector}`);
-            const elements = await page.$$(selector);
-            debugLog(`Found ${elements.length} elements matching ${selector}`);
-            for (const element of elements) {
-              const html = await element.evaluate((el) => el.outerHTML);
-              debugLog(`Converting HTML to Markdown: ${html.substring(0, 100)}...`);
-              const markdown = turndownService.turndown(html);
-              debugLog(`Markdown result: ${markdown.substring(0, 100)}...`);
-              results.push({ selector, html: markdown });
-            }
-          } catch (_error) {
-            debugLog(`Error getting HTML for selector: ${selector} - ${_error instanceof Error ? _error.message : String(_error)}`);
-            results.push({ selector, error: "Element not found or inaccessible" });
-          }
-        }
-        return {
-          success: results.some((r) => !r.error),
-          message: results.filter((r) => !r.error).map((r) => `Markdown captured for ${r.selector}`).join(`
-`),
-          warning: results.some((r) => r.error) ? `Failed to capture some elements: ${results.filter((r) => r.error).map((r) => r.selector).join(", ")}` : undefined,
-          data: results
-        };
-      }
-      default: {
-        const unknownAction = action;
-        return {
-          success: false,
-          message: "Unknown action type",
-          error: `Action type ${unknownAction.type} not supported`
-        };
-      }
+    } catch (error2) {
+      console.error("Error in markdown conversion:", error2);
+      results.push({
+        selector,
+        error: "Element not found or inaccessible",
+        type: "markdown",
+        html: ""
+      });
     }
+  }
+  return {
+    success: results.some((r) => !r.error),
+    message: results.filter((r) => !r.error).map((r) => `Markdown captured for ${r.selector}`).join(`
+`),
+    warning: results.some((r) => r.error) ? `Failed to capture some elements: ${results.filter((r) => r.error).map((r) => r.selector).join(", ")}` : undefined,
+    data: results
+  };
+}
+
+// src/core/handlers/keyPress.ts
+async function executeKeyPressAction(page, action, options) {
+  try {
+    if (action.element) {
+      await page.focus(action.element);
+    }
+    await page.keyboard.press(action.key);
+    const stabilityTimeout = options.headless ? 2000 : ACTION_STABILITY_TIMEOUT;
+    const isStable = await waitForActionStability(page, { timeout: stabilityTimeout }).catch(() => false);
+    return {
+      success: true,
+      message: "Key pressed",
+      warning: !isStable ? "Page not fully stable after key press" : undefined
+    };
+  } catch (error2) {
+    return {
+      success: false,
+      message: "Failed to press key",
+      error: error2 instanceof Error ? error2.message : "Unknown error occurred"
+    };
+  }
+}
+
+// src/core/handlers/index.ts
+var actionHandlers = {
+  wait: (page, action, options) => {
+    if (action.type !== "wait")
+      throw new Error("Invalid action type");
+    return executeWaitAction(page, action, options);
+  },
+  click: (page, action, options) => {
+    if (action.type !== "click")
+      throw new Error("Invalid action type");
+    return executeClickAction(page, action, options);
+  },
+  typing: (page, action, options) => {
+    if (action.type !== "typing")
+      throw new Error("Invalid action type");
+    return executeTypingAction(page, action, options);
+  },
+  keyPress: (page, action, options) => {
+    if (action.type !== "keyPress")
+      throw new Error("Invalid action type");
+    return executeKeyPressAction(page, action, options);
+  },
+  print: (page, action, options) => {
+    if (action.type !== "print")
+      throw new Error("Invalid action type");
+    return executePrintAction(page, action, options);
+  },
+  markdown: (page, action, options) => {
+    if (action.type !== "markdown")
+      throw new Error("Invalid action type");
+    return executeMarkdownAction(page, action, options);
+  }
+};
+async function executeAction(page, action, options) {
+  const handler = actionHandlers[action.type];
+  if (!handler) {
+    return { success: false, message: "Unknown action type", error: `Action type ${action.type} not supported` };
+  }
+  try {
+    return await handler(page, action, options);
   } catch (error2) {
     if (error2 instanceof Error && error2.message.includes("context was destroyed")) {
-      return {
-        success: true,
-        message: "Action completed",
-        warning: "Page navigation occurred"
-      };
+      return { success: true, message: "Action completed", warning: "Page navigation occurred" };
     }
     return {
       success: false,
@@ -23998,6 +22285,255 @@ async function executeAction(page, action, options) {
     };
   }
 }
+
+// src/utils/output.ts
+function printPlan(plan) {
+  let output = "";
+  output += `
+\uD83D\uDCCB Plan to Execute:
+`;
+  output += "=".repeat(50) + `
+`;
+  plan.actions.forEach((action, index) => {
+    const symbol = getActionSymbol(action);
+    output += `${symbol} Step ${index + 1}/${plan.actions.length}: ${getActionDescription(action)}
+`;
+  });
+  output += "=".repeat(50) + `
+
+`;
+  return output;
+}
+function printPageHeader(analysis) {
+  let output = "";
+  output += `
+\uD83D\uDCC4 Page Analysis:
+
+`;
+  output += `Title: ${analysis.title}
+`;
+  if (analysis.description) {
+    output += `Description: ${analysis.description}
+`;
+  }
+  return output;
+}
+function printInputsSummary(inputs, showAll) {
+  let output = "";
+  if (!inputs?.length)
+    return output;
+  output += `Total Input Elements: ${inputs.length}
+`;
+  if (showAll) {
+    inputs.forEach((input) => {
+      output += `
+\uD83D\uDD24 ${input.label || input.type}
+`;
+      output += `  Type: ${input.type}
+`;
+      if (input.id)
+        output += `  ID: ${input.id}
+`;
+      if (!input.isVisible)
+        output += `  Hidden: true
+`;
+      output += `  Selector: ${input.selector}
+`;
+    });
+  } else {
+    const visibleInputs = inputs.filter((i) => i.isVisible).slice(0, 5);
+    if (visibleInputs.length) {
+      output += `[Showing top visible 5 inputs]
+`;
+      visibleInputs.forEach((input) => {
+        output += `- ${input.label || input.type}
+`;
+      });
+      output += `> to get list of all inputs add --inputs
+`;
+    }
+  }
+  return output;
+}
+function printButtonsSummary(buttons, showAll) {
+  let output = "";
+  if (!buttons?.length)
+    return output;
+  output += `
+Total Button Elements: ${buttons.length}
+`;
+  if (showAll) {
+    buttons.forEach((button) => {
+      output += `
+\uD83D\uDD18 ${button.text || "No text"}
+`;
+      output += `  Selector: ${button.selector}
+`;
+    });
+  } else {
+    const topButtons = buttons.slice(0, 5);
+    if (topButtons.length) {
+      output += `[Showing top visible 5 buttons]
+`;
+      topButtons.forEach((button) => {
+        output += `- ${button.text || "No text"}
+`;
+      });
+      output += `> to get list of all buttons add --buttons
+`;
+    }
+  }
+  return output;
+}
+function printLinksSummary(links, showAll) {
+  let output = "";
+  if (!links?.length)
+    return output;
+  output += `
+Total Link Elements: ${links.length}
+`;
+  if (showAll) {
+    links.forEach((link) => {
+      output += `
+\uD83D\uDD17 ${link.title || "No title"}
+`;
+      output += `  URL: ${link.url}
+`;
+      output += `  Selector: ${link.selector}
+`;
+    });
+  } else {
+    const topLinks = links.slice(0, 5);
+    if (topLinks.length) {
+      output += `[Showing top visible 5 links]
+`;
+      topLinks.forEach((link) => {
+        output += `- ${link.title || "No title"}
+`;
+      });
+      output += `> to get list of all links add --links
+`;
+    }
+  }
+  return output;
+}
+function printActionResults(plannedActions) {
+  let output = "";
+  if (!plannedActions?.length)
+    return output;
+  const results = plannedActions.filter((r) => !r.error);
+  const errorResults = plannedActions.filter((r) => r.error);
+  if (results.length) {
+    output += `
+
+Action Results:
+`;
+    output += "=".repeat(80) + `
+
+`;
+    results.forEach((result) => {
+      if (!result.error && result.html) {
+        if (result.type === "print") {
+          output += `HTML Output:
+`;
+          output += result.html + `
+
+`;
+        } else if (result.type === "markdown") {
+          output += `Markdown Output:
+`;
+          const lines = result.html.split(`
+`);
+          const seenRefs = new Set;
+          const uniqueLines = lines.filter((line) => {
+            if (line.match(/^\[.*\]:/)) {
+              if (seenRefs.has(line))
+                return false;
+              seenRefs.add(line);
+            }
+            return true;
+          });
+          output += uniqueLines.join(`
+`) + `
+`;
+        }
+      }
+    });
+    output += "=".repeat(80) + `
+`;
+  }
+  if (errorResults.length) {
+    output += `
+Action Errors:
+`;
+    errorResults.forEach((result) => {
+      output += `
+❌ ${result.selector}
+`;
+      output += `  Error: ${result.error}
+`;
+    });
+  }
+  return output;
+}
+function printAnalysis(analysis, format = "pretty", options = {}) {
+  if (format === "json") {
+    return JSON.stringify(analysis, null, 2);
+  }
+  let output = printPageHeader(analysis);
+  output += `
+Page Elements Summary:
+`;
+  output += "=".repeat(50) + `
+`;
+  output += printInputsSummary(analysis.inputs, options.showInputs || false);
+  output += printButtonsSummary(analysis.buttons, options.showButtons || false);
+  output += printLinksSummary(analysis.links, options.showLinks || false);
+  if (analysis.plannedActions?.length) {
+    output += printActionResults(analysis.plannedActions);
+  }
+  output += `
+`;
+  return output;
+}
+function printActionStatus(status) {
+  const { step, totalSteps, symbol, description, result } = status;
+  let output = `[${step}/${totalSteps}] ${symbol} ${description}`;
+  if (result) {
+    if (result.success) {
+      output += " ✅";
+    } else {
+      output += " ❌";
+      if (result.message) {
+        output += ` (${result.message})`;
+      }
+    }
+  }
+  return output;
+}
+function printActionSummary(statuses) {
+  const total = statuses.length;
+  const successful = statuses.filter((s) => s.result?.success).length;
+  const failed = total - successful;
+  let output = `
+Action Summary:
+`;
+  output += "=".repeat(50) + `
+`;
+  output += `Total Actions: ${total}
+`;
+  output += `Successful: ${successful} ✅
+`;
+  if (failed > 0) {
+    output += `Failed: ${failed} ❌
+`;
+  }
+  output += "=".repeat(50) + `
+`;
+  return output;
+}
+
+// src/core/actions.ts
 async function executePlan(page, plan, options) {
   const actionStatuses = [];
   const plannedActionResults = [];
@@ -24013,9 +22549,8 @@ async function executePlan(page, plan, options) {
     if ((action.type === "print" || action.type === "markdown") && status.result?.data) {
       plannedActionResults.push(...status.result.data);
     }
-    if (!status.result?.success) {
+    if (!status.result?.success)
       break;
-    }
   }
   console.warn(printActionSummary(actionStatuses));
   return { actionStatuses, plannedActionResults };
@@ -24154,29 +22689,60 @@ async function analyzePage(url, options) {
   }
 }
 
-// src/utils/hash.ts
+// src/utils/resource.ts
 import { createHash } from "crypto";
-function md5(input) {
-  return createHash("md5").update(input).digest("hex");
+var DEFAULT_EXPIRATION_MS = 24 * 60 * 60 * 1000;
+function createStoredAnalysis(analysis, url) {
+  const currentTime = Date.now();
+  return {
+    analysis: {
+      ...analysis,
+      cacheKey: createHash("md5").update(`${url}-${currentTime}`).digest("hex"),
+      timestamp: currentTime,
+      expiresAt: currentTime + DEFAULT_EXPIRATION_MS
+    },
+    timestamp: new Date(currentTime),
+    url
+  };
 }
-function formatTimestamp(date = new Date) {
-  return date.toISOString().replace(/[:.]/g, "-");
-}
-function formatReadableTimestamp(date = new Date) {
-  return date.toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false
+function filterExpiredAnalyses(analyses) {
+  const currentTime = Date.now();
+  return analyses.filter((a) => {
+    const expiresAt = a.analysis.expiresAt || Infinity;
+    return expiresAt > currentTime;
   });
 }
-function createResourceId(url, timestamp = new Date) {
-  const hash = md5(url);
-  const timeStr = formatTimestamp(timestamp);
-  return `${hash}-${timeStr}`;
+function trimAnalysesList(analyses, maxSize) {
+  return analyses.slice(0, maxSize);
+}
+function formatReadableTimestamp(date) {
+  return date.toISOString().replace("T", " ").replace(/\.\d+Z$/, " UTC");
+}
+function createResourceUri(stored) {
+  const hash = createHash("md5").update(stored.url).digest("hex");
+  const timestamp = stored.analysis.timestamp || Date.now();
+  const version = "1";
+  return `page://${hash}-${timestamp}?v=${version}`;
+}
+function createResourceName(stored) {
+  const timestamp = formatReadableTimestamp(stored.timestamp);
+  return `Page for [${stored.analysis.title}][${stored.url}] at ${timestamp}`;
+}
+function createResourceDescription(stored) {
+  const timestamp = formatReadableTimestamp(stored.timestamp);
+  const expiresAt = stored.analysis.expiresAt ? formatReadableTimestamp(new Date(stored.analysis.expiresAt)) : "Never";
+  const summary = [
+    `Page analysis scraped at ${timestamp}`,
+    `Expires at: ${expiresAt}`,
+    `Title: ${stored.analysis.title}`,
+    `URL: ${stored.url}`,
+    `Links found: ${stored.analysis.links.length}`,
+    `Buttons found: ${stored.analysis.buttons.length}`,
+    `Inputs found: ${stored.analysis.inputs.length}`,
+    stored.analysis.plannedActions ? `Actions executed: ${stored.analysis.plannedActions.length}` : undefined
+  ].filter(Boolean).join(`
+`);
+  return summary;
 }
 
 // src/mcp/resources.ts
@@ -24191,50 +22757,45 @@ function log2(level, message) {
 }
 function storeAnalysis(analysis, url) {
   log2("debug", `Storing analysis for page: ${analysis.title}`);
-  const storedAnalysis = {
-    analysis,
-    timestamp: new Date,
-    url
-  };
-  analyses.unshift(storedAnalysis);
-  if (analyses.length > MAX_STORED_ANALYSES) {
-    analyses.length = MAX_STORED_ANALYSES;
-  }
+  const storedAnalysis = createStoredAnalysis(analysis, url);
+  const validAnalyses = filterExpiredAnalyses(analyses);
+  analyses.length = 0;
+  analyses.push(...trimAnalysesList([storedAnalysis, ...validAnalyses], MAX_STORED_ANALYSES));
   log2("debug", `Total stored analyses: ${analyses.length}`);
 }
 function getAnalyses() {
-  log2("debug", `Getting all analyses. Count: ${analyses.length}`);
-  return analyses;
+  const validAnalyses = filterExpiredAnalyses(analyses);
+  log2("debug", `Getting all valid analyses. Count: ${validAnalyses.length}`);
+  return validAnalyses;
 }
 function getAnalysisByUri(uri) {
   log2("debug", `Looking for analysis with URI: ${uri}`);
-  const analysis = analyses.find((a) => createResourceUri(a) === uri);
+  const validAnalyses = filterExpiredAnalyses(analyses);
+  const analysis = validAnalyses.find((a) => createResourceUri(a) === uri);
   log2("debug", `Analysis ${analysis ? "found" : "not found"} for URI: ${uri}`);
   return analysis;
 }
-function createResourceUri(stored) {
-  const resourceId = createResourceId(stored.url, stored.timestamp);
-  const uri = `page://${resourceId}`;
-  log2("debug", `Created URI for page: ${stored.analysis.title} -> ${uri}`);
-  return uri;
-}
-function createResourceName(stored) {
-  const timestamp = formatReadableTimestamp(stored.timestamp);
-  return `Page for [${stored.analysis.title}][${stored.url}] at ${timestamp}`;
-}
-function createResourceDescription(stored) {
-  const timestamp = formatReadableTimestamp(stored.timestamp);
-  const summary = [
-    `Page analysis scraped at ${timestamp}`,
-    `Title: ${stored.analysis.title}`,
-    `URL: ${stored.url}`,
-    `Links found: ${stored.analysis.links.length}`,
-    `Buttons found: ${stored.analysis.buttons.length}`,
-    `Input fields found: ${stored.analysis.inputs.length}`,
-    stored.analysis.plannedActions ? `Actions executed: ${stored.analysis.plannedActions.length}` : undefined
-  ].filter(Boolean).join(`
-`);
-  return summary;
+
+// src/config/errorCodes.ts
+var MCP_ERROR_CODES = {
+  INVALID_TOOL: 4001,
+  MISSING_PARAMS: 4002,
+  BROWSER_ERROR: 4101,
+  SELECTOR_ERROR: 4102,
+  INTERNAL_ERROR: 5001
+};
+
+// src/utils/security.ts
+function validateUrl(url) {
+  try {
+    const parsed = new URL(url);
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      return { valid: false, error: "URL must use http or https protocol" };
+    }
+    return { valid: true };
+  } catch (e) {
+    return { valid: false, error: `Invalid URL: ${e instanceof Error ? e.message : String(e)}` };
+  }
 }
 
 // src/mcp/toolsHandler.ts
@@ -24254,6 +22815,8 @@ function validateAction(action) {
     case "keyPress":
       return typeof action.key === "string" && (!action.element || typeof action.element === "string");
     case "print":
+      return Array.isArray(action.elements) && action.elements.every((e) => typeof e === "string");
+    case "markdown":
       return Array.isArray(action.elements) && action.elements.every((e) => typeof e === "string");
     default:
       return false;
@@ -24283,7 +22846,16 @@ async function handleToolCall(name, args, server) {
     if (!args.url) {
       return {
         content: [{ type: "text", text: "URL parameter is required" }],
-        isError: true
+        isError: true,
+        code: MCP_ERROR_CODES.MISSING_PARAMS
+      };
+    }
+    const urlValidation = validateUrl(args.url);
+    if (!urlValidation.valid) {
+      return {
+        content: [{ type: "text", text: urlValidation.error || "Invalid URL" }],
+        isError: true,
+        code: MCP_ERROR_CODES.MISSING_PARAMS
       };
     }
     const displayOptions = {
@@ -24307,7 +22879,8 @@ async function handleToolCall(name, args, server) {
         if (!planValidation.valid) {
           return {
             content: [{ type: "text", text: `Invalid plan: ${planValidation.error}` }],
-            isError: true
+            isError: true,
+            code: MCP_ERROR_CODES.MISSING_PARAMS
           };
         }
         options.plan = planValidation.plan;
@@ -24321,7 +22894,8 @@ async function handleToolCall(name, args, server) {
     }
     return {
       content: [{ type: "text", text: `Unknown tool: ${name}` }],
-      isError: true
+      isError: true,
+      code: MCP_ERROR_CODES.INVALID_TOOL
     };
   } catch (error2) {
     const errorMessage = error2 instanceof Error ? error2.message : String(error2);
@@ -24331,7 +22905,8 @@ async function handleToolCall(name, args, server) {
     });
     return {
       content: [{ type: "text", text: `Tool execution failed: ${errorMessage}` }],
-      isError: true
+      isError: true,
+      code: MCP_ERROR_CODES.INTERNAL_ERROR
     };
   }
 }
@@ -24378,7 +22953,7 @@ function setupRequestHandlers(server, tools) {
 
 // src/mcp/server.ts
 async function runServer() {
-  const version = "1.6.0";
+  const version = "1.7.0";
   const server = new Server({
     name: "@aashari/rag-browser",
     version
@@ -24387,10 +22962,17 @@ async function runServer() {
       resources: {
         list: true,
         read: true,
-        templates: false
+        templates: false,
+        streaming: false,
+        caching: false
       },
-      tools: {},
-      logging: {}
+      tools: {
+        version,
+        features: ["action"]
+      },
+      logging: {
+        levels: ["info", "error", "debug"]
+      }
     }
   });
   const TOOLS = createToolDefinitions();

@@ -65,7 +65,7 @@ function createTool(name: string, description: string, additionalProps: SchemaPr
 	return {
 		name,
 		description,
-		version: "1.6.2", // Current version
+		version: "1.7.0", // Current version
 		compatibility: {
 			minVersion: "1.0.0",
 			deprecatedFeatures: [], // No deprecated features yet
@@ -142,7 +142,7 @@ export function createToolDefinitions(): EnhancedTool[] {
 				"     }\n" +
 				"   }\n" +
 				"   ```",
-			version: "1.6.2",
+			version: "1.7.0",
 			compatibility: {
 				minVersion: "1.0.0",
 				deprecatedFeatures: [],
