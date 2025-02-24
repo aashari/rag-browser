@@ -1,0 +1,9 @@
+export const MCP_ERROR_CODES = {
+	INVALID_TOOL: 4001,
+	MISSING_PARAMS: 4002,
+	BROWSER_ERROR: 4101,
+	SELECTOR_ERROR: 4102,
+	INTERNAL_ERROR: 5001,
+} as const;
+
+export type McpErrorCode = typeof MCP_ERROR_CODES[keyof typeof MCP_ERROR_CODES]; 

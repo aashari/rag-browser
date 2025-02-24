@@ -1,6 +1,6 @@
 {
   "name": "@aashari/rag-browser",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "A Model Context Protocol server for browser automation using Playwright.",
   "license": "MIT",
   "type": "module",

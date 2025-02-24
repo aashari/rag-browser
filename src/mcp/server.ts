@@ -6,7 +6,7 @@ import { createToolDefinitions } from "./tools.js";
 import { setupRequestHandlers } from "./requestHandler.js";
 
 export async function runServer(): Promise<void> {
-	const version = "1.6.1";
+	const version = "1.6.2";
 	const server = new Server(
 		{
 			name: "@aashari/rag-browser",
@@ -18,9 +18,16 @@ export async function runServer(): Promise<void> {
 					list: true,
 					read: true,
 					templates: false,
+					streaming: false, // Future support for streaming resource content
+					caching: false,   // Future support for resource caching
 				},
-				tools: {},
-				logging: {},
+				tools: {
+					version,      // Explicit tool versioning tied to server version
+					features: ["browser", "markdown"], // Supported tool capabilities
+				},
+				logging: {
+					levels: ["info", "error", "debug"], // Supported log levels
+				},
 			},
 		}
 	);
@@ -48,9 +55,9 @@ export async function runServer(): Promise<void> {
 				capabilities: {
 					resources: true,
 					tools: true,
-					logging: true
-				}
-			}
+					logging: true,
+				},
+			},
 		})
 	);
 }

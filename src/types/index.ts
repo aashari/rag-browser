@@ -87,6 +87,9 @@ export interface PageAnalysis {
 	buttons: Button[];
 	inputs: Input[];
 	plannedActions?: PlannedActionResult[];
+	cacheKey?: string;
+	timestamp?: number;
+	expiresAt?: number;
 }
 
 export type SelectorMode = "full" | "simple";

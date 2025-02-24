@@ -5,6 +5,8 @@ import { printAnalysis } from "../cli/printer";
 import type { Plan, Action, SelectorMode } from "../types";
 import { storeAnalysis } from "./resources";
 import { DEFAULT_TIMEOUT, VISIBLE_MODE_SLOW_MO } from "../config/constants";
+import { MCP_ERROR_CODES, type McpErrorCode } from "../config/errorCodes";
+import { validateUrl } from "../utils/security";
 
 // Validate action type and required fields
 function validateAction(action: any): action is Action {
@@ -58,17 +60,31 @@ function createSingleActionPlan(action: Action): Plan {
 	};
 }
 
+interface ExtendedCallToolResult extends CallToolResult {
+	code?: McpErrorCode;
+}
+
 export async function handleToolCall(
 	name: string,
 	args: Record<string, string>,
 	server: Server
-): Promise<CallToolResult> {
+): Promise<ExtendedCallToolResult> {
 	try {
 		// Validate common parameters
 		if (!args.url) {
 			return {
 				content: [{ type: "text", text: "URL parameter is required" }],
 				isError: true,
+				code: MCP_ERROR_CODES.MISSING_PARAMS
+			};
+		}
+
+		const urlValidation = validateUrl(args.url);
+		if (!urlValidation.valid) {
+			return {
+				content: [{ type: "text", text: urlValidation.error || "Invalid URL" }],
+				isError: true,
+				code: MCP_ERROR_CODES.MISSING_PARAMS
 			};
 		}
 
@@ -106,6 +122,7 @@ export async function handleToolCall(
 					return {
 						content: [{ type: "text", text: `Invalid plan: ${planValidation.error}` }],
 						isError: true,
+						code: MCP_ERROR_CODES.MISSING_PARAMS
 					};
 				}
 				options.plan = planValidation.plan;
@@ -115,13 +132,14 @@ export async function handleToolCall(
 			storeAnalysis(analysisResult, args.url);
 			return {
 				content: [{ type: "text", text: printAnalysis(analysisResult, "pretty", displayOptions) }],
-				isError: false,
+				isError: false
 			};
 		}
 
 		return {
 			content: [{ type: "text", text: `Unknown tool: ${name}` }],
 			isError: true,
+			code: MCP_ERROR_CODES.INVALID_TOOL
 		};
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
@@ -132,6 +150,7 @@ export async function handleToolCall(
 		return {
 			content: [{ type: "text", text: `Tool execution failed: ${errorMessage}` }],
 			isError: true,
+			code: MCP_ERROR_CODES.INTERNAL_ERROR
 		};
 	}
 }

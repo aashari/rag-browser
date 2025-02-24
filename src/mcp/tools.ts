@@ -42,6 +42,15 @@ type JsonSchema = {
 	required: string[];
 };
 
+// Enhanced Tool interface with version and compatibility
+interface EnhancedTool extends Tool {
+	version: string;
+	compatibility: {
+		minVersion: string;
+		deprecatedFeatures: string[];
+	};
+}
+
 // Function to create a browser tool schema
 function createBrowserToolSchema(additionalProps: SchemaProperties = {}, required: string[] = ["url"]): JsonSchema {
 	return {
@@ -52,15 +61,20 @@ function createBrowserToolSchema(additionalProps: SchemaProperties = {}, require
 }
 
 // Function to create a tool definition
-function createTool(name: string, description: string, additionalProps: SchemaProperties = {}, required: string[] = ["url"]): Tool {
+function createTool(name: string, description: string, additionalProps: SchemaProperties = {}, required: string[] = ["url"]): EnhancedTool {
 	return {
 		name,
 		description,
+		version: "1.6.2", // Current version
+		compatibility: {
+			minVersion: "1.0.0",
+			deprecatedFeatures: [], // No deprecated features yet
+		},
 		inputSchema: createBrowserToolSchema(additionalProps, required),
 	};
 }
 
-export function createToolDefinitions(): Tool[] {
+export function createToolDefinitions(): EnhancedTool[] {
 	return [
 		{
 			name: "action",
@@ -131,6 +145,11 @@ export function createToolDefinitions(): Tool[] {
 				"     }\n" +
 				"   }\n" +
 				"   ```",
+			version: "1.6.2",
+			compatibility: {
+				minVersion: "1.0.0",
+				deprecatedFeatures: [],
+			},
 			inputSchema: {
 				type: "object",
 				properties: {
