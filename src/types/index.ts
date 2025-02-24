@@ -9,13 +9,17 @@ export type Button = {
 	selector: string;
 };
 
-export type Input = {
+export interface Input {
 	type: string;
-	label?: string;
 	id?: string;
+	name?: string;
+	value?: string;
+	placeholder?: string;
+	label?: string;
 	selector: string;
-	isVisible: boolean;
-};
+	attributes?: string[];
+	isVisible?: boolean;
+}
 
 export type WaitAction = {
 	type: "wait";
@@ -57,12 +61,18 @@ export type Plan = {
 	actions: Action[];
 };
 
-export type PlannedActionResult = {
-	type?: "print" | "markdown";
+export interface PlannedActionResult {
 	selector: string;
+	html: string;
+	type: 'print' | 'markdown';
 	error?: string;
-	html?: string;
-};
+	metadata?: {
+		tagName: string;
+		className: string;
+		id: string;
+		attributes: string;
+	};
+}
 
 export type PageAnalysis = {
 	title: string;

@@ -116,23 +116,7 @@ function printActionResults(plannedActions: PlannedActionResult[]): string {
 		output += "=".repeat(80) + "\n\n";
 		results.forEach((result) => {
 			if (!result.error && result.html) {
-				if (result.type === 'print') {
-					output += "HTML Output:\n";
-					output += result.html + "\n\n";
-				} else if (result.type === 'markdown') {
-					output += "Markdown Output:\n";
-					// Remove duplicate link references
-					const lines = result.html.split('\n');
-					const seenRefs = new Set<string>();
-					const uniqueLines = lines.filter(line => {
-						if (line.match(/^\[.*\]:/)) {
-							if (seenRefs.has(line)) return false;
-							seenRefs.add(line);
-						}
-						return true;
-					});
-					output += uniqueLines.join('\n') + "\n";
-				}
+				output += result.html + "\n\n";
 			}
 		});
 		output += "=".repeat(80) + "\n";
@@ -243,34 +227,15 @@ export function printAnalysis(
 	if (analysis.plannedActions && analysis.plannedActions.length > 0) {
 		output += "\nAction Results:\n";
 		output += "================================================================================\n\n";
-
-		// Group results by type
-		const printResults = analysis.plannedActions.filter((r) => r.type === "print");
-		const markdownResults = analysis.plannedActions.filter((r) => r.type === "markdown");
-
-		if (printResults.length > 0) {
-			output += "HTML Output:\n";
-			printResults.forEach((result) => {
-				if (result.error) {
-					output += `Error capturing ${result.selector}: ${result.error}\n`;
-				} else {
-					output += result.html + "\n";
-				}
-			});
-			output += "================================================================================\n\n";
-		}
-
-		if (markdownResults.length > 0) {
-			output += "Markdown Output:\n";
-			markdownResults.forEach((result) => {
-				if (result.error) {
-					output += `Error capturing ${result.selector}: ${result.error}\n`;
-				} else {
-					output += result.html + "\n";
-				}
-			});
-			output += "================================================================================\n\n";
-		}
+		
+		analysis.plannedActions.forEach((result) => {
+			if (result.error) {
+				output += `Error capturing ${result.selector}: ${result.error}\n`;
+			} else if (result.html) {
+				output += result.html + "\n";
+			}
+		});
+		output += "================================================================================\n\n";
 	}
 
 	return output;

@@ -22200,19 +22200,41 @@ async function executePrintAction(page, action, _options) {
     try {
       const elements = await page.$$(selector);
       for (const element of elements) {
-        const text = await element.evaluate((el) => el.textContent?.trim() || "");
-        if (text) {
-          results.push({ selector, html: text, type: "print" });
-        }
+        const html = await element.evaluate((el) => {
+          return {
+            outerHTML: el.outerHTML,
+            structure: {
+              tagName: el.tagName.toLowerCase(),
+              className: el.className,
+              id: el.id,
+              attributes: Array.from(el.attributes).map((attr) => `${attr.name}="${attr.value}"`).join(" ")
+            }
+          };
+        });
+        results.push({
+          selector,
+          html: `HTML Structure:
+${JSON.stringify(html.structure, null, 2)}
+
+HTML Content:
+${html.outerHTML}`,
+          type: "print",
+          metadata: html.structure
+        });
       }
-    } catch (_error) {
-      results.push({ selector, error: "Element not found or inaccessible", type: "print", html: "" });
+    } catch (error2) {
+      results.push({
+        selector,
+        error: error2 instanceof Error ? error2.message : "Element not found or inaccessible",
+        type: "print",
+        html: ""
+      });
     }
   }
   const formattedResults = results.filter((r) => !r.error && r.html).map((r) => `Content from ${r.selector}:
----
+=================
 ${r.html}
----
+=================
 `);
   return {
     success: results.some((r) => !r.error),
@@ -22228,31 +22250,52 @@ var import_turndown = __toESM(require_turndown_cjs(), 1);
 var turndownService = new import_turndown.default({
   headingStyle: "atx",
   codeBlockStyle: "fenced",
-  emDelimiter: "*",
+  emDelimiter: "_",
+  strongDelimiter: "**",
   bulletListMarker: "-",
   hr: "---",
   linkStyle: "referenced",
   linkReferenceStyle: "full"
 });
-turndownService.addRule("searchResult", {
-  filter: ["li"],
-  replacement: function(content, node) {
-    const element = node;
-    if (element.classList?.contains("mw-search-result")) {
-      const headingEl = element.querySelector(".mw-search-result-heading");
-      const heading = turndownService.turndown(headingEl?.innerHTML || "");
-      const snippet = element.querySelector(".searchresult")?.textContent?.trim() || "";
-      const metadata = element.querySelector(".mw-search-result-data")?.textContent?.trim() || "";
-      return `## ${heading}
-
-${snippet}
-
-*${metadata}*
-
----
-`;
+turndownService.addRule("preserveStructure", {
+  filter: (node) => {
+    return node instanceof HTMLElement && (node.hasAttribute("data-testid") || node.hasAttribute("role") || node.className.includes("css-"));
+  },
+  replacement: (content, node) => {
+    if (node instanceof HTMLElement) {
+      const attrs = Array.from(node.attributes).map((attr) => `${attr.name}="${attr.value}"`).join(" ");
+      return `<${node.tagName.toLowerCase()} ${attrs}>${content}</${node.tagName.toLowerCase()}>`;
     }
     return content;
+  }
+});
+turndownService.addRule("enhancedImage", {
+  filter: ["img"],
+  replacement: (content, node) => {
+    if (node instanceof HTMLImageElement) {
+      const alt = node.alt || "Image";
+      const src = node.src || "";
+      const title = node.title ? ` "${node.title}"` : "";
+      return src ? `![${alt}](${src}${title})` : "";
+    }
+    return content;
+  }
+});
+turndownService.addRule("codeBlock", {
+  filter: (node) => {
+    return node.nodeName === "PRE" && node.firstChild?.nodeName === "CODE";
+  },
+  replacement: (content, node) => {
+    const code = node.firstChild;
+    const language = code.className.replace("language-", "") || "";
+    const fence = "```";
+    return `
+
+${fence}${language}
+${content}
+${fence}
+
+`;
   }
 });
 
@@ -22264,37 +22307,44 @@ async function executeMarkdownAction(page, action, _options) {
       const elements = await page.$$(selector);
       for (const element of elements) {
         const html = await element.evaluate((el) => {
-          const outerHTML = el.outerHTML;
-          const innerText = el.textContent || "";
-          const attributes = Array.from(el.attributes).map((attr) => `${attr.name}="${attr.value}"`).join(" ");
-          return { outerHTML, innerText, attributes };
+          return {
+            outerHTML: el.outerHTML,
+            structure: {
+              tagName: el.tagName.toLowerCase(),
+              className: el.className,
+              id: el.id,
+              attributes: Array.from(el.attributes).map((attr) => `${attr.name}="${attr.value}"`).join(" ")
+            }
+          };
         });
-        let markdown = turndownService.turndown(html.outerHTML);
-        if (html.attributes) {
-          markdown = `<!-- ${html.attributes} -->
-${markdown}`;
-        }
+        const markdown = turndownService.turndown(html.outerHTML);
         results.push({
           selector,
           html: markdown,
-          type: "markdown"
+          type: "markdown",
+          metadata: html.structure
         });
       }
     } catch (error2) {
       info("Error in markdown conversion:", error2);
       results.push({
         selector,
-        error: "Element not found or inaccessible",
+        error: error2 instanceof Error ? error2.message : "Element not found or inaccessible",
         type: "markdown",
         html: ""
       });
     }
   }
+  const successfulResults = results.filter((r) => !r.error);
+  const failedResults = results.filter((r) => r.error);
   return {
-    success: results.some((r) => !r.error),
-    message: results.filter((r) => !r.error).map((r) => `Markdown captured for ${r.selector}`).join(`
+    success: successfulResults.length > 0,
+    message: successfulResults.map((r) => r.html).join(`
+
+---
+
 `),
-    warning: results.some((r) => r.error) ? `Failed to capture some elements: ${results.filter((r) => r.error).map((r) => r.selector).join(", ")}` : undefined,
+    warning: failedResults.length > 0 ? `Failed to capture ${failedResults.length} elements: ${failedResults.map((r) => `${r.selector} (${r.error})`).join(", ")}` : undefined,
     data: results
   };
 }

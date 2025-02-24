@@ -1,6 +1,7 @@
 import type { Page } from "playwright";
-import type { MarkdownAction, ActionResult, BrowserOptions, PlannedActionResult } from "../../types";
+import type { MarkdownAction, ActionResult, BrowserOptions } from "../../types";
 import { turndownService } from "../../utils/markdown";
+import { captureElementsHtml } from "./print";
 import { info } from "../../utils/logging";
 
 export async function executeMarkdownAction(
@@ -8,54 +9,55 @@ export async function executeMarkdownAction(
     action: MarkdownAction,
     _options: BrowserOptions
 ): Promise<ActionResult> {
-    const results: PlannedActionResult[] = [];
-    for (const selector of action.elements) {
-        try {
-            const elements = await page.$$(selector);
-            for (const element of elements) {
-                const html = await element.evaluate(el => {
-                    // Get both the outer HTML and inner text for better conversion
-                    const outerHTML = el.outerHTML;
-                    const innerText = el.textContent || '';
-                    const attributes = Array.from(el.attributes).map(attr => `${attr.name}="${attr.value}"`).join(' ');
-                    return { outerHTML, innerText, attributes };
-                });
-
-                // Convert to markdown, preserving important attributes
-                let markdown = turndownService.turndown(html.outerHTML);
-                if (html.attributes) {
-                    markdown = `<!-- ${html.attributes} -->\n${markdown}`;
-                }
-
-                results.push({ 
-                    selector, 
-                    html: markdown, 
-                    type: 'markdown' as const 
-                });
-            }
-        } catch (error) {
-            info('Error in markdown conversion:', error);
-            results.push({ 
-                selector, 
-                error: "Element not found or inaccessible", 
-                type: 'markdown' as const, 
-                html: '' 
-            });
+    // Use shared function to capture HTML
+    const results = await captureElementsHtml(page, action.elements);
+    
+    info('Converting HTML to markdown for', { count: results.length, results });
+    
+    // Convert HTML to markdown for successful captures
+    const markdownResults = results.map(result => {
+        if (result.error || !result.html) {
+            return result;
         }
-    }
+        
+        try {
+            info('Converting HTML to markdown:', { html: result.html.substring(0, 100) + '...' });
+            const markdown = turndownService.turndown(result.html);
+            info('Successfully converted to markdown');
+            
+            return {
+                ...result,
+                html: markdown,
+                type: 'markdown' as const
+            };
+        } catch (error) {
+            info('Error converting to markdown:', { error });
+            return {
+                ...result,
+                error: error instanceof Error ? error.message : 'Markdown conversion failed',
+                type: 'markdown' as const
+            };
+        }
+    });
+
+    const successfulResults = markdownResults.filter(r => !r.error && r.html);
+    const failedResults = markdownResults.filter(r => r.error);
+
+    info('Conversion results:', { 
+        successful: successfulResults.length,
+        failed: failedResults.length
+    });
 
     return {
-        success: results.some((r) => !r.error),
-        message: results
-            .filter((r) => !r.error)
-            .map((r) => `Markdown captured for ${r.selector}`)
-            .join("\n"),
-        warning: results.some((r) => r.error)
-            ? `Failed to capture some elements: ${results
-                .filter((r) => r.error)
-                .map((r) => r.selector)
+        success: successfulResults.length > 0,
+        message: successfulResults
+            .map(r => r.html)
+            .join("\n\n---\n\n"),
+        warning: failedResults.length > 0
+            ? `Failed to capture ${failedResults.length} elements: ${failedResults
+                .map(r => `${r.selector} (${r.error})`)
                 .join(", ")}`
             : undefined,
-        data: results,
+        data: markdownResults,
     };
 } 

@@ -282,21 +282,18 @@ export async function analyzePage(url: string, options: BrowserOptions): Promise
 					}
 				}, true);
 
-				// Specifically for Slack: override their link handling
-				if (window.location.hostname.includes('slack.com')) {
-					// Override Slack's link handler
-					document.addEventListener('click', (e) => {
-						const link = (e.target as Element).closest('a');
-						if (link && !link.getAttribute('href')?.startsWith('javascript:')) {
-							e.preventDefault();
-							e.stopPropagation();
-							const href = link.getAttribute('href');
-							if (href) {
-								window.location.href = href;
-							}
+				// Generic link handler for all sites
+				document.addEventListener('click', (e) => {
+					const link = (e.target as Element).closest('a');
+					if (link && !link.getAttribute('href')?.startsWith('javascript:')) {
+						e.preventDefault();
+						e.stopPropagation();
+						const href = link.getAttribute('href');
+						if (href) {
+							window.location.href = href;
 						}
-					}, true);
-				}
+					}
+				}, true);
 			}
 
 			// Run immediately and after any navigation

@@ -121,11 +121,13 @@ export async function waitForPageStability(
 		let isKnownDynamicApp = false;
 		try {
 			const url = page.url();
-			isKnownDynamicApp = url.includes("slack.com") || 
-							   url.includes("discord.com") || 
-							   url.includes("teams.microsoft.com");
+			// Use generic detection based on WebSocket connections and dynamic content
+			isKnownDynamicApp = await page.evaluate(() => {
+				return window.WebSocket !== undefined && 
+					   document.querySelector('[data-testid], [role="application"], [role="main"]') !== null;
+			});
 		} catch (err) {
-			warn("Failed to check URL", { error: err instanceof Error ? err.message : String(err) });
+			warn("Failed to check dynamic app status", { error: err instanceof Error ? err.message : String(err) });
 		}
 
 		// For dynamic apps, we only need basic DOM readiness
