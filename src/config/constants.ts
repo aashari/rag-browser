@@ -6,7 +6,7 @@ export const NETWORK_QUIET_PERIOD = 500;
 export const NETWORK_IDLE_TIMEOUT = 1000; // Increased to 1s to allow for more network activity
 export const LAYOUT_CHECK_INTERVAL = 50; // ms between layout stability checks
 export const MUTATION_CHECK_INTERVAL = 100; // Increased to reduce check frequency
-export const VISIBLE_MODE_SLOW_MO = 50;
+export const VISIBLE_MODE_SLOW_MO = 100; // Increased from 50 to 100 for better visibility
 
 // Stability timeouts
 export const MUTATION_STABILITY_TIMEOUT = 500; // Increased to allow for more mutations
