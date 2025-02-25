@@ -21610,6 +21610,11 @@ var commonProperties = {
     type: "string",
     enum: ["true", "false"],
     description: "Controls the level of detail for hyperlinks in the output. Set to 'true' to return complete details about all links (e.g., anchor tags with 'href') including URL, text content, selectors, and whether they are internal or external. When 'false' (default), only the top 5 visible links are summarized with basic info (title, URL, selector). Use 'true' when you need a full navigation map or to follow specific links."
+  },
+  format: {
+    type: "string",
+    enum: ["json", "pretty"],
+    description: "Controls the output format. Set to 'json' to return the analysis as a JSON object, or 'pretty' (default) for a human-readable text format. JSON format is useful for programmatic processing, while pretty format is better for human consumption."
   }
 };
 function createToolDefinitions() {
@@ -21687,7 +21692,7 @@ var DEBUG = true;
 var DEFAULT_TIMEOUT = 30000;
 var NETWORK_IDLE_TIMEOUT = 1000;
 var MUTATION_CHECK_INTERVAL = 100;
-var VISIBLE_MODE_SLOW_MO = 50;
+var VISIBLE_MODE_SLOW_MO = 100;
 var MUTATION_STABILITY_TIMEOUT = 500;
 var LAYOUT_STABILITY_TIMEOUT = 300;
 var ACTION_STABILITY_TIMEOUT = 3000;
@@ -21840,6 +21845,32 @@ function checkLayoutStability() {
 }
 
 // src/utils/logging.ts
+var MAX_LOG_DATA_LENGTH = 1000;
+function truncateLogData(data) {
+  if (data === null || data === undefined) {
+    return data;
+  }
+  if (typeof data === "string") {
+    if (data.length > MAX_LOG_DATA_LENGTH) {
+      return `${data.substring(0, MAX_LOG_DATA_LENGTH)}... [truncated, ${data.length} chars total]`;
+    }
+    return data;
+  }
+  if (typeof data === "object") {
+    const result = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (typeof value === "string" && value.length > MAX_LOG_DATA_LENGTH) {
+        result[key] = `${value.substring(0, MAX_LOG_DATA_LENGTH)}... [truncated, ${value.length} chars total]`;
+      } else if (typeof value === "object" && value !== null) {
+        result[key] = truncateLogData(value);
+      } else {
+        result[key] = value;
+      }
+    }
+    return result;
+  }
+  return data;
+}
 function log(message, level = "info", data) {
   if (!DEBUG && level === "debug")
     return;
@@ -21849,7 +21880,7 @@ function log(message, level = "info", data) {
     params: {
       level,
       message,
-      data: data || undefined
+      data: data ? truncateLogData(data) : undefined
     }
   };
   console.error(JSON.stringify(notification));
@@ -22179,45 +22210,47 @@ async function executeClickAction(page, action, options) {
 }
 
 // src/core/handlers/typing.ts
+var MIN_DELAY = 200;
+var MAX_DELAY = 500;
+function getRandomDelay(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 async function executeTypingAction(page, action, options) {
   try {
-    await page.fill(action.element, action.value);
-    const isStable = await waitForActionStability(page).catch(() => false);
+    await page.focus(action.element);
+    await page.evaluate((selector) => {
+      const element = document.querySelector(selector);
+      if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+        element.value = "";
+      } else if (element && "textContent" in element) {
+        element.textContent = "";
+      }
+    }, action.element);
+    await page.waitForTimeout(getRandomDelay(200, 300));
+    const baseDelay = action.delay || getRandomDelay(MIN_DELAY, MAX_DELAY);
+    info("Typing text with random delays", {
+      element: action.element,
+      textLength: action.value.length,
+      baseDelay
+    });
+    for (let i = 0;i < action.value.length; i++) {
+      const char = action.value[i];
+      const charDelay = getRandomDelay(MIN_DELAY, MAX_DELAY);
+      await page.type(action.element, char, { delay: charDelay });
+    }
+    await waitForActionStability(page, options);
     return {
       success: true,
-      message: "Text input successful",
-      warning: !isStable ? "Page not fully stable after typing" : undefined
+      message: "Text input successful"
     };
-  } catch (err) {
-    error("Error in typing action", { error: err instanceof Error ? err.message : String(err) });
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    error("Error during typing action", { error: errorMessage, element: action.element });
     return {
       success: false,
-      message: "Failed to input text",
-      error: err instanceof Error ? err.message : "Unknown error occurred"
+      message: `Failed to type text: ${errorMessage}`
     };
   }
-}
-
-// src/utils/handlers.ts
-function createActionResult(results, format = "markdown") {
-  const typedResults = results.map((result) => ({
-    ...result,
-    type: "print",
-    format
-  }));
-  const successfulResults = typedResults.filter((r) => !r.error && r.html);
-  const failedResults = typedResults.filter((r) => r.error);
-  return {
-    success: successfulResults.length > 0,
-    message: successfulResults.map((r) => `Content from ${r.selector}:
-=================
-${r.html}
-=================
-`).join(`
-`),
-    warning: failedResults.length > 0 ? `Failed to capture some elements: ${failedResults.map((r) => `${r.selector} (${r.error})`).join(", ")}` : undefined,
-    data: typedResults
-  };
 }
 
 // src/utils/markdown.ts
@@ -22249,103 +22282,129 @@ var convertToMarkdown = (html, selector) => {
 };
 
 // src/core/handlers/print.ts
-async function captureElementsHtml(page, selectors, format = "markdown") {
-  const results = [];
-  for (const selector of selectors) {
-    try {
+var MAX_CONTENT_LENGTH = 1e4;
+async function captureElementsHtml(page, selectors, format = "html", options) {
+  const result = {
+    selector: selectors.join(", "),
+    type: "print",
+    format,
+    error: "No content captured",
+    html: ""
+  };
+  let extendedMetadata;
+  try {
+    await waitForPageStability(page, options);
+    for (const selector of selectors) {
       info("Searching for elements:", { selector });
-      const content = await page.evaluate((sel) => {
-        const elements = Array.from(document.querySelectorAll(sel));
-        if (elements.length === 0)
-          return "";
-        const container = document.createElement("div");
-        elements.forEach((el) => {
-          const clone = el.cloneNode(true);
-          container.appendChild(clone);
-        });
-        const scripts = container.getElementsByTagName("script");
-        const styles = container.getElementsByTagName("style");
-        for (let i = scripts.length - 1;i >= 0; i--) {
-          scripts[i].remove();
+      const elements = await page.$$(selector);
+      if (elements.length > 0) {
+        const htmlContents = [];
+        let totalContentLength = 0;
+        let truncated = false;
+        const headerText = `Found ${elements.length} element${elements.length > 1 ? "s" : ""} matching "${selector}"`;
+        htmlContents.push(`## ${headerText}`);
+        for (const element of elements) {
+          const html = await page.evaluate((el) => {
+            const clone = el.cloneNode(true);
+            const scripts = clone.querySelectorAll("script");
+            scripts.forEach((script) => script.remove());
+            const styles = clone.querySelectorAll("style");
+            styles.forEach((style) => style.remove());
+            const emptyDivs = clone.querySelectorAll("div:empty");
+            emptyDivs.forEach((div) => div.remove());
+            return clone.outerHTML;
+          }, element);
+          if (totalContentLength + html.length > MAX_CONTENT_LENGTH) {
+            truncated = true;
+            break;
+          }
+          const elementMetadata = await page.evaluate((el) => {
+            return {
+              tagName: el.tagName.toLowerCase(),
+              id: el.id || "",
+              className: Array.from(el.classList).join(" ") || "",
+              attributes: Array.from(el.attributes).map((attr) => `${attr.name}="${attr.value}"`).join(" ")
+            };
+          }, element);
+          const metadataText = `<!-- Element: ${elementMetadata.tagName}${elementMetadata.id ? ` id="${elementMetadata.id}"` : ""}${elementMetadata.className ? ` class="${elementMetadata.className}"` : ""} -->`;
+          htmlContents.push(metadataText);
+          if (!result.metadata) {
+            result.metadata = elementMetadata;
+          }
+          htmlContents.push(html);
+          if (elements.length > 1) {
+            htmlContents.push("---");
+          }
+          totalContentLength += html.length;
         }
-        for (let i = styles.length - 1;i >= 0; i--) {
-          styles[i].remove();
+        let combinedHtml = htmlContents.join(`
+
+`);
+        if (truncated || combinedHtml.length > MAX_CONTENT_LENGTH) {
+          combinedHtml = combinedHtml.substring(0, MAX_CONTENT_LENGTH);
+          truncated = true;
         }
-        const cleanAttributes = (element) => {
-          element.removeAttribute("style");
-          element.removeAttribute("class");
-          Array.from(element.children).forEach((child) => {
-            cleanAttributes(child);
-          });
+        if (truncated) {
+          combinedHtml += `
+
+**Note: Content was truncated to ${MAX_CONTENT_LENGTH} characters. Some elements may have been omitted.**`;
+        }
+        if (format === "markdown") {
+          try {
+            const markdownResult = convertToMarkdown(combinedHtml, selector);
+            result.html = markdownResult.html;
+            result.format = "markdown";
+            info("Successfully converted content to markdown");
+          } catch (conversionError) {
+            result.html = combinedHtml;
+            result.format = "html";
+            info("Error converting to markdown, falling back to HTML:", { error: conversionError });
+          }
+        } else {
+          result.html = combinedHtml;
+          info("Successfully captured HTML content");
+        }
+        delete result.error;
+        extendedMetadata = {
+          elementCount: elements.length,
+          truncated,
+          originalLength: totalContentLength
         };
-        cleanAttributes(container);
-        const removeEmptyDivs = (element) => {
-          Array.from(element.children).forEach((child) => {
-            if (child.tagName.toLowerCase() === "div" && !child.textContent?.trim()) {
-              child.remove();
-            } else {
-              removeEmptyDivs(child);
-            }
-          });
-        };
-        removeEmptyDivs(container);
-        return container.innerHTML;
-      }, selector);
-      if (!content) {
-        info("No elements found for selector:", { selector });
-        results.push({
-          selector,
-          error: "No elements found",
-          type: "print",
-          html: "",
-          format
-        });
-        continue;
-      }
-      info("Successfully captured HTML content");
-      if (format === "markdown") {
-        try {
-          const result = convertToMarkdown(content, selector);
-          info("Successfully converted content to markdown");
-          results.push({
-            ...result,
-            type: "print",
-            format
-          });
-        } catch (conversionError) {
-          info("Error converting to markdown, falling back to HTML:", { error: conversionError });
-          results.push({
-            selector,
-            html: content,
-            type: "print",
-            format: "html",
-            error: conversionError instanceof Error ? conversionError.message : "Failed to convert to markdown"
-          });
-        }
+        break;
       } else {
-        results.push({
-          selector,
-          html: content,
-          type: "print",
-          format
-        });
+        info("No elements found for selector:", { selector });
       }
-    } catch (err) {
-      error("Error capturing content:", { error: err instanceof Error ? err.message : String(err) });
-      results.push({
-        selector,
-        error: err instanceof Error ? err.message : "Failed to capture element content",
-        type: "print",
-        html: "",
-        format
-      });
     }
+    return result;
+  } catch (err) {
+    error("Error capturing content:", { error: err instanceof Error ? err.message : String(err) });
+    result.error = err instanceof Error ? err.message : String(err);
+    return result;
   }
-  return results;
 }
-async function executePrintAction(page, action, _options) {
-  const results = await captureElementsHtml(page, action.elements, action.format);
-  return createActionResult(results, action.format);
+async function executePrintAction(page, action, options) {
+  try {
+    if (action.type !== "print") {
+      throw new Error(`Invalid action type: ${action.type}`);
+    }
+    const printAction = action;
+    if (!printAction.elements || !Array.isArray(printAction.elements) || printAction.elements.length === 0) {
+      throw new Error("No elements specified for print action");
+    }
+    const format = printAction.format || "html";
+    const result = await captureElementsHtml(page, printAction.elements, format, options);
+    const elementCount = result.html.includes("Found ") ? result.html.match(/Found (\d+) element/)?.[1] : "";
+    return {
+      success: !result.error,
+      message: result.error || `Content captured successfully${elementCount ? ` (${elementCount} elements)` : ""}`,
+      data: [result]
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : String(err)
+    };
+  }
 }
 
 // src/core/handlers/keyPress.ts
@@ -22421,6 +22480,21 @@ async function executeAction(page, action, options) {
 }
 
 // src/utils/output.ts
+function normalizeFormat(format) {
+  if (format === "json") {
+    return "json";
+  }
+  return "pretty";
+}
+function formatAnalysis(analysis, format = "pretty", options = {}) {
+  const normalizedOptions = {
+    showInputs: options.showInputs ?? false,
+    showButtons: options.showButtons ?? false,
+    showLinks: options.showLinks ?? false
+  };
+  const normalizedFormat = normalizeFormat(format);
+  return printAnalysis(analysis, normalizedFormat, normalizedOptions);
+}
 function printPlan(plan) {
   let output = "";
   output += `
@@ -22438,6 +22512,29 @@ function printPlan(plan) {
 `;
   return output;
 }
+var MAX_CONTENT_LENGTH2 = 5000;
+function createSectionHeader(title) {
+  return `
+${title}
+${"=".repeat(80)}
+`;
+}
+function createSectionDivider() {
+  return `
+${"-".repeat(80)}
+`;
+}
+function formatContent(content, format) {
+  if (format === "markdown") {
+    return content;
+  }
+  return content.replace(/\n{3,}/g, `
+
+`).replace(/<\/p>\s*<p>/g, `
+
+`).replace(/<br\s*\/?>/g, `
+`);
+}
 function printAnalysis(analysis, format = "pretty", options = {}) {
   if (format === "json") {
     return JSON.stringify(analysis, null, 2);
@@ -22449,11 +22546,11 @@ function printAnalysis(analysis, format = "pretty", options = {}) {
   if (analysis.error) {
     output += `⚠️ Error encountered:
 `;
-    output += `==================================================
+    output += "=".repeat(50) + `
 `;
     output += analysis.error + `
 `;
-    output += `==================================================
+    output += "=".repeat(50) + `
 
 `;
   }
@@ -22466,7 +22563,7 @@ function printAnalysis(analysis, format = "pretty", options = {}) {
   output += `
 Page Elements Summary:
 `;
-  output += `==================================================
+  output += "=".repeat(50) + `
 `;
   output += `Total Input Elements: ${analysis.inputs.length}
 `;
@@ -22544,22 +22641,33 @@ Page Elements Summary:
   output += `
 `;
   if (analysis.plannedActions && analysis.plannedActions.length > 0) {
-    output += `
-Action Results:
-`;
-    output += `================================================================================
+    output += createSectionHeader("\uD83D\uDCCA Action Results");
+    analysis.plannedActions.forEach((result, index) => {
+      if (index > 0) {
+        output += createSectionDivider();
+      }
+      const formatLabel = result.format === "markdown" ? "(Markdown)" : "(HTML)";
+      output += `\uD83D\uDCCC Content from: ${result.selector} ${formatLabel}
 
 `;
-    analysis.plannedActions.forEach((result) => {
       if (result.error) {
-        output += `Error capturing ${result.selector}: ${result.error}
+        output += `⚠️ Error: ${result.error}
 `;
       } else if (result.html) {
-        output += result.html + `
+        if (result.html.length > MAX_CONTENT_LENGTH2) {
+          const truncatedContent = result.html.substring(0, MAX_CONTENT_LENGTH2);
+          output += formatContent(truncatedContent, result.format) + `
 `;
+          output += `
+⚠️ Content was truncated (${result.html.length} characters, showing first ${MAX_CONTENT_LENGTH2})
+`;
+        } else {
+          output += formatContent(result.html, result.format) + `
+`;
+        }
       }
     });
-    output += `================================================================================
+    output += "=".repeat(80) + `
 
 `;
   }
@@ -23224,6 +23332,7 @@ async function handleToolCall(name, args, server) {
       showButtons: args.buttons === "true",
       showLinks: args.links === "true"
     };
+    const format = args.format || "pretty";
     const options = {
       headless: args.headless === "true",
       slowMo: VISIBLE_MODE_SLOW_MO,
@@ -23249,7 +23358,7 @@ async function handleToolCall(name, args, server) {
       const analysisResult = await analyzePage(args.url, options);
       storeAnalysis(analysisResult, args.url);
       return {
-        content: [{ type: "text", text: printAnalysis(analysisResult, "pretty", displayOptions) }],
+        content: [{ type: "text", text: formatAnalysis(analysisResult, format, displayOptions) }],
         isError: false
       };
     }
@@ -23300,7 +23409,7 @@ function setupRequestHandlers(server, tools) {
       contents: [{
         uri: request.params.uri,
         mimeType: "text/plain",
-        text: printAnalysis(stored.analysis)
+        text: formatAnalysis(stored.analysis)
       }]
     };
   });
@@ -23418,7 +23527,7 @@ Display Options:`);
       selectorMode,
       plan
     });
-    console.warn(printAnalysis(analysis, format, { showInputs, showButtons, showLinks }));
+    console.warn(formatAnalysis(analysis, format, { showInputs, showButtons, showLinks }));
   } catch (error2) {
     console.error("Error:", error2 instanceof Error ? error2.message : String(error2));
     process.exit(1);

@@ -2,7 +2,7 @@
 
 import { analyzePage } from "../core/browser";
 import type { Plan } from "../types";
-import { printAnalysis, printPlan, type OutputFormat } from "../utils/output";
+import { formatAnalysis, printPlan, type OutputFormat } from "../utils/output";
 import { DEFAULT_TIMEOUT, VISIBLE_MODE_SLOW_MO } from "../config/constants";
 import { fileURLToPath } from 'url';
 
@@ -73,7 +73,7 @@ export async function main(): Promise<void> {
 			selectorMode,
 			plan,
 		});
-		console.warn(printAnalysis(analysis, format, { showInputs, showButtons, showLinks }));
+		console.warn(formatAnalysis(analysis, format, { showInputs, showButtons, showLinks }));
 	} catch (error) {
 		console.error("Error:", error instanceof Error ? error.message : String(error));
 		process.exit(1);

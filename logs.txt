@@ -1,0 +1,33 @@
+Running in visible mode with full selectors...
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"info","message":"Starting navigation","data":{"url":"https://example.com","options":{"headless":false,"slowMo":50,"timeout":30000,"selectorMode":"full"}}}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"info","message":"Navigation to: https://example.com/"}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"info","message":"Navigation to: https://example.com/"}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"info","message":"Initial page load complete"}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"debug","message":"Starting page stability check","data":{"timeout":30000}}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"debug","message":"Injecting stability scripts"}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"info","message":"Stability scripts injection complete and verified"}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"debug","message":"Stability check iteration","data":{"iteration":1}}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"debug","message":"Stability check iteration","data":{"iteration":2}}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"debug","message":"Checking page stability"}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"debug","message":"Page reported as stable","data":{"consecutiveChecks":1}}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"debug","message":"Stability check iteration","data":{"iteration":3}}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"debug","message":"Checking page stability"}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"debug","message":"Page reported as stable","data":{"consecutiveChecks":2}}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"info","message":"Page stability confirmed"}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"info","message":"Input elements extracted","data":{"count":0}}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"info","message":"Page analysis complete","data":{"title":"Example Domain","linksCount":1,"buttonsCount":0,"inputsCount":0}}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"info","message":"Final URL before closing","data":{"url":"https://example.com/"}}}[0m
+[0m[31m{"jsonrpc":"2.0","method":"notification/log","params":{"level":"info","message":"Final execution state","data":{"url":"https://example.com/","actionSucceeded":false,"plannedActionsCount":0,"hasTimeout":true}}}[0m
+{
+  "title": "Example Domain",
+  "description": "",
+  "links": [
+    {
+      "title": "More information...",
+      "url": "https://www.iana.org/domains/example",
+      "selector": "html > body > div > p:nth-of-type(2) > a"
+    }
+  ],
+  "buttons": [],
+  "inputs": []
+}

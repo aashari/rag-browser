@@ -26,6 +26,11 @@ const commonProperties = {
 		enum: ["true", "false"],
 		description: "Controls the level of detail for hyperlinks in the output. Set to 'true' to return complete details about all links (e.g., anchor tags with 'href') including URL, text content, selectors, and whether they are internal or external. When 'false' (default), only the top 5 visible links are summarized with basic info (title, URL, selector). Use 'true' when you need a full navigation map or to follow specific links.",
 	},
+	format: {
+		type: "string",
+		enum: ["json", "pretty"],
+		description: "Controls the output format. Set to 'json' to return the analysis as a JSON object, or 'pretty' (default) for a human-readable text format. JSON format is useful for programmatic processing, while pretty format is better for human consumption.",
+	}
 };
 
 // Type for additional properties in tool schemas

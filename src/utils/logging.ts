@@ -1,5 +1,8 @@
 import { DEBUG } from "../config/constants";
 
+// Maximum length for data in logs to prevent excessive log sizes
+const MAX_LOG_DATA_LENGTH = 1000;
+
 interface JsonRpcMessage {
 	jsonrpc: "2.0";
 	method: string;
@@ -17,6 +20,39 @@ interface JsonRpcNotification extends JsonRpcMessage {
 }
 
 /**
+ * Safely truncate log data if it's a string or contains string properties
+ * to prevent excessive log sizes
+ */
+function truncateLogData(data: unknown): unknown {
+	if (data === null || data === undefined) {
+		return data;
+	}
+
+	if (typeof data === 'string') {
+		if (data.length > MAX_LOG_DATA_LENGTH) {
+			return `${data.substring(0, MAX_LOG_DATA_LENGTH)}... [truncated, ${data.length} chars total]`;
+		}
+		return data;
+	}
+
+	if (typeof data === 'object') {
+		const result: Record<string, unknown> = {};
+		for (const [key, value] of Object.entries(data)) {
+			if (typeof value === 'string' && value.length > MAX_LOG_DATA_LENGTH) {
+				result[key] = `${value.substring(0, MAX_LOG_DATA_LENGTH)}... [truncated, ${value.length} chars total]`;
+			} else if (typeof value === 'object' && value !== null) {
+				result[key] = truncateLogData(value);
+			} else {
+				result[key] = value;
+			}
+		}
+		return result;
+	}
+
+	return data;
+}
+
+/**
  * Send a log message following JSON-RPC 2.0 notification format
  */
 export function log(message: string, level: "debug" | "info" | "warn" | "error" = "info", data?: unknown): void {
@@ -28,7 +64,7 @@ export function log(message: string, level: "debug" | "info" | "warn" | "error" 
 		params: {
 			level,
 			message,
-			data: data || undefined,
+			data: data ? truncateLogData(data) : undefined,
 		},
 	};
 

@@ -1,0 +1,1 @@
+{"url": "https://example.com", "plan": {"actions": [{"type": "wait", "elements": ["body"], "timeout": 5000}, {"type": "print", "elements": ["body"]}]}}

@@ -16,7 +16,7 @@ import {
 	createResourceDescription,
 	initializeResources
 } from "./resources.js";
-import { printAnalysis } from "../utils/output";
+import { formatAnalysis } from "../utils/output";
 
 export function setupRequestHandlers(server: Server, tools: Tool[]): void {
 	// Initialize resources with server instance
@@ -51,7 +51,7 @@ export function setupRequestHandlers(server: Server, tools: Tool[]): void {
 			contents: [{
 				uri: request.params.uri,
 				mimeType: "text/plain",
-				text: printAnalysis(stored.analysis),
+				text: formatAnalysis(stored.analysis),
 			}],
 		};
 	});

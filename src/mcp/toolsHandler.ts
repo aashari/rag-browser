@@ -1,7 +1,7 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { analyzePage } from "../core/browser";
-import { printAnalysis } from "../utils/output";
+import { formatAnalysis } from "../utils/output";
 import type { Plan, Action, SelectorMode } from "../types";
 import { storeAnalysis } from "./resources";
 import { DEFAULT_TIMEOUT, VISIBLE_MODE_SLOW_MO } from "../config/constants";
@@ -96,6 +96,9 @@ export async function handleToolCall(
 			showLinks: args.links === "true"
 		};
 
+		// Get format option (default to "pretty" if not specified)
+		const format = args.format || "pretty";
+
 		// Default browser options
 		const options: {
 			headless: boolean;
@@ -132,7 +135,7 @@ export async function handleToolCall(
 			const analysisResult = await analyzePage(args.url, options);
 			storeAnalysis(analysisResult, args.url);
 			return {
-				content: [{ type: "text", text: printAnalysis(analysisResult, "pretty", displayOptions) }],
+				content: [{ type: "text", text: formatAnalysis(analysisResult, format, displayOptions) }],
 				isError: false
 			};
 		}

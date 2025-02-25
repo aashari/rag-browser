@@ -9,6 +9,34 @@ export interface DisplayOptions {
 	showLinks?: boolean;
 }
 
+// Helper function to normalize format
+function normalizeFormat(format: string | undefined): OutputFormat {
+	if (format === "json") {
+		return "json";
+	}
+	return "pretty"; // Default to pretty if not specified or invalid
+}
+
+// New centralized formatting function
+export function formatAnalysis(
+	analysis: PageAnalysis,
+	format: OutputFormat | string = "pretty",
+	options: DisplayOptions = {}
+): string {
+	// Ensure we have valid options with defaults
+	const normalizedOptions: DisplayOptions = {
+		showInputs: options.showInputs ?? false,
+		showButtons: options.showButtons ?? false,
+		showLinks: options.showLinks ?? false
+	};
+	
+	// Normalize the format
+	const normalizedFormat = normalizeFormat(format);
+	
+	// Use the existing printAnalysis function with normalized parameters
+	return printAnalysis(analysis, normalizedFormat, normalizedOptions);
+}
+
 export function printPlan(plan: Plan): string {
 	let output = "";
 	output += "\n📋 Plan to Execute:\n";
@@ -21,116 +49,32 @@ export function printPlan(plan: Plan): string {
 	return output;
 }
 
-function printPageHeader(analysis: PageAnalysis): string {
-	let output = "";
-	output += "\n📄 Page Analysis:\n\n";
-	output += `Title: ${analysis.title}\n`;
-	if (analysis.description) {
-		output += `Description: ${analysis.description}\n`;
-	}
-	return output;
+// Maximum character limit for each planned action result
+const MAX_CONTENT_LENGTH = 5000;
+
+// Helper function to create consistent section headers
+function createSectionHeader(title: string): string {
+	return `\n${title}\n${"=".repeat(80)}\n`;
 }
 
-function printInputsSummary(inputs: Input[], showAll: boolean): string {
-	let output = "";
-	if (!inputs?.length) return output;
-
-	output += `Total Input Elements: ${inputs.length}\n`;
-	if (showAll) {
-		inputs.forEach((input) => {
-			output += `\n🔤 ${input.label || input.type}\n`;
-			output += `  Type: ${input.type}\n`;
-			if (input.id) output += `  ID: ${input.id}\n`;
-			if (!input.isVisible) output += "  Hidden: true\n";
-			output += `  Selector: ${input.selector}\n`;
-		});
-	} else {
-		const visibleInputs = inputs.filter(i => i.isVisible).slice(0, 5);
-		if (visibleInputs.length) {
-			output += "[Showing top visible 5 inputs]\n";
-			visibleInputs.forEach(input => {
-				output += `- ${input.label || input.type}\n`;
-			});
-			output += "> to get list of all inputs add --inputs\n";
-		}
-	}
-	return output;
+// Helper function to create consistent section dividers
+function createSectionDivider(): string {
+	return `\n${"-".repeat(80)}\n`;
 }
 
-function printButtonsSummary(buttons: Button[], showAll: boolean): string {
-	let output = "";
-	if (!buttons?.length) return output;
-
-	output += `\nTotal Button Elements: ${buttons.length}\n`;
-	if (showAll) {
-		buttons.forEach((button) => {
-			output += `\n🔘 ${button.text || "No text"}\n`;
-			output += `  Selector: ${button.selector}\n`;
-		});
-	} else {
-		const topButtons = buttons.slice(0, 5);
-		if (topButtons.length) {
-			output += "[Showing top visible 5 buttons]\n";
-			topButtons.forEach(button => {
-				output += `- ${button.text || "No text"}\n`;
-			});
-			output += "> to get list of all buttons add --buttons\n";
-		}
+// Helper function to format content based on format type
+function formatContent(content: string, format: 'html' | 'markdown' | undefined): string {
+	// For markdown content, we don't need additional formatting
+	if (format === 'markdown') {
+		return content;
 	}
-	return output;
-}
-
-function printLinksSummary(links: Link[], showAll: boolean): string {
-	let output = "";
-	if (!links?.length) return output;
-
-	output += `\nTotal Link Elements: ${links.length}\n`;
-	if (showAll) {
-		links.forEach((link) => {
-			output += `\n🔗 ${link.title || "No title"}\n`;
-			output += `  URL: ${link.url}\n`;
-			output += `  Selector: ${link.selector}\n`;
-		});
-	} else {
-		const topLinks = links.slice(0, 5);
-		if (topLinks.length) {
-			output += "[Showing top visible 5 links]\n";
-			topLinks.forEach(link => {
-				output += `- ${link.title || "No title"}\n`;
-			});
-			output += "> to get list of all links add --links\n";
-		}
-	}
-	return output;
-}
-
-function printActionResults(plannedActions: PlannedActionResult[]): string {
-	let output = "";
-	if (!plannedActions?.length) return output;
-
-	const results = plannedActions.filter(r => !r.error);
-	const errorResults = plannedActions.filter(r => r.error);
-
-	if (results.length) {
-		output += "\n\nAction Results:\n";
-		output += "=".repeat(80) + "\n\n";
-		results.forEach((result) => {
-			if (!result.error && result.html) {
-				output += result.html + "\n\n";
-			}
-		});
-		output += "=".repeat(80) + "\n";
-	}
-
-	if (errorResults.length) {
-		output += "\nAction Errors:\n";
-		errorResults.forEach((result) => {
-			output += `\n❌ ${result.selector}\n`;
-			output += `  Error: ${result.error}\n`;
-		});
-	}
-
-	return output;
+	
+	// For HTML or undefined format, add some basic formatting
+	// Remove excessive newlines and add proper spacing
+	return content
+		.replace(/\n{3,}/g, '\n\n') // Replace 3+ consecutive newlines with 2
+		.replace(/<\/p>\s*<p>/g, '\n\n') // Add proper paragraph spacing
+		.replace(/<br\s*\/?>/g, '\n'); // Replace <br> with newlines
 }
 
 export function printAnalysis(
@@ -147,9 +91,9 @@ export function printAnalysis(
 	// Show error first if present
 	if (analysis.error) {
 		output += "⚠️ Error encountered:\n";
-		output += "==================================================\n";
+		output += "=".repeat(50) + "\n";
 		output += analysis.error + "\n";
-		output += "==================================================\n\n";
+		output += "=".repeat(50) + "\n\n";
 	}
 
 	output += `Title: ${analysis.title}\n`;
@@ -158,7 +102,7 @@ export function printAnalysis(
 	}
 
 	output += "\nPage Elements Summary:\n";
-	output += "==================================================\n";
+	output += "=".repeat(50) + "\n";
 
 	// Show inputs
 	output += `Total Input Elements: ${analysis.inputs.length}\n`;
@@ -225,17 +169,34 @@ export function printAnalysis(
 
 	// Show action results if present
 	if (analysis.plannedActions && analysis.plannedActions.length > 0) {
-		output += "\nAction Results:\n";
-		output += "================================================================================\n\n";
+		output += createSectionHeader("📊 Action Results");
 		
-		analysis.plannedActions.forEach((result) => {
+		analysis.plannedActions.forEach((result, index) => {
+			// Add a divider between results if not the first one
+			if (index > 0) {
+				output += createSectionDivider();
+			}
+			
+			// Add a header for each result with selector and format info
+			const formatLabel = result.format === 'markdown' ? '(Markdown)' : '(HTML)';
+			output += `📌 Content from: ${result.selector} ${formatLabel}\n\n`;
+			
 			if (result.error) {
-				output += `Error capturing ${result.selector}: ${result.error}\n`;
+				output += `⚠️ Error: ${result.error}\n`;
 			} else if (result.html) {
-				output += result.html + "\n";
+				// Check if content exceeds the maximum length
+				if (result.html.length > MAX_CONTENT_LENGTH) {
+					// Truncate the content and add a warning
+					const truncatedContent = result.html.substring(0, MAX_CONTENT_LENGTH);
+					output += formatContent(truncatedContent, result.format) + "\n";
+					output += `\n⚠️ Content was truncated (${result.html.length} characters, showing first ${MAX_CONTENT_LENGTH})\n`;
+				} else {
+					output += formatContent(result.html, result.format) + "\n";
+				}
 			}
 		});
-		output += "================================================================================\n\n";
+		
+		output += "=".repeat(80) + "\n\n";
 	}
 
 	return output;
