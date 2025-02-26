@@ -21583,7 +21583,7 @@ class StdioServerTransport {
 }
 
 // src/config/version.ts
-var VERSION = "1.19.0";
+var VERSION = "1.22.0";
 var [MAJOR, MINOR, PATCH] = VERSION.split(".").map(Number);
 var GIT_VERSION = `v${VERSION}`;
 var PACKAGE_NAME = "@aashari/rag-browser";
@@ -21714,8 +21714,6 @@ function getActionSymbol(action) {
       return "\uD83D\uDD24";
     case "print":
       return "\uD83D\uDCDD";
-    case "markdown":
-      return "\uD83D\uDCC4";
     default:
       return "❓";
   }
@@ -21732,8 +21730,6 @@ function getActionDescription(action) {
       return `Press ${action.key}${action.element ? ` on ${action.element}` : ""}`;
     case "print":
       return `Print HTML content of: ${action.elements.join(", ")}`;
-    case "markdown":
-      return `Convert HTML to Markdown: ${action.elements.join(", ")}`;
     default:
       return "Unknown action";
   }
@@ -22263,6 +22259,7 @@ var turndownService = new import_turndown.default({
 var convertToMarkdown = (html, selector) => {
   try {
     const markdown = turndownService.turndown(html).trim();
+    info("Converting HTML to Markdown:", { selector, length: markdown.length });
     return {
       selector,
       html: markdown,
@@ -22362,6 +22359,7 @@ async function captureElementsHtml(page, selectors, format = "html", options) {
           }
         } else {
           result.html = combinedHtml;
+          result.format = "html";
           info("Successfully captured HTML content");
         }
         delete result.error;
@@ -22525,6 +22523,9 @@ ${"-".repeat(80)}
 `;
 }
 function formatContent(content, format) {
+  if (!content || content.startsWith("Content captured successfully")) {
+    return content;
+  }
   if (format === "markdown") {
     return content;
   }
@@ -22533,53 +22534,46 @@ function formatContent(content, format) {
 `).replace(/<\/p>\s*<p>/g, `
 
 `).replace(/<br\s*\/?>/g, `
-`);
+`).replace(/<\/?[^>]+(>|$)/g, "");
 }
 function printAnalysis(analysis, format = "pretty", options = {}) {
   if (format === "json") {
     return JSON.stringify(analysis, null, 2);
   }
-  let output = `
+  let output = "";
+  output += `
 \uD83D\uDCC4 Page Analysis:
 
 `;
-  if (analysis.error) {
-    output += `⚠️ Error encountered:
-`;
-    output += "=".repeat(50) + `
-`;
-    output += analysis.error + `
-`;
-    output += "=".repeat(50) + `
-
+  if (analysis.title) {
+    output += `Title: ${analysis.title}
 `;
   }
-  output += `Title: ${analysis.title}
-`;
   if (analysis.description) {
     output += `Description: ${analysis.description}
 `;
   }
   output += `
-Page Elements Summary:
+`;
+  output += `Page Elements Summary:
 `;
   output += "=".repeat(50) + `
 `;
-  output += `Total Input Elements: ${analysis.inputs.length}
-`;
   if (analysis.inputs.length > 0) {
+    output += `Total Input Elements: ${analysis.inputs.length}
+`;
     if (options.showInputs) {
       output += `[Showing all inputs]
 `;
       analysis.inputs.forEach((input) => {
-        output += `- ${input.label || input.type}${!input.isVisible ? " (hidden)" : ""}
+        output += `- ${input.label || "No label"}
 `;
       });
     } else {
       output += `[Showing top visible 5 inputs]
 `;
-      analysis.inputs.filter((input) => input.isVisible).slice(0, 5).forEach((input) => {
-        output += `- ${input.label || input.type}
+      analysis.inputs.slice(0, 5).forEach((input) => {
+        output += `- ${input.label || "No label"}
 `;
       });
       if (analysis.inputs.length > 5) {
@@ -22587,12 +22581,12 @@ Page Elements Summary:
 `;
       }
     }
+    output += `
+`;
   }
-  output += `
-`;
-  output += `Total Button Elements: ${analysis.buttons.length}
-`;
   if (analysis.buttons.length > 0) {
+    output += `Total Button Elements: ${analysis.buttons.length}
+`;
     if (options.showButtons) {
       output += `[Showing all buttons]
 `;
@@ -22612,12 +22606,12 @@ Page Elements Summary:
 `;
       }
     }
+    output += `
+`;
   }
-  output += `
-`;
-  output += `Total Link Elements: ${analysis.links.length}
-`;
   if (analysis.links.length > 0) {
+    output += `Total Link Elements: ${analysis.links.length}
+`;
     if (options.showLinks) {
       output += `[Showing all links]
 `;
@@ -22725,9 +22719,10 @@ async function executePlan(page, plan, options) {
     actionStatuses.push(status);
     if (status.result?.success) {
       plannedActionResults.push({
-        type: action.type,
-        selector: action.type === "wait" || action.type === "print" || action.type === "markdown" ? action.elements[0] : action.type === "click" || action.type === "typing" ? action.element : "",
-        html: status.result.message
+        type: "print",
+        selector: action.type === "wait" || action.type === "print" ? action.elements[0] : action.type === "click" || action.type === "typing" ? action.element : "",
+        html: status.result.data?.[0]?.html || status.result.message,
+        format: status.result.data?.[0]?.format
       });
     }
     if (!status.result?.success)
@@ -23284,8 +23279,6 @@ function validateAction(action) {
     case "keyPress":
       return typeof action.key === "string" && (!action.element || typeof action.element === "string");
     case "print":
-      return Array.isArray(action.elements) && action.elements.every((e) => typeof e === "string");
-    case "markdown":
       return Array.isArray(action.elements) && action.elements.every((e) => typeof e === "string");
     default:
       return false;
