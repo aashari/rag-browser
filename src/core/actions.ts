@@ -17,11 +17,23 @@ export async function executePlan(
     const plannedActionResults: PlannedActionResult[] = [];
     const totalSteps = plan.actions.length;
 
+    // Track page context changes
+    let contextChanges = 0;
+    let lastUrl = page.url();
+
     for (const [index, action] of plan.actions.entries()) {
         const step = index + 1;
         const symbol = getActionSymbol(action);
         const description = getActionDescription(action);
         const status: ActionStatus = { step, totalSteps, action, symbol, description };
+        
+        // Check if navigation occurred between steps
+        const currentUrl = page.url();
+        if (currentUrl !== lastUrl) {
+            info(`Page navigation detected: ${lastUrl} → ${currentUrl}`);
+            contextChanges++;
+            lastUrl = currentUrl;
+        }
 
         status.result = await executeAction(page, action, options);
         info(printActionStatus(status));
@@ -41,6 +53,43 @@ export async function executePlan(
                 // Include the format from the result data
                 format: status.result.data?.[0]?.format
             });
+            
+            // Log warning if present in result
+            if ('warning' in status.result && status.result.warning) {
+                info(`Warning: ${status.result.warning}`);
+            }
+        }
+
+        // If action failed, check if we've had navigation events
+        if (!status.result?.success && contextChanges > 0) {
+            info(`Action failed after navigation. Attempting to extract content from current page...`);
+            
+            try {
+                // Create a fallback print action to extract content from the current page
+                const fallbackAction = {
+                    type: "print" as const,
+                    elements: ['h1', 'main', 'article', 'body']
+                };
+                
+                const fallbackResult = await executeAction(page, fallbackAction, options);
+                
+                if (fallbackResult.success) {
+                    plannedActionResults.push({
+                        type: "print",
+                        selector: "navigation-fallback",
+                        html: fallbackResult.data?.[0]?.html || "Navigation content captured",
+                        format: fallbackResult.data?.[0]?.format
+                    });
+                    
+                    info('Successfully captured content after navigation');
+                    
+                    // Continue to next action instead of breaking
+                    continue;
+                }
+            } catch (fallbackError) {
+                // Just log and continue with normal flow
+                info(`Failed to capture fallback content: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
+            }
         }
 
         if (!status.result?.success) break;

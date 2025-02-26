@@ -109,13 +109,13 @@ export interface BrowserOptions {
 	abortSignal?: AbortSignal;
 }
 
-export type ActionResult = {
+export interface ActionResult {
 	success: boolean;
 	message: string;
 	warning?: string;
 	error?: string;
 	data?: PlannedActionResult[];
-};
+}
 
 export interface ActionStatus {
 	step: number;

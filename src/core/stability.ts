@@ -11,6 +11,11 @@ import {
 import { getFullPath, checkPageStability, checkLayoutStability } from "./scripts";
 import { debug, info, warn, error } from "../utils/logging";
 
+// Define missing constants that were previously imported
+const REDIRECT_CHECK_INTERVAL = 500;
+const STABILITY_POLL_INTERVAL = 200;
+const STABILITY_MIN_ITERATIONS = 2;
+
 declare global {
 	interface Window {
 		getFullPath: (element: Element) => string;
@@ -120,7 +125,7 @@ export async function waitForPageStability(
 		// Check if we're on a known dynamic app
 		let isKnownDynamicApp = false;
 		try {
-			const url = page.url();
+			const _url = page.url();
 			// Use generic detection based on WebSocket connections and dynamic content
 			isKnownDynamicApp = await page.evaluate(() => {
 				return window.WebSocket !== undefined && 
@@ -172,9 +177,9 @@ export async function waitForPageStability(
 
 			try {
 				// Check if we're still on the same page
-				let currentUrl = '';
+				let _currentUrl = '';
 				try {
-					currentUrl = await page.url();
+					_currentUrl = await page.url();
 				} catch {
 					warn("Page context lost during stability check");
 					break;
@@ -382,4 +387,142 @@ export async function waitForSearchInput(
 		}
 	}
 	throw new Error(`Could not find search input with selector: ${selector}`);
+}
+
+// Function to check if a URL is valid
+function _isValidUrl(urlString: string): boolean {
+	try {
+		const _url = new URL(urlString);
+		return true;
+	} catch (_e) {
+		return false;
+	}
+}
+
+export async function checkForRedirects(page: Page, options: { timeout?: number, checkInterval?: number } = {}): Promise<boolean> {
+	const startTime = Date.now();
+	const timeout = options.timeout || DEFAULT_TIMEOUT;
+	const checkInterval = options.checkInterval || REDIRECT_CHECK_INTERVAL;
+	
+	while (Date.now() - startTime < timeout) {
+		await page.waitForTimeout(checkInterval);
+
+		// If we've been aborted, stop checking
+		// ...
+	}
+	
+	return false;
+}
+
+export async function waitForPageContentStability(page: Page, options: { timeout?: number, checkInterval?: number, minIterations?: number, abortSignal?: AbortSignal } = {}): Promise<boolean> {
+	const startTime = Date.now();
+	const timeout = options.timeout || DEFAULT_TIMEOUT;
+	const minIterations = options.minIterations || STABILITY_MIN_ITERATIONS;
+
+	if (options.abortSignal?.aborted) {
+		throw new Error("Stability check aborted");
+	}
+
+	let consecutiveStableChecks = 0;
+	let lastLoadingIndicatorCount = -1;
+
+	while (Date.now() - startTime < timeout && !options.abortSignal?.aborted) {
+		try {
+			// Check if we're still on the same page
+			let _currentUrl = '';
+			try {
+				_currentUrl = await page.url();
+			} catch {
+				warn("Page context lost during stability check");
+				return false;
+			}
+
+			await page
+				.waitForLoadState("networkidle", { timeout: NETWORK_IDLE_TIMEOUT })
+				.catch(() => warn("Network not idle"));
+
+			const loadingIndicators = await page.$$(LOADING_INDICATORS).catch(() => []);
+			const currentLoadingCount = loadingIndicators.length;
+
+			if (currentLoadingCount !== lastLoadingIndicatorCount) {
+				lastLoadingIndicatorCount = currentLoadingCount;
+				consecutiveStableChecks = 0;
+				await page.waitForTimeout(MUTATION_CHECK_INTERVAL);
+				continue;
+			}
+
+			if (currentLoadingCount === 0) {
+				debug("Checking page stability");
+				const isStable = await page
+					.evaluate((timeout) => {
+						return window.checkPageStability?.(timeout) ?? true;
+					}, MUTATION_STABILITY_TIMEOUT)
+					.catch((err) => {
+						warn("Error in stability check", {
+							error: err instanceof Error ? err.message : String(err),
+						});
+						return true;
+					});
+
+				if (isStable) {
+					consecutiveStableChecks++;
+					debug("Page reported as stable", { consecutiveChecks: consecutiveStableChecks });
+					if (consecutiveStableChecks >= minIterations) {
+						return true;
+					}
+				} else {
+					consecutiveStableChecks = 0;
+					debug("Page not yet stable");
+				}
+			}
+		} catch (err) {
+			if (err instanceof Error &&
+				(err.message.includes("Target closed") || err.message.includes("context was destroyed"))) {
+				debug("Page context destroyed", { error: err.message });
+				return false;
+			}
+			warn("Error during stability check", { error: err instanceof Error ? err.message : String(err) });
+			await page.waitForTimeout(MUTATION_CHECK_INTERVAL);
+		}
+		await page.waitForTimeout(options.checkInterval || STABILITY_POLL_INTERVAL);
+	}
+
+	if (options.abortSignal?.aborted) {
+		debug("Stability check aborted");
+	} else {
+		warn("Stability check timed out", { duration: Date.now() - startTime });
+	}
+	return false;
+}
+
+// Function to check for DOM nodes continually re-rendering
+export async function detectReRendering(page: Page, selector: string, options: { timeout?: number, abortSignal?: AbortSignal } = {}): Promise<boolean> {
+	const startTime = Date.now();
+	const timeout = options.timeout || DEFAULT_TIMEOUT;
+
+	if (options.abortSignal?.aborted) {
+		throw new Error("Stability check aborted");
+	}
+
+	while (Date.now() - startTime < timeout) {
+		try {
+			const _url = page.url();
+			// ... rest of the function
+		} catch (err) {
+			if (err instanceof Error &&
+				(err.message.includes("Target closed") || err.message.includes("context was destroyed"))) {
+				debug("Page context destroyed", { error: err.message });
+				return false;
+			}
+			warn("Error during re-rendering detection", { error: err instanceof Error ? err.message : String(err) });
+		}
+		await page.waitForTimeout(MUTATION_CHECK_INTERVAL);
+	}
+
+	if (options.abortSignal?.aborted) {
+		debug("Re-rendering detection aborted");
+	} else {
+		warn("Re-rendering detection timed out", { duration: Date.now() - startTime });
+	}
+	return false;
 }

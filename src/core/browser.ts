@@ -8,7 +8,7 @@ import { getElementInfo } from "../utils/element";
 import { info, error } from "../utils/logging";
 import * as path from "path";
 import * as os from "os";
-import type { BrowserContext, Cookie, BrowserContextOptions } from 'playwright';
+import type { Cookie } from "playwright";
 
 interface StorageState {
 	cookies: Array<{

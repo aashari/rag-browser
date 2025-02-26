@@ -2,7 +2,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { analyzePage } from "../core/browser";
 import { formatAnalysis } from "../utils/output";
-import type { Plan, Action, SelectorMode } from "../types";
+import type { Plan, Action } from "../types";
 import { storeAnalysis } from "./resources";
 import { DEFAULT_TIMEOUT, VISIBLE_MODE_SLOW_MO } from "../config/constants";
 import { MCP_ERROR_CODES, type McpErrorCode } from "../config/errorCodes";
@@ -50,13 +50,6 @@ function validatePlan(planJson: string): { valid: true; plan: Plan } | { valid: 
 	} catch (e) {
 		return { valid: false, error: `Invalid JSON: ${e instanceof Error ? e.message : String(e)}` };
 	}
-}
-
-// Create a single action plan
-function createSingleActionPlan(action: Action): Plan {
-	return {
-		actions: [action],
-	};
 }
 
 interface ExtendedCallToolResult extends CallToolResult {

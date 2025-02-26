@@ -21583,7 +21583,7 @@ class StdioServerTransport {
 }
 
 // src/config/version.ts
-var VERSION = "1.22.2";
+var VERSION = "1.22.3";
 var [MAJOR, MINOR, PATCH] = VERSION.split(".").map(Number);
 var GIT_VERSION = `v${VERSION}`;
 var PACKAGE_NAME = "@aashari/rag-browser";
@@ -21623,51 +21623,55 @@ function createToolDefinitions() {
       name: "action",
       description: `A proactive web automation tool that enables me (the AI) to interact with webpages in a browser for you. I can open sites, wait for page loads or authentication, click buttons, type text, extract data, and more—based on your intent. My goal is to assist with tasks like opening apps, fetching content, or automating actions, even if you don't specify every step.
 
-` + `### When I'll Use This Tool:
-` + `- Automatically when you ask me to 'open' a webpage or app (e.g., 'open Slack,' 'open Twitter').
-` + `- When you request data from a webpage (e.g., 'give me unread messages,' 'list Slack channels').
-` + `- When you imply an action on a site (e.g., 'search Twitter for AI news').
-` + `I'll assume you want me to use this tool unless you explicitly say otherwise (e.g., 'don't use the browser').
+### When I'll Use This Tool:
+- Automatically when you ask me to 'open' a webpage or app (e.g., 'open Slack,' 'open Twitter').
+- When you request data from a webpage (e.g., 'give me unread messages,' 'list Slack channels').
+- When you imply an action on a site (e.g., 'search Twitter for AI news').
+I'll assume you want me to use this tool unless you explicitly say otherwise (e.g., 'don't use the browser').
 
-` + `### What I Can Do:
-` + `- Open a URL and wait for it to load or for you to authenticate (e.g., Slack, Twitter).
-` + `- Extract content (e.g., unread messages, channel lists) in either markdown format (for readable text) or raw HTML (for structured data).
-` + `- Perform interactions like typing text, clicking elements, or pressing keys (e.g., search forms, navigation, form submission).
-` + `- Handle dynamic pages and authentication by waiting for specific elements to appear before proceeding.
-` + `- Process forms, navigate between pages, and extract data across multiple steps.
+### What I Can Do:
+- Open a URL and wait for it to load or for you to authenticate (e.g., Slack, Twitter).
+- Extract content (e.g., unread messages, channel lists) in either markdown format (for readable text) or raw HTML (for structured data).
+- Perform interactions like typing text, clicking elements, or pressing keys (e.g., search forms, navigation, form submission).
+- Handle dynamic pages and authentication by waiting for specific elements to appear before proceeding.
+- Process forms, navigate between pages, and extract data across multiple steps.
 
-` + `### How I'll Respond:
-` + `1. I'll confirm what I'm doing (e.g., 'Let me open Slack and wait for you to log in if needed').
-` + "2. I'll execute the tool with a crafted `plan` (a sequence of actions like wait, extract, click, etc.).\n" + `3. I'll share the results or ask for clarification if stuck (e.g., 'Here are your unread messages' or 'I need more details').
-` + `4. If an action fails (element not found, timeout), I'll provide feedback and suggest alternatives.
+### How I'll Respond:
+1. I'll confirm what I'm doing (e.g., 'Let me open Slack and wait for you to log in if needed').
+2. I'll execute the tool with a crafted \`plan\` (a sequence of actions like wait, extract, click, etc.).
+3. I'll share the results or ask for clarification if stuck (e.g., 'Here are your unread messages' or 'I need more details').
+4. If an action fails (element not found, timeout), I'll provide feedback and suggest alternatives.
 
-` + `### Key Examples:
-` + `1. **Simple page load - User: 'open Slack'**
-` + `   - I say: 'Let me open Slack. If you're not logged in, I'll wait for you.'
-` + '   - I run: `{"url": "https://app.slack.com/client", "plan": {"actions": [{"type": "wait", "elements": [".p-workspace__primary_view_contents, .p-signin_form"], "timeout": -1}]}}`\n' + `   - This opens Slack and waits indefinitely for either the workspace view or login form to appear.
+### Understanding Results:
+When I use this tool, the results will contain:
+- Page analysis: Title, description, and summary of elements (inputs, buttons, links)
+- Action guidance: Recommended patterns for interaction based on page structure
+- Detected elements: Lists of inputs, buttons, and links with their selectors (use these in follow-up actions)
+- Action results: Content extracted from the elements (in HTML or markdown format)
+- Next action suggestions: Example actions with selectors that you can use for follow-up commands
 
-` + `2. **Extract data - User: 'open Slack give me unread messages'**
-` + `   - I say: 'I'll open Slack and fetch your unread messages.'
-` + '   - I run: `{"url": "https://app.slack.com/client", "plan": {"actions": [{"type": "wait", "elements": [".p-channel_sidebar__channel--unread span.p-channel_sidebar__name"], "timeout": -1}, {"type": "print", "elements": [".p-channel_sidebar__channel--unread span.p-channel_sidebar__name"], "format": "markdown"}]}}`\n' + `   - The plan first waits for unread channels to appear, then extracts their names as markdown text.
+For best results, I'll:
+1. First analyze the page structure to understand what's available
+2. Use selectors provided in the results for follow-up actions
+3. Follow recommended action patterns (e.g., wait → interact → wait → extract)
+4. Use appropriate timeouts for dynamic content
+5. Extract content in markdown format for human-readable text or HTML for structured data analysis
 
-` + `3. **Interactive sequence - User: 'search Twitter for AI news'**
-` + `   - I say: 'I'm opening Twitter to search for AI news.'
-` + `   - I run: \`{"url": "https://x.com", "plan": {"actions": [{"type": "wait", "elements": ["input[data-testid='SearchBox_Search_Input']"], "timeout": -1}, {"type": "typing", "element": "input[data-testid='SearchBox_Search_Input']", "value": "AI news"}, {"type": "keyPress", "key": "Enter"}, {"type": "wait", "elements": ["[data-testid='tweet']"], "timeout": 5000}, {"type": "print", "elements": ["[data-testid='tweet']"], "format": "markdown"}]}}\`
-` + `   - The plan first waits for the search box, types the query, presses Enter, waits for results, and finally extracts the tweets.
+### Key Examples:
+1. **Simple page load - User: 'open Slack'**
+   - I say: 'Let me open Slack. If you're not logged in, I'll wait for you.'
+   - I run: \`{"url": "https://app.slack.com/client", "plan": {"actions": [{"type": "wait", "elements": [".p-workspace__primary_view_contents, .p-signin_form"], "timeout": -1}]}}\`
+   - This opens Slack and waits indefinitely for either the workspace view or login form to appear.
 
-` + `### Best Practices:
-` + `- **Always start with a wait action** to ensure the page is loaded before any interaction.
-` + "- For authentication flows, use `timeout: -1` in wait actions to pause until the user has logged in.\n" + `- After any interaction (click/type), include another wait action to ensure the page has responded.
-` + `- Use specific selectors when possible (IDs, data-testid attributes) for better reliability.
-` + `- For forms, wait → type → wait → click (submit) → wait → extract results is a reliable pattern.
-` + `- If extracting content fails, try different selectors or check if authentication is needed.
+2. **Extract data - User: 'open Slack give me unread messages'**
+   - I say: 'I'll open Slack and fetch your unread messages.'
+   - I run: \`{"url": "https://app.slack.com/client", "plan": {"actions": [{"type": "wait", "elements": [".p-channel_sidebar__channel--unread span.p-channel_sidebar__name"], "timeout": -1}, {"type": "print", "elements": [".p-channel_sidebar__channel--unread span.p-channel_sidebar__name"], "format": "markdown"}]}}\`
+   - The plan first waits for unread channels to appear, then extracts their names as markdown text.
 
-` + `### Tips for You:
-` + `- Use natural phrases like 'open Slack,' 'list channels,' or 'search X'—I'll handle the technical details.
-` + `- If I need more specific information (e.g., search terms, login credentials), I'll ask you.
-` + `- To override this tool, say 'don't use the browser' or similar.
-
-` + "Give me a task, and I'll create an appropriate plan to accomplish it!",
+3. **Interactive sequence - User: 'search Twitter for AI news'**
+   - I say: 'I'm opening Twitter to search for AI news.'
+   - I run: \`{"url": "https://x.com", "plan": {"actions": [{"type": "wait", "elements": ["input[data-testid='SearchBox_Search_Input']"], "timeout": -1}, {"type": "typing", "element": "input[data-testid='SearchBox_Search_Input']", "value": "AI news"}, {"type": "keyPress", "key": "Enter"}, {"type": "wait", "elements": ["[data-testid='tweet']"], "timeout": 5000}, {"type": "print", "elements": ["[data-testid='tweet']"], "format": "markdown"}]}}\`
+   - The plan first waits for the search box, types the query, presses Enter, waits for results, and finally extracts the tweets.`,
       version: VERSION,
       compatibility: {
         minVersion: "1.0.0",
@@ -21681,18 +21685,68 @@ function createToolDefinitions() {
             type: "string",
             description: `A JSON string containing an object with an 'actions' array that will be executed in sequence. Format must be: {"actions": [{action1}, {action2}, ...]}. If omitted, I'll just analyze the URL without executing actions. Each action must have a 'type' property and type-specific properties. The action plan executes sequentially until completion or until an action fails.
 
-` + `Actions include:
-` + "- `wait`: Waits for elements (e.g., `elements: ['body', '.login']`). You can specify a `timeout` in milliseconds (default: 30000). Use `timeout: -1` for an indefinite wait, which is useful for authentication flows where user interaction is required.\n" + "- `click`: Clicks an element (e.g., `element: 'button.submit'`). Be sure to wait for the element to appear before clicking.\n" + "- `typing`: Types text (e.g., `element: 'input', value: 'hello'`). Optional `delay` parameter (in ms) controls typing speed.\n" + "- `keyPress`: Presses a key (e.g., `key: 'Enter'`). Specify an `element` to target a specific element, or omit to press the key globally.\n" + "- `print`: Gets content from elements. Use `elements: ['selector1', 'selector2']` to specify target elements. The `format` property can be `'html'` (default) for raw HTML or `'markdown'` for formatted text.\n\n" + `For selectors, use valid CSS selectors (e.g., '#id', '.class'). For best results, prefer:
-` + `- IDs (#login-form) and data attributes ([data-testid='submit'])
-` + `- Specific class names (.login-button) over generic ones (.button)
-` + `- Multiple selectors for fallbacks ('button.submit, [type="submit"]')
+Actions include:
+- \`wait\`: Waits for elements (e.g., \`elements: ['body', '.login']\`). You can specify a \`timeout\` in milliseconds (default: 30000). Use \`timeout: -1\` for an indefinite wait, which is useful for authentication flows where user interaction is required.
+- \`click\`: Clicks an element (e.g., \`element: 'button.submit'\`). Be sure to wait for the element to appear before clicking.
+- \`typing\`: Types text (e.g., \`element: 'input', value: 'hello'\`). Optional \`delay\` parameter (in ms) controls typing speed.
+- \`keyPress\`: Presses a key (e.g., \`key: 'Enter'\`). Specify an \`element\` to target a specific element, or omit to press the key globally.
+- \`print\`: Gets content from elements. Use \`elements: ['selector1', 'selector2']\` to specify target elements. The \`format\` property can be \`'html'\` (default) for raw HTML or \`'markdown'\` for formatted text.
 
-` + `Common patterns:
-` + `- For page load: wait → extract content
-` + `- For interaction: wait → interact (click/type) → wait for result → extract content
-` + `- For authentication: wait with timeout: -1 → extract content after user logs in
+For selectors, use valid CSS selectors (e.g., '#id', '.class'). For best results, prefer:
+- IDs (#login-form) and data attributes ([data-testid='submit'])
+- Specific class names (.login-button) over generic ones (.button)
+- Multiple selectors for fallbacks ('button.submit, [type="submit"]')
 
-` + "If an action fails (element not found, timeout, etc.), execution stops and returns results collected up to that point."
+Common patterns:
+- For page load: wait → extract content
+- For interaction: wait → interact (click/type) → wait for result → extract content
+- For authentication: wait with timeout: -1 → extract content after user logs in
+
+If an action fails (element not found, timeout, etc.), execution stops and returns results collected up to that point.
+
+PRACTICAL EXAMPLES:
+
+1. Login to a site (wait for user authentication):
+   {"actions": [
+     {"type": "wait", "elements": [".login-form, .dashboard"], "timeout": -1},
+     {"type": "print", "elements": ["body"], "format": "markdown"}
+   ]}
+
+2. Fill a search form and get results:
+   {"actions": [
+     {"type": "wait", "elements": ["input[type='search']"], "timeout": 5000},
+     {"type": "typing", "element": "input[type='search']", "value": "search query"},
+     {"type": "keyPress", "key": "Enter"},
+     {"type": "wait", "elements": [".search-results"], "timeout": 10000},
+     {"type": "print", "elements": [".search-results"], "format": "markdown"}
+   ]}
+
+3. Click a button and capture the resulting content:
+   {"actions": [
+     {"type": "wait", "elements": ["button.show-more"], "timeout": 5000},
+     {"type": "click", "element": "button.show-more"},
+     {"type": "wait", "elements": [".additional-content"], "timeout": 5000},
+     {"type": "print", "elements": [".additional-content"], "format": "markdown"}
+   ]}
+
+4. Navigate through pagination:
+   {"actions": [
+     {"type": "wait", "elements": [".pagination a.next"], "timeout": 5000},
+     {"type": "click", "element": ".pagination a.next"},
+     {"type": "wait", "elements": [".content", ".items"], "timeout": 5000},
+     {"type": "print", "elements": [".content, .items"], "format": "markdown"}
+   ]}
+
+5. Extract specific information from a dashboard:
+   {"actions": [
+     {"type": "wait", "elements": [".dashboard"], "timeout": 10000},
+     {"type": "print", "elements": [".user-info", ".stats", ".notifications"], "format": "markdown"}
+   ]}
+
+ERROR HANDLING TIPS:
+- If an element isn't found, try using a more general selector or multiple alternative selectors
+- For pages with dynamic content, increase timeout values (e.g., 10000 or 15000 ms)
+- For complex UIs, break down interactions into smaller steps with appropriate waits between them`
           }
         },
         required: ["url"]
@@ -21971,7 +22025,7 @@ async function waitForPageStability(page, options = {}) {
     }
     let isKnownDynamicApp = false;
     try {
-      const url = page.url();
+      const _url = page.url();
       isKnownDynamicApp = await page.evaluate(() => {
         return window.WebSocket !== undefined && document.querySelector('[data-testid], [role="application"], [role="main"]') !== null;
       });
@@ -22006,9 +22060,9 @@ async function waitForPageStability(page, options = {}) {
       checkCount++;
       debug("Stability check iteration", { iteration: checkCount });
       try {
-        let currentUrl = "";
+        let _currentUrl = "";
         try {
-          currentUrl = await page.url();
+          _currentUrl = await page.url();
         } catch {
           warn("Page context lost during stability check");
           break;
@@ -22146,21 +22200,95 @@ async function executeWaitAction(page, action, options) {
   const isInfiniteWait = action.timeout === -1 || options.timeout === -1;
   const timeout = isInfiniteWait ? 0 : action.timeout || options.timeout || DEFAULT_TIMEOUT;
   let abortController;
+  const initialUrl = page.url();
+  let navigationDetected = false;
+  let finalUrl = initialUrl;
+  const handleNavigation = async (frame) => {
+    if (frame === page.mainFrame()) {
+      const currentUrl = frame.url();
+      if (currentUrl !== initialUrl) {
+        navigationDetected = true;
+        finalUrl = currentUrl;
+        info("Navigation detected during wait", { from: initialUrl, to: currentUrl });
+      }
+    }
+  };
+  page.on("framenavigated", handleNavigation);
   try {
     if (!isInfiniteWait) {
-      await Promise.all(action.elements.map(async (selector) => {
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          if (navigationDetected) {
+            return;
+          }
+          reject(new Error(`Timeout ${timeout}ms exceeded.`));
+        }, timeout);
+      });
+      const navigationPromise = new Promise((resolve) => {
+        const checkInterval = setInterval(() => {
+          if (navigationDetected) {
+            clearInterval(checkInterval);
+            resolve({
+              success: true,
+              message: `Navigation detected to: ${finalUrl}`,
+              warning: `Original elements "${action.elements.join(", ")}" not found; navigation occurred to ${finalUrl}`,
+              data: [{
+                type: "print",
+                selector: "",
+                html: `<p>Navigated to: ${finalUrl}</p>`,
+                format: "html"
+              }]
+            });
+          }
+        }, 500);
+        setTimeout(() => clearInterval(checkInterval), timeout);
+      });
+      const elementPromise = Promise.all(action.elements.map(async (selector) => {
         await page.waitForSelector(selector, { timeout });
+      })).then(() => ({
+        success: true,
+        message: "Elements found"
       }));
+      const result = await Promise.race([
+        elementPromise,
+        navigationPromise,
+        timeoutPromise
+      ]);
+      if (result.success && !(("warning" in result) && result.warning)) {
+        const isStable2 = await waitForActionStability(page, {
+          timeout: isInfiniteWait ? undefined : timeout,
+          abortSignal: abortController?.signal
+        }).catch(() => false);
+        return {
+          success: true,
+          message: "Elements found and stable",
+          warning: !isStable2 ? "Page not fully stable, but elements are present" : undefined
+        };
+      }
+      return result;
     } else {
       abortController = new AbortController;
       const signal = abortController.signal;
       while (!signal.aborted) {
         try {
+          if (navigationDetected) {
+            return {
+              success: true,
+              message: `Navigation detected to: ${finalUrl}`,
+              warning: `Original elements "${action.elements.join(", ")}" not found; navigation occurred to ${finalUrl}`,
+              data: [{
+                type: "print",
+                selector: "",
+                html: `<p>Navigated to: ${finalUrl}</p>`,
+                format: "html"
+              }]
+            };
+          }
           await Promise.all(action.elements.map(async (selector) => {
             await page.waitForSelector(selector, { timeout: 1000 });
           }));
           break;
-        } catch (err) {
+        } catch (_err) {
           if (signal.aborted) {
             throw new Error("Wait operation interrupted");
           }
@@ -22180,6 +22308,19 @@ async function executeWaitAction(page, action, options) {
     };
   } catch (err) {
     error("Error in wait action", { error: err instanceof Error ? err.message : String(err) });
+    if (navigationDetected) {
+      return {
+        success: true,
+        message: `Navigation detected to: ${finalUrl}`,
+        warning: `Original elements "${action.elements.join(", ")}" not found; navigation occurred to ${finalUrl}`,
+        data: [{
+          type: "print",
+          selector: "",
+          html: `<p>Navigated to: ${finalUrl}</p>`,
+          format: "html"
+        }]
+      };
+    }
     if (isInfiniteWait) {
       return {
         success: false,
@@ -22196,11 +22337,12 @@ async function executeWaitAction(page, action, options) {
     if (abortController) {
       abortController.abort();
     }
+    page.removeListener("framenavigated", handleNavigation);
   }
 }
 
 // src/core/handlers/click.ts
-async function executeClickAction(page, action, options) {
+async function executeClickAction(page, action, _options) {
   try {
     await page.click(action.element);
     const isStable = await waitForActionStability(page, { expectNavigation: true }).catch(() => false);
@@ -22305,7 +22447,7 @@ async function captureElementsHtml(page, selectors, format = "html", options) {
     error: "No content captured",
     html: ""
   };
-  let extendedMetadata;
+  let _extendedMetadata;
   try {
     await waitForPageStability(page, options);
     for (const selector of selectors) {
@@ -22380,7 +22522,7 @@ async function captureElementsHtml(page, selectors, format = "html", options) {
           info("Successfully captured content in HTML format");
         }
         delete result.error;
-        extendedMetadata = {
+        _extendedMetadata = {
           elementCount: elements.length,
           truncated,
           originalLength: totalContentLength
@@ -22408,6 +22550,29 @@ async function executePrintAction(page, action, options) {
     }
     const format = printAction.format || "html";
     const result = await captureElementsHtml(page, printAction.elements, format, options);
+    if (result.error && page.url() !== "") {
+      info("Primary selectors not found, attempting fallback content extraction");
+      const fallbackSelectors = [
+        "main",
+        "article",
+        "#content",
+        "#main-content",
+        ".content",
+        "h1",
+        "body"
+      ];
+      for (const selector of fallbackSelectors) {
+        const fallbackResult = await captureElementsHtml(page, [selector], format, options);
+        if (!fallbackResult.error) {
+          return {
+            success: true,
+            message: `Fallback content captured from ${selector} after navigation`,
+            warning: `Original selectors "${printAction.elements.join(", ")}" not found; used fallback selector "${selector}"`,
+            data: [fallbackResult]
+          };
+        }
+      }
+    }
     const elementCount = result.html.includes("Found ") ? result.html.match(/Found (\d+) element/)?.[1] : "";
     return {
       success: !result.error,
@@ -22572,6 +22737,64 @@ function printAnalysis(analysis, format = "pretty", options = {}) {
   }
   output += `
 `;
+  output += `\uD83E\uDD16 AI Action Guidance:
+`;
+  output += "=".repeat(50) + `
+`;
+  output += `This page contains ${analysis.inputs.length} input elements, ${analysis.buttons.length} buttons, and ${analysis.links.length} links.
+`;
+  const hasListStructure = detectListStructure(analysis);
+  const hasFormStructure = detectFormStructure(analysis);
+  const hasNavigationMenu = detectNavigationMenu(analysis);
+  if (hasListStructure || hasFormStructure || hasNavigationMenu) {
+    output += `
+Page Structure Insights:
+`;
+    if (hasListStructure) {
+      output += `- This page contains a list/collection of items (likely repeating elements with similar structure)
+`;
+    }
+    if (hasFormStructure) {
+      output += `- This page contains form(s) with input fields and submission buttons
+`;
+    }
+    if (hasNavigationMenu) {
+      output += `- This page has a navigation menu structure with multiple links
+`;
+    }
+  }
+  output += `
+Possible interactions:
+`;
+  if (analysis.inputs.length > 0 && analysis.buttons.length > 0) {
+    output += `- This page has forms that can be filled (use typing actions on inputs followed by click actions on buttons)
+`;
+  }
+  if (analysis.links.length > 0) {
+    output += `- This page has navigation links (use click actions on links to navigate)
+`;
+  }
+  output += `- Content can be extracted with print actions on specific elements
+`;
+  output += `
+Recommended action pattern examples:
+`;
+  output += `1. To fill a form: wait → type → click → wait for response (expect form submission or validation feedback)
+`;
+  output += `2. To navigate: wait → click link → wait for new page (expect URL change and page content refresh)
+`;
+  output += `3. To extract content: wait → print elements with specific selectors (use container selectors for grouped content)
+`;
+  if (hasListStructure) {
+    output += `4. To interact with list items: wait → identify item by index → click on specific elements within the item
+`;
+  }
+  if (hasFormStructure && analysis.inputs.length > 1) {
+    output += `5. To complete multi-field forms: wait → type in first field → press Tab or click next field → type → ... → submit
+`;
+  }
+  output += `
+`;
   output += `Page Elements Summary:
 `;
   output += "=".repeat(50) + `
@@ -22582,15 +22805,24 @@ function printAnalysis(analysis, format = "pretty", options = {}) {
     if (options.showInputs) {
       output += `[Showing all inputs]
 `;
-      analysis.inputs.forEach((input) => {
-        output += `- ${input.label || "No label"}
+      analysis.inputs.forEach((input, index) => {
+        const inputType = input.type ? `(${input.type})` : "";
+        const placeholder = input.placeholder ? ` placeholder="${input.placeholder}"` : "";
+        const visibility = input.isVisible === false ? " [hidden]" : " [visible]";
+        output += `- ${index + 1}. ${input.label || "No label"} ${inputType}${placeholder}${visibility}
+`;
+        output += `  Selector: ${input.selector}
 `;
       });
     } else {
       output += `[Showing top visible 5 inputs]
 `;
-      analysis.inputs.slice(0, 5).forEach((input) => {
-        output += `- ${input.label || "No label"}
+      analysis.inputs.slice(0, 5).forEach((input, index) => {
+        const inputType = input.type ? `(${input.type})` : "";
+        const placeholder = input.placeholder ? ` placeholder="${input.placeholder}"` : "";
+        output += `- ${index + 1}. ${input.label || "No label"} ${inputType}${placeholder}
+`;
+        output += `  Selector: ${input.selector}
 `;
       });
       if (analysis.inputs.length > 5) {
@@ -22607,15 +22839,19 @@ function printAnalysis(analysis, format = "pretty", options = {}) {
     if (options.showButtons) {
       output += `[Showing all buttons]
 `;
-      analysis.buttons.forEach((button) => {
-        output += `- ${button.text || "No text"}
+      analysis.buttons.forEach((button, index) => {
+        output += `- ${index + 1}. ${button.text || "No text"}
+`;
+        output += `  Selector: ${button.selector}
 `;
       });
     } else {
       output += `[Showing top visible 5 buttons]
 `;
-      analysis.buttons.slice(0, 5).forEach((button) => {
-        output += `- ${button.text || "No text"}
+      analysis.buttons.slice(0, 5).forEach((button, index) => {
+        output += `- ${index + 1}. ${button.text || "No text"}
+`;
+        output += `  Selector: ${button.selector}
 `;
       });
       if (analysis.buttons.length > 5) {
@@ -22632,15 +22868,19 @@ function printAnalysis(analysis, format = "pretty", options = {}) {
     if (options.showLinks) {
       output += `[Showing all links]
 `;
-      analysis.links.forEach((link) => {
-        output += `- ${link.title}
+      analysis.links.forEach((link, index) => {
+        output += `- ${index + 1}. ${link.title} → ${link.url}
+`;
+        output += `  Selector: ${link.selector}
 `;
       });
     } else {
       output += `[Showing top visible 5 links]
 `;
-      analysis.links.slice(0, 5).forEach((link) => {
-        output += `- ${link.title}
+      analysis.links.slice(0, 5).forEach((link, index) => {
+        output += `- ${index + 1}. ${link.title} → ${link.url}
+`;
+        output += `  Selector: ${link.selector}
 `;
       });
       if (analysis.links.length > 5) {
@@ -22676,12 +22916,51 @@ function printAnalysis(analysis, format = "pretty", options = {}) {
           output += formatContent(result.html, result.format) + `
 `;
         }
+        if (result.metadata) {
+          output += `
+Element metadata:
+`;
+          if (result.metadata.tagName)
+            output += `  Tag: ${result.metadata.tagName}
+`;
+          if (result.metadata.id)
+            output += `  ID: ${result.metadata.id}
+`;
+          if (result.metadata.className)
+            output += `  Classes: ${result.metadata.className}
+`;
+        }
       }
     });
     output += "=".repeat(80) + `
 
 `;
   }
+  output += `\uD83D\uDE80 Next Actions Suggestions:
+`;
+  output += "=".repeat(50) + `
+`;
+  if (analysis.inputs.length > 0) {
+    const exampleInput = analysis.inputs[0];
+    output += `- Type into input: {"type": "typing", "element": "${exampleInput.selector}", "value": "your text here"}
+`;
+  }
+  if (analysis.buttons.length > 0) {
+    const exampleButton = analysis.buttons[0];
+    output += `- Click button: {"type": "click", "element": "${exampleButton.selector}"}
+`;
+  }
+  if (analysis.links.length > 0) {
+    const exampleLink = analysis.links[0];
+    output += `- Click link: {"type": "click", "element": "${exampleLink.selector}"}
+`;
+  }
+  output += `- Wait for element: {"type": "wait", "elements": ["selector_here"], "timeout": 5000}
+`;
+  output += `- Extract content: {"type": "print", "elements": ["selector_here"], "format": "markdown"}
+`;
+  output += `
+`;
   return output;
 }
 function printActionStatus(status) {
@@ -22720,17 +22999,96 @@ Action Summary:
 `;
   return output;
 }
+function detectListStructure(analysis) {
+  if (analysis.links.length >= 3) {
+    const selectors = analysis.links.map((link) => link.selector);
+    const commonParentPattern = findCommonSelectorPattern(selectors);
+    if (commonParentPattern)
+      return true;
+  }
+  if (analysis.buttons.length >= 3) {
+    const selectors = analysis.buttons.map((button) => button.selector);
+    const commonParentPattern = findCommonSelectorPattern(selectors);
+    if (commonParentPattern)
+      return true;
+  }
+  const listIndicators = ["list", "item", "collection", "row", "card", "grid"];
+  for (const link of analysis.links) {
+    if (listIndicators.some((indicator) => link.selector.toLowerCase().includes(indicator))) {
+      return true;
+    }
+  }
+  for (const button of analysis.buttons) {
+    if (listIndicators.some((indicator) => button.selector.toLowerCase().includes(indicator))) {
+      return true;
+    }
+  }
+  return false;
+}
+function detectFormStructure(analysis) {
+  if (analysis.inputs.length === 0)
+    return false;
+  const hasSubmitButton = analysis.buttons.some((button) => {
+    const text = button.text.toLowerCase();
+    return text.includes("submit") || text.includes("search") || text.includes("send") || text.includes("save") || text.includes("log in") || text.includes("sign in");
+  });
+  if (hasSubmitButton)
+    return true;
+  const hasFormInputs = analysis.inputs.some((input) => {
+    return input.type === "text" || input.type === "password" || input.type === "email" || input.type === "checkbox" || input.type === "radio";
+  });
+  return hasFormInputs;
+}
+function detectNavigationMenu(analysis) {
+  if (analysis.links.length < 3)
+    return false;
+  const navTerms = ["home", "about", "contact", "menu", "nav", "navigation"];
+  const navLinks = analysis.links.filter((link) => {
+    const title = link.title.toLowerCase();
+    return navTerms.some((term) => title.includes(term));
+  });
+  if (navLinks.length >= 2)
+    return true;
+  const selectors = analysis.links.map((link) => link.selector);
+  const navSelectors = selectors.filter((selector) => {
+    return selector.toLowerCase().includes("nav") || selector.toLowerCase().includes("menu") || selector.toLowerCase().includes("header");
+  });
+  return navSelectors.length >= 2;
+}
+function findCommonSelectorPattern(selectors) {
+  if (selectors.length < 3)
+    return null;
+  const selectorParts = selectors.map((selector) => selector.split(" "));
+  const minDepth = Math.min(...selectorParts.map((parts) => parts.length));
+  for (let depth = minDepth;depth >= 1; depth--) {
+    const partsAtDepth = selectorParts.map((parts) => parts.slice(0, depth).join(" "));
+    const firstPart = partsAtDepth[0];
+    const similarityCount = partsAtDepth.filter((part) => part === firstPart || part.includes("[") && firstPart.includes("[") || part.includes("#") && firstPart.includes("#") || part.includes(".") && firstPart.includes(".")).length;
+    if (similarityCount >= selectors.length * 0.7) {
+      return firstPart;
+    }
+  }
+  return null;
+}
 
 // src/core/actions.ts
 async function executePlan(page, plan, options) {
   const actionStatuses = [];
   const plannedActionResults = [];
   const totalSteps = plan.actions.length;
+  let contextChanges = 0;
+  let lastUrl = page.url();
   for (const [index, action] of plan.actions.entries()) {
     const step = index + 1;
     const symbol = getActionSymbol(action);
     const description = getActionDescription(action);
     const status = { step, totalSteps, action, symbol, description };
+    const currentUrl = page.url();
+    if (currentUrl !== lastUrl) {
+      info(`Page navigation detected: ${lastUrl} → ${currentUrl}`);
+      contextChanges++;
+      lastUrl = currentUrl;
+    }
     status.result = await executeAction(page, action, options);
     info(printActionStatus(status));
     actionStatuses.push(status);
@@ -22741,6 +23099,31 @@ async function executePlan(page, plan, options) {
         html: status.result.data?.[0]?.html || status.result.message,
         format: status.result.data?.[0]?.format
       });
+      if ("warning" in status.result && status.result.warning) {
+        info(`Warning: ${status.result.warning}`);
+      }
+    }
+    if (!status.result?.success && contextChanges > 0) {
+      info(`Action failed after navigation. Attempting to extract content from current page...`);
+      try {
+        const fallbackAction = {
+          type: "print",
+          elements: ["h1", "main", "article", "body"]
+        };
+        const fallbackResult = await executeAction(page, fallbackAction, options);
+        if (fallbackResult.success) {
+          plannedActionResults.push({
+            type: "print",
+            selector: "navigation-fallback",
+            html: fallbackResult.data?.[0]?.html || "Navigation content captured",
+            format: fallbackResult.data?.[0]?.format
+          });
+          info("Successfully captured content after navigation");
+          continue;
+        }
+      } catch (fallbackError) {
+        info(`Failed to capture fallback content: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
+      }
     }
     if (!status.result?.success)
       break;

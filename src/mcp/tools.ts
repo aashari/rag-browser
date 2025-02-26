@@ -1,8 +1,5 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { analyzePage } from "../core/browser.js";
-import { validateUrl } from "../utils/security.js";
 import { VERSION } from "../config/version.js";
-import type { BrowserOptions, PageAnalysis } from "../types";
 
 // Common properties shared between tools
 const commonProperties = {
@@ -33,24 +30,6 @@ const commonProperties = {
 	}
 };
 
-// Type for additional properties in tool schemas
-type SchemaProperties = Record<
-	string,
-	{
-		type: string;
-		description: string;
-		format?: string;
-		enum?: string[];
-	}
->;
-
-// Type for JSON Schema object
-type JsonSchema = {
-	type: "object";
-	properties: Record<string, unknown>;
-	required: string[];
-};
-
 // Enhanced Tool interface with version and compatibility
 interface EnhancedTool extends Tool {
 	version: string;
@@ -60,76 +39,62 @@ interface EnhancedTool extends Tool {
 	};
 }
 
-// Function to create a browser tool schema
-function createBrowserToolSchema(additionalProps: SchemaProperties = {}, required: string[] = ["url"]): JsonSchema {
-	return {
-		type: "object",
-		properties: { ...commonProperties, ...additionalProps },
-		required,
-	};
-}
-
-// Function to create a tool definition
-function createTool(name: string, description: string, additionalProps: SchemaProperties = {}, required: string[] = ["url"]): EnhancedTool {
-	return {
-		name,
-		description,
-		version: "1.16.0",
-		compatibility: {
-			minVersion: "1.0.0",
-			deprecatedFeatures: [], // No deprecated features yet
-		},
-		inputSchema: createBrowserToolSchema(additionalProps, required),
-	};
-}
-
 export function createToolDefinitions(): EnhancedTool[] {
 	return [
 		{
 			name: "action",
 			description:
-				"A proactive web automation tool that enables me (the AI) to interact with webpages in a browser for you. I can open sites, wait for page loads or authentication, click buttons, type text, extract data, and more—based on your intent. My goal is to assist with tasks like opening apps, fetching content, or automating actions, even if you don't specify every step.\n\n" +
-				"### When I'll Use This Tool:\n" +
-				"- Automatically when you ask me to 'open' a webpage or app (e.g., 'open Slack,' 'open Twitter').\n" +
-				"- When you request data from a webpage (e.g., 'give me unread messages,' 'list Slack channels').\n" +
-				"- When you imply an action on a site (e.g., 'search Twitter for AI news').\n" +
-				"I'll assume you want me to use this tool unless you explicitly say otherwise (e.g., 'don't use the browser').\n\n" +
-				"### What I Can Do:\n" +
-				"- Open a URL and wait for it to load or for you to authenticate (e.g., Slack, Twitter).\n" +
-				"- Extract content (e.g., unread messages, channel lists) in either markdown format (for readable text) or raw HTML (for structured data).\n" +
-				"- Perform interactions like typing text, clicking elements, or pressing keys (e.g., search forms, navigation, form submission).\n" +
-				"- Handle dynamic pages and authentication by waiting for specific elements to appear before proceeding.\n" +
-				"- Process forms, navigate between pages, and extract data across multiple steps.\n\n" +
-				"### How I'll Respond:\n" +
-				"1. I'll confirm what I'm doing (e.g., 'Let me open Slack and wait for you to log in if needed').\n" +
-				"2. I'll execute the tool with a crafted `plan` (a sequence of actions like wait, extract, click, etc.).\n" +
-				"3. I'll share the results or ask for clarification if stuck (e.g., 'Here are your unread messages' or 'I need more details').\n" +
-				"4. If an action fails (element not found, timeout), I'll provide feedback and suggest alternatives.\n\n" +
-				"### Key Examples:\n" +
-				"1. **Simple page load - User: 'open Slack'**\n" +
-				"   - I say: 'Let me open Slack. If you're not logged in, I'll wait for you.'\n" +
-				"   - I run: `{\"url\": \"https://app.slack.com/client\", \"plan\": {\"actions\": [{\"type\": \"wait\", \"elements\": [\".p-workspace__primary_view_contents, .p-signin_form\"], \"timeout\": -1}]}}`\n" +
-				"   - This opens Slack and waits indefinitely for either the workspace view or login form to appear.\n\n" +
-				"2. **Extract data - User: 'open Slack give me unread messages'**\n" +
-				"   - I say: 'I'll open Slack and fetch your unread messages.'\n" +
-				"   - I run: `{\"url\": \"https://app.slack.com/client\", \"plan\": {\"actions\": [{\"type\": \"wait\", \"elements\": [\".p-channel_sidebar__channel--unread span.p-channel_sidebar__name\"], \"timeout\": -1}, {\"type\": \"print\", \"elements\": [\".p-channel_sidebar__channel--unread span.p-channel_sidebar__name\"], \"format\": \"markdown\"}]}}`\n" +
-				"   - The plan first waits for unread channels to appear, then extracts their names as markdown text.\n\n" +
-				"3. **Interactive sequence - User: 'search Twitter for AI news'**\n" +
-				"   - I say: 'I'm opening Twitter to search for AI news.'\n" +
-				"   - I run: `{\"url\": \"https://x.com\", \"plan\": {\"actions\": [{\"type\": \"wait\", \"elements\": [\"input[data-testid='SearchBox_Search_Input']\"], \"timeout\": -1}, {\"type\": \"typing\", \"element\": \"input[data-testid='SearchBox_Search_Input']\", \"value\": \"AI news\"}, {\"type\": \"keyPress\", \"key\": \"Enter\"}, {\"type\": \"wait\", \"elements\": [\"[data-testid='tweet']\"], \"timeout\": 5000}, {\"type\": \"print\", \"elements\": [\"[data-testid='tweet']\"], \"format\": \"markdown\"}]}}`\n" +
-				"   - The plan first waits for the search box, types the query, presses Enter, waits for results, and finally extracts the tweets.\n\n" +
-				"### Best Practices:\n" +
-				"- **Always start with a wait action** to ensure the page is loaded before any interaction.\n" +
-				"- For authentication flows, use `timeout: -1` in wait actions to pause until the user has logged in.\n" +
-				"- After any interaction (click/type), include another wait action to ensure the page has responded.\n" +
-				"- Use specific selectors when possible (IDs, data-testid attributes) for better reliability.\n" +
-				"- For forms, wait → type → wait → click (submit) → wait → extract results is a reliable pattern.\n" +
-				"- If extracting content fails, try different selectors or check if authentication is needed.\n\n" +
-				"### Tips for You:\n" +
-				"- Use natural phrases like 'open Slack,' 'list channels,' or 'search X'—I'll handle the technical details.\n" +
-				"- If I need more specific information (e.g., search terms, login credentials), I'll ask you.\n" +
-				"- To override this tool, say 'don't use the browser' or similar.\n\n" +
-				"Give me a task, and I'll create an appropriate plan to accomplish it!",
+				`A proactive web automation tool that enables me (the AI) to interact with webpages in a browser for you. I can open sites, wait for page loads or authentication, click buttons, type text, extract data, and more—based on your intent. My goal is to assist with tasks like opening apps, fetching content, or automating actions, even if you don't specify every step.
+
+### When I'll Use This Tool:
+- Automatically when you ask me to 'open' a webpage or app (e.g., 'open Slack,' 'open Twitter').
+- When you request data from a webpage (e.g., 'give me unread messages,' 'list Slack channels').
+- When you imply an action on a site (e.g., 'search Twitter for AI news').
+I'll assume you want me to use this tool unless you explicitly say otherwise (e.g., 'don't use the browser').
+
+### What I Can Do:
+- Open a URL and wait for it to load or for you to authenticate (e.g., Slack, Twitter).
+- Extract content (e.g., unread messages, channel lists) in either markdown format (for readable text) or raw HTML (for structured data).
+- Perform interactions like typing text, clicking elements, or pressing keys (e.g., search forms, navigation, form submission).
+- Handle dynamic pages and authentication by waiting for specific elements to appear before proceeding.
+- Process forms, navigate between pages, and extract data across multiple steps.
+
+### How I'll Respond:
+1. I'll confirm what I'm doing (e.g., 'Let me open Slack and wait for you to log in if needed').
+2. I'll execute the tool with a crafted \`plan\` (a sequence of actions like wait, extract, click, etc.).
+3. I'll share the results or ask for clarification if stuck (e.g., 'Here are your unread messages' or 'I need more details').
+4. If an action fails (element not found, timeout), I'll provide feedback and suggest alternatives.
+
+### Understanding Results:
+When I use this tool, the results will contain:
+- Page analysis: Title, description, and summary of elements (inputs, buttons, links)
+- Action guidance: Recommended patterns for interaction based on page structure
+- Detected elements: Lists of inputs, buttons, and links with their selectors (use these in follow-up actions)
+- Action results: Content extracted from the elements (in HTML or markdown format)
+- Next action suggestions: Example actions with selectors that you can use for follow-up commands
+
+For best results, I'll:
+1. First analyze the page structure to understand what's available
+2. Use selectors provided in the results for follow-up actions
+3. Follow recommended action patterns (e.g., wait → interact → wait → extract)
+4. Use appropriate timeouts for dynamic content
+5. Extract content in markdown format for human-readable text or HTML for structured data analysis
+
+### Key Examples:
+1. **Simple page load - User: 'open Slack'**
+   - I say: 'Let me open Slack. If you're not logged in, I'll wait for you.'
+   - I run: \`{"url": "https://app.slack.com/client", "plan": {"actions": [{"type": "wait", "elements": [".p-workspace__primary_view_contents, .p-signin_form"], "timeout": -1}]}}\`
+   - This opens Slack and waits indefinitely for either the workspace view or login form to appear.
+
+2. **Extract data - User: 'open Slack give me unread messages'**
+   - I say: 'I'll open Slack and fetch your unread messages.'
+   - I run: \`{"url": "https://app.slack.com/client", "plan": {"actions": [{"type": "wait", "elements": [".p-channel_sidebar__channel--unread span.p-channel_sidebar__name"], "timeout": -1}, {"type": "print", "elements": [".p-channel_sidebar__channel--unread span.p-channel_sidebar__name"], "format": "markdown"}]}}\`
+   - The plan first waits for unread channels to appear, then extracts their names as markdown text.
+
+3. **Interactive sequence - User: 'search Twitter for AI news'**
+   - I say: 'I'm opening Twitter to search for AI news.'
+   - I run: \`{"url": "https://x.com", "plan": {"actions": [{"type": "wait", "elements": ["input[data-testid='SearchBox_Search_Input']"], "timeout": -1}, {"type": "typing", "element": "input[data-testid='SearchBox_Search_Input']", "value": "AI news"}, {"type": "keyPress", "key": "Enter"}, {"type": "wait", "elements": ["[data-testid='tweet']"], "timeout": 5000}, {"type": "print", "elements": ["[data-testid='tweet']"], "format": "markdown"}]}}\`
+   - The plan first waits for the search box, types the query, presses Enter, waits for results, and finally extracts the tweets.`,
 			version: VERSION,
 			compatibility: {
 				minVersion: "1.0.0",
@@ -142,22 +107,70 @@ export function createToolDefinitions(): EnhancedTool[] {
 					plan: {
 						type: "string",
 						description:
-							"A JSON string containing an object with an 'actions' array that will be executed in sequence. Format must be: {\"actions\": [{action1}, {action2}, ...]}. If omitted, I'll just analyze the URL without executing actions. Each action must have a 'type' property and type-specific properties. The action plan executes sequentially until completion or until an action fails.\n\n" +
-							"Actions include:\n" +
-							"- `wait`: Waits for elements (e.g., `elements: ['body', '.login']`). You can specify a `timeout` in milliseconds (default: 30000). Use `timeout: -1` for an indefinite wait, which is useful for authentication flows where user interaction is required.\n" +
-							"- `click`: Clicks an element (e.g., `element: 'button.submit'`). Be sure to wait for the element to appear before clicking.\n" +
-							"- `typing`: Types text (e.g., `element: 'input', value: 'hello'`). Optional `delay` parameter (in ms) controls typing speed.\n" +
-							"- `keyPress`: Presses a key (e.g., `key: 'Enter'`). Specify an `element` to target a specific element, or omit to press the key globally.\n" +
-							"- `print`: Gets content from elements. Use `elements: ['selector1', 'selector2']` to specify target elements. The `format` property can be `'html'` (default) for raw HTML or `'markdown'` for formatted text.\n\n" +
-							"For selectors, use valid CSS selectors (e.g., '#id', '.class'). For best results, prefer:\n" +
-							"- IDs (#login-form) and data attributes ([data-testid='submit'])\n" +
-							"- Specific class names (.login-button) over generic ones (.button)\n" +
-							"- Multiple selectors for fallbacks ('button.submit, [type=\"submit\"]')\n\n" +
-							"Common patterns:\n" +
-							"- For page load: wait → extract content\n" +
-							"- For interaction: wait → interact (click/type) → wait for result → extract content\n" +
-							"- For authentication: wait with timeout: -1 → extract content after user logs in\n\n" +
-							"If an action fails (element not found, timeout, etc.), execution stops and returns results collected up to that point."
+							`A JSON string containing an object with an 'actions' array that will be executed in sequence. Format must be: {"actions": [{action1}, {action2}, ...]}. If omitted, I'll just analyze the URL without executing actions. Each action must have a 'type' property and type-specific properties. The action plan executes sequentially until completion or until an action fails.
+
+Actions include:
+- \`wait\`: Waits for elements (e.g., \`elements: ['body', '.login']\`). You can specify a \`timeout\` in milliseconds (default: 30000). Use \`timeout: -1\` for an indefinite wait, which is useful for authentication flows where user interaction is required.
+- \`click\`: Clicks an element (e.g., \`element: 'button.submit'\`). Be sure to wait for the element to appear before clicking.
+- \`typing\`: Types text (e.g., \`element: 'input', value: 'hello'\`). Optional \`delay\` parameter (in ms) controls typing speed.
+- \`keyPress\`: Presses a key (e.g., \`key: 'Enter'\`). Specify an \`element\` to target a specific element, or omit to press the key globally.
+- \`print\`: Gets content from elements. Use \`elements: ['selector1', 'selector2']\` to specify target elements. The \`format\` property can be \`'html'\` (default) for raw HTML or \`'markdown'\` for formatted text.
+
+For selectors, use valid CSS selectors (e.g., '#id', '.class'). For best results, prefer:
+- IDs (#login-form) and data attributes ([data-testid='submit'])
+- Specific class names (.login-button) over generic ones (.button)
+- Multiple selectors for fallbacks ('button.submit, [type="submit"]')
+
+Common patterns:
+- For page load: wait → extract content
+- For interaction: wait → interact (click/type) → wait for result → extract content
+- For authentication: wait with timeout: -1 → extract content after user logs in
+
+If an action fails (element not found, timeout, etc.), execution stops and returns results collected up to that point.
+
+PRACTICAL EXAMPLES:
+
+1. Login to a site (wait for user authentication):
+   {"actions": [
+     {"type": "wait", "elements": [".login-form, .dashboard"], "timeout": -1},
+     {"type": "print", "elements": ["body"], "format": "markdown"}
+   ]}
+
+2. Fill a search form and get results:
+   {"actions": [
+     {"type": "wait", "elements": ["input[type='search']"], "timeout": 5000},
+     {"type": "typing", "element": "input[type='search']", "value": "search query"},
+     {"type": "keyPress", "key": "Enter"},
+     {"type": "wait", "elements": [".search-results"], "timeout": 10000},
+     {"type": "print", "elements": [".search-results"], "format": "markdown"}
+   ]}
+
+3. Click a button and capture the resulting content:
+   {"actions": [
+     {"type": "wait", "elements": ["button.show-more"], "timeout": 5000},
+     {"type": "click", "element": "button.show-more"},
+     {"type": "wait", "elements": [".additional-content"], "timeout": 5000},
+     {"type": "print", "elements": [".additional-content"], "format": "markdown"}
+   ]}
+
+4. Navigate through pagination:
+   {"actions": [
+     {"type": "wait", "elements": [".pagination a.next"], "timeout": 5000},
+     {"type": "click", "element": ".pagination a.next"},
+     {"type": "wait", "elements": [".content", ".items"], "timeout": 5000},
+     {"type": "print", "elements": [".content, .items"], "format": "markdown"}
+   ]}
+
+5. Extract specific information from a dashboard:
+   {"actions": [
+     {"type": "wait", "elements": [".dashboard"], "timeout": 10000},
+     {"type": "print", "elements": [".user-info", ".stats", ".notifications"], "format": "markdown"}
+   ]}
+
+ERROR HANDLING TIPS:
+- If an element isn't found, try using a more general selector or multiple alternative selectors
+- For pages with dynamic content, increase timeout values (e.g., 10000 or 15000 ms)
+- For complex UIs, break down interactions into smaller steps with appropriate waits between them`
 					}
 				},
 				required: ["url"]

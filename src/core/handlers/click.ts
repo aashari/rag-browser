@@ -6,7 +6,7 @@ import { error } from "../../utils/logging";
 export async function executeClickAction(
     page: Page,
     action: ClickAction,
-    options: BrowserOptions
+    _options: BrowserOptions
 ): Promise<ActionResult> {
     try {
         await page.click(action.element);

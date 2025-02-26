@@ -33,7 +33,7 @@ export async function captureElementsHtml(
 	};
 
 	// Track additional metadata that's not part of the PlannedActionResult interface
-	let extendedMetadata: ExtendedMetadata | undefined;
+	let _extendedMetadata: ExtendedMetadata | undefined;
 
 	try {
 		// Wait for stability before capturing content
@@ -152,7 +152,7 @@ export async function captureElementsHtml(
 				delete result.error;
 				
 				// Store extended metadata for use in the action result message
-				extendedMetadata = {
+				_extendedMetadata = {
 					elementCount: elements.length,
 					truncated,
 					originalLength: totalContentLength
@@ -195,6 +195,31 @@ export async function executePrintAction(
 		
 		const format = printAction.format || "html";
 		const result = await captureElementsHtml(page, printAction.elements, format, options);
+		
+		// If no content found with specified selectors, try fallback selectors
+		if (result.error && page.url() !== '') {
+			info('Primary selectors not found, attempting fallback content extraction');
+			
+			// Common content container selectors in order of specificity
+			const fallbackSelectors = [
+				'main', 'article', '#content', '#main-content', '.content', 
+				'h1', // At minimum, grab the headline
+				'body' // Last resort, grab everything
+			];
+			
+			// Try each fallback selector
+			for (const selector of fallbackSelectors) {
+				const fallbackResult = await captureElementsHtml(page, [selector], format, options);
+				if (!fallbackResult.error) {
+					return {
+						success: true,
+						message: `Fallback content captured from ${selector} after navigation`,
+						warning: `Original selectors "${printAction.elements.join(', ')}" not found; used fallback selector "${selector}"`,
+						data: [fallbackResult]
+					};
+				}
+			}
+		}
 		
 		// Get element count from the result for the success message
 		const elementCount = result.html.includes('Found ') ? 
