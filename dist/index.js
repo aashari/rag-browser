@@ -21583,7 +21583,7 @@ class StdioServerTransport {
 }
 
 // src/config/version.ts
-var VERSION = "1.22.4";
+var VERSION = "1.23.0";
 var [MAJOR, MINOR, PATCH] = VERSION.split(".").map(Number);
 var GIT_VERSION = `v${VERSION}`;
 var PACKAGE_NAME = "@aashari/rag-browser";
@@ -21642,6 +21642,13 @@ I'll assume you want me to use this tool unless you explicitly say otherwise (e.
 3. I'll share the results or ask for clarification if stuck (e.g., 'Here are your unread messages' or 'I need more details').
 4. If an action fails (element not found, timeout), I'll provide feedback and suggest alternatives.
 
+### Element Selection Strategy:
+- Always PROACTIVELY check for what elements are actually available on the page
+- When specific selectors fail, I should automatically try broader selectors to understand the page context
+- Use a progression from specific to broad: exact element → container → main content → body
+- If waiting for specific elements fails, I'll get broader page content to analyze why (e.g., login wall, error page)
+- For initial exploration, try 'body' or common content containers ('main', 'article', '.content') to see what's available
+
 ### Understanding Results:
 When I use this tool, the results will contain:
 - Page analysis: Title, description, and summary of elements (inputs, buttons, links)
@@ -21686,23 +21693,33 @@ For best results, I'll:
             description: `A JSON string containing an object with an 'actions' array that will be executed in sequence. Format must be: {"actions": [{action1}, {action2}, ...]}. If omitted, I'll just analyze the URL without executing actions. Each action must have a 'type' property and type-specific properties. The action plan executes sequentially until completion or until an action fails.
 
 Actions include:
-- \`wait\`: Waits for elements (e.g., \`elements: ['body', '.login']\`). You can specify a \`timeout\` in milliseconds (default: 30000). Use \`timeout: -1\` for an indefinite wait, which is useful for authentication flows where user interaction is required.
+- \`wait\`: Waits for elements (e.g., \`elements: ['body', '.login']\`). You can specify a \`timeout\` in milliseconds (default: 30000). Use \`timeout: -1\` for an indefinite wait, which is useful for authentication flows where user interaction is required. If elements aren't found, I should try broader selectors (e.g., 'main', 'article', 'body') to understand the context.
 - \`click\`: Clicks an element (e.g., \`element: 'button.submit'\`). Be sure to wait for the element to appear before clicking.
 - \`typing\`: Types text (e.g., \`element: 'input', value: 'hello'\`). Optional \`delay\` parameter (in ms) controls typing speed.
 - \`keyPress\`: Presses a key (e.g., \`key: 'Enter'\`). Specify an \`element\` to target a specific element, or omit to press the key globally.
-- \`print\`: Gets content from elements. Use \`elements: ['selector1', 'selector2']\` to specify target elements. The \`format\` property can be \`'html'\` (default) for raw HTML or \`'markdown'\` for formatted text.
+- \`print\`: Gets content from elements. Use \`elements: ['selector1', 'selector2']\` to specify target elements. The \`format\` property can be \`'html'\` (default) for raw HTML or \`'markdown'\` for formatted text. Always prioritize markdown format for better readability. If specific selectors fail, I should try broader ones like '.content', 'main', or 'body' to get context.
 
 For selectors, use valid CSS selectors (e.g., '#id', '.class'). For best results, prefer:
 - IDs (#login-form) and data attributes ([data-testid='submit'])
 - Specific class names (.login-button) over generic ones (.button)
 - Multiple selectors for fallbacks ('button.submit, [type="submit"]')
+- Always be ready to try broader selectors (main, article, body) if specific ones fail
 
 Common patterns:
 - For page load: wait → extract content
 - For interaction: wait → interact (click/type) → wait for result → extract content
 - For authentication: wait with timeout: -1 → extract content after user logs in
+- For exploring unknown pages: wait for 'body' → print 'body' in markdown format → analyze structure
 
-If an action fails (element not found, timeout, etc.), execution stops and returns results collected up to that point.
+HANDLING AUTHENTICATION WALLS:
+When encountering authentication walls or unexpected content:
+1. If waiting for specific elements fails (like tweets or dashboard items), the tool will automatically extract broader page content to show what's actually displayed
+2. Check the returned page title, URL, and structure - these will often indicate a login page or other block
+3. If you see a login form (inputs and buttons), inform the user that authentication is required
+4. For sites requiring login, use the infinite wait approach: {"actions": [{"type": "wait", "elements": [".authenticated-content, .login-form"], "timeout": -1}]}
+5. Let users know they should manually log in when the browser opens
+
+If an action fails (element not found, timeout, etc.), execution stops and returns results collected up to that point. When wait or print actions fail, broader page content will be automatically captured to help understand the context.
 
 PRACTICAL EXAMPLES:
 
@@ -21746,7 +21763,8 @@ PRACTICAL EXAMPLES:
 ERROR HANDLING TIPS:
 - If an element isn't found, try using a more general selector or multiple alternative selectors
 - For pages with dynamic content, increase timeout values (e.g., 10000 or 15000 ms)
-- For complex UIs, break down interactions into smaller steps with appropriate waits between them`
+- For complex UIs, break down interactions into smaller steps with appropriate waits between them
+- When authentication is required, let users know they'll need to log in manually when the browser opens`
           }
         },
         required: ["url"]
@@ -22195,6 +22213,390 @@ async function waitForActionStability(page, options = {}) {
   return true;
 }
 
+// src/utils/markdown.ts
+var import_turndown = __toESM(require_turndown_cjs(), 1);
+var turndownService = new import_turndown.default({
+  headingStyle: "atx",
+  codeBlockStyle: "fenced",
+  bulletListMarker: "-",
+  blankReplacement: function(content, node) {
+    const blockElements = new Set([
+      "DIV",
+      "P",
+      "BLOCKQUOTE",
+      "LI",
+      "TR",
+      "TH",
+      "TD",
+      "H1",
+      "H2",
+      "H3",
+      "H4",
+      "H5",
+      "H6",
+      "HR",
+      "UL",
+      "OL",
+      "DL",
+      "PRE",
+      "ARTICLE",
+      "SECTION"
+    ]);
+    return blockElements.has(node.nodeName) ? `
+
+` : " ";
+  },
+  br: `
+`,
+  listItem: function(content, node) {
+    const listType = node.parentNode?.nodeName.toLowerCase();
+    const bullet = listType === "ol" ? "1. " : "- ";
+    return bullet + content.trim() + `
+`;
+  }
+});
+turndownService.addRule("images", {
+  filter: "img",
+  replacement: function(content, node) {
+    const element = node;
+    const alt = element.getAttribute("alt")?.trim() || "";
+    const src = element.getAttribute("src")?.trim();
+    if (element.closest("a")) {
+      return alt ? `${alt} ` : "";
+    }
+    return src ? `![${alt}](${src})` : alt ? `${alt} ` : "";
+  }
+});
+function extractBetterLinkText(element) {
+  const heading = element.querySelector("h1, h2, h3, h4, h5, h6");
+  if (heading && heading.textContent?.trim()) {
+    return heading.textContent.trim();
+  }
+  const strong = element.querySelector("strong, b, em");
+  if (strong && strong.textContent?.trim()) {
+    return strong.textContent.trim();
+  }
+  const paragraph = element.querySelector("p");
+  if (paragraph && paragraph.textContent?.trim()) {
+    return paragraph.textContent.trim();
+  }
+  const textContent = element.textContent || "";
+  const firstLine = textContent.split(`
+`).filter((line) => line.trim().length > 0)[0];
+  if (firstLine && firstLine.trim()) {
+    return firstLine.trim();
+  }
+  const limitedText = textContent.trim().substring(0, 60);
+  return limitedText + (limitedText.length < textContent.trim().length ? "..." : "");
+}
+turndownService.addRule("complexNestedLinks", {
+  filter: function(node) {
+    if (node.nodeName !== "A")
+      return false;
+    const element = node;
+    const hasImages = element.querySelectorAll("img").length > 0;
+    const hasBlocks = element.querySelectorAll("div, p, h1, h2, h3, h4, h5, h6").length > 0;
+    const hasManyNewlines = (element.textContent?.split(`
+`).filter((l) => l.trim()).length || 0) > 3;
+    return hasImages || hasBlocks || hasManyNewlines;
+  },
+  replacement: function(content, node) {
+    const element = node;
+    const href = element.getAttribute("href");
+    if (!href) {
+      const firstLine = (content || "").split(`
+`)[0].trim();
+      return firstLine || content;
+    }
+    const title = extractBetterLinkText(element);
+    return `[${title || "Link"}](${href})`;
+  }
+});
+turndownService.addRule("simpleLinks", {
+  filter: function(node) {
+    if (node.nodeName !== "A")
+      return false;
+    const element = node;
+    const hasImages = element.querySelectorAll("img").length > 0;
+    const hasBlocks = element.querySelectorAll("div, p, h1, h2, h3, h4, h5, h6").length > 0;
+    const hasManyNewlines = (element.textContent?.split(`
+`).filter((l) => l.trim()).length || 0) > 3;
+    return !(hasImages || hasBlocks || hasManyNewlines);
+  },
+  replacement: function(content, node) {
+    const element = node;
+    const href = element.getAttribute("href");
+    if (!href)
+      return content;
+    const cleanContent = content.replace(/\s+/g, " ").trim();
+    return `[${cleanContent}](${href})`;
+  }
+});
+turndownService.addRule("links", {
+  filter: "a",
+  replacement: function(content, node) {
+    const element = node;
+    const href = element.getAttribute("href")?.trim();
+    if (!href)
+      return content;
+    let linkText = content.replace(/\n+/g, " ").replace(/\s+/g, " ").replace(/!\[([^\]]+)\]\([^)]+\)/g, "$1").trim();
+    if (!linkText) {
+      linkText = extractBetterLinkText(element);
+    }
+    const finalText = linkText || href;
+    return ` [${finalText}](${href}) `;
+  }
+});
+turndownService.addRule("horizontalRule", {
+  filter: "hr",
+  replacement: function() {
+    return `
+
+---
+
+`;
+  }
+});
+function cleanHtmlWithRegex(html) {
+  html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "").replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, "");
+  const links = new Map;
+  let linkCounter = 0;
+  html = html.replace(/<a\s+([^>]*)>([\s\S]*?)<\/a>/gi, (match, attrs, content) => {
+    const hrefMatch = attrs.match(/href="([^"]*)"/i);
+    if (!hrefMatch)
+      return content.trim();
+    const href = hrefMatch[1].trim().replace(/\s+/g, "%20").replace(/\n/g, "").replace(/\\/g, "/").replace(/\s*---\s*/g, "--").replace(/\s+/g, "-");
+    let cleanContent = content.replace(/<hr[^>]*>/gi, "").replace(/\n+/g, " ").replace(/\s+/g, " ").replace(/<img[^>]*alt="([^"]*)"[^>]*>/gi, "$1 ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (!cleanContent) {
+      cleanContent = href;
+    }
+    const placeholder = `__LINK_${linkCounter}__`;
+    links.set(placeholder, { href, text: cleanContent });
+    linkCounter++;
+    return placeholder;
+  });
+  html = html.replace(/<hr[^>]*>/gi, `
+---
+`).replace(/\n{3,}/g, `
+
+`).replace(/\s+/g, " ").trim();
+  links.forEach((link, placeholder) => {
+    const linkText = link.text.replace(/\s+/g, " ").trim();
+    const linkHref = link.href.trim();
+    html = html.replace(placeholder, `[${linkText}](${linkHref})`);
+  });
+  html = html.replace(/\]\s*\n+\s*\(/g, "](").replace(/\[([^\]]+?)\s*\n+\s*([^\]]*?)\]/g, "[$1 $2]").replace(/\(([^)]+?)\s*\n+\s*([^)]*?)\)/g, "($1$2)").replace(/([^\n])\n?---\n?([^\n])/g, `$1
+
+---
+
+$2`).replace(/^---\n?([^\n])/gm, `---
+
+$1`).replace(/([^\n])\n?---$/g, `$1
+
+---`).replace(/\n---\n+---\n/g, `
+---
+`).replace(/(\n---\n)\n+/g, `
+---
+`).replace(/\n+(\n---\n)/g, `
+---
+`).replace(/\n{3,}/g, `
+
+`).replace(/\\\[/g, "[").replace(/\\\]/g, "]").replace(/\\\(/g, "(").replace(/\\\)/g, ")").trim();
+  return html;
+}
+var convertToMarkdown = (html, selector) => {
+  try {
+    const cleanedHtml = cleanHtmlWithRegex(html);
+    let markdown = turndownService.turndown(cleanedHtml);
+    markdown = markdown.replace(/([^\n])(#{1,6}\s)/g, `$1
+
+$2`).replace(/(#{1,6}[^\n]+)\n(?!$)/g, `$1
+
+`).replace(/\[([^\]]+?)\s*\n+\s*([^\]]*?)\]/g, "[$1 $2]").replace(/\(([^)]+?)\s*\n+\s*([^)]*?)\)/g, "($1$2)").replace(/\]\s*\n+\s*\(/g, "](").replace(/\n?---\n?/g, `
+
+---
+
+`).replace(/(\n---\n)\n+/g, `
+---
+`).replace(/\n+(\n---\n)/g, `
+---
+`).replace(/(\]\([^)]+\))\s*\n*---/g, `$1
+
+---`).replace(/---\n*\s*(\[[^\]]+\])/g, `---
+
+$1`).replace(/\]\(([^)]+?)\s+([^)]+?)\)/g, "]($1$2)").replace(/\]\(([^)]+?)---([^)]+?)\)/g, "]($1--$2)").replace(/\n{3,}/g, `
+
+`).trim();
+    info("Successfully converted HTML to Markdown:", { selector, length: markdown.length });
+    return {
+      selector,
+      html: markdown,
+      type: "print",
+      format: "markdown"
+    };
+  } catch (err) {
+    error("Error converting to markdown:", { error: err instanceof Error ? err.message : String(err) });
+    return {
+      selector,
+      html,
+      type: "print",
+      format: "html",
+      error: err instanceof Error ? err.message : "Unknown error during markdown conversion"
+    };
+  }
+};
+
+// src/core/handlers/print.ts
+var MAX_CAPTURED_CONTENT_LENGTH = 50000;
+var MIN_ELEMENTS_TO_CAPTURE = 5;
+async function captureElementsHtml(page, selectors, format = "html", options) {
+  const result = {
+    selector: selectors.join(", "),
+    type: "print",
+    format,
+    error: "No content captured",
+    html: ""
+  };
+  let _extendedMetadata;
+  try {
+    await waitForPageStability(page, options);
+    for (const selector of selectors) {
+      info("Searching for elements:", { selector });
+      const elements = await page.$$(selector);
+      if (elements.length > 0) {
+        const htmlContents = [];
+        let totalContentLength = 0;
+        let truncated = false;
+        const headerText = `Found ${elements.length} element${elements.length > 1 ? "s" : ""} matching "${selector}"`;
+        htmlContents.push(`<h2>${headerText}</h2>`);
+        for (const element of elements) {
+          const html = await page.evaluate((el) => {
+            const clone = el.cloneNode(true);
+            const scripts = clone.querySelectorAll("script");
+            scripts.forEach((script) => script.remove());
+            const styles = clone.querySelectorAll("style");
+            styles.forEach((style) => style.remove());
+            const emptyDivs = clone.querySelectorAll("div:empty");
+            emptyDivs.forEach((div) => div.remove());
+            return clone.outerHTML;
+          }, element);
+          if (totalContentLength + html.length > MAX_CAPTURED_CONTENT_LENGTH && htmlContents.length > MIN_ELEMENTS_TO_CAPTURE * 3) {
+            truncated = true;
+            break;
+          }
+          const elementMetadata = await page.evaluate((el) => {
+            return {
+              tagName: el.tagName.toLowerCase(),
+              id: el.id || "",
+              className: Array.from(el.classList).join(" ") || "",
+              attributes: Array.from(el.attributes).map((attr) => `${attr.name}="${attr.value}"`).join(" ")
+            };
+          }, element);
+          const metadataText = `<!-- Element: ${elementMetadata.tagName}${elementMetadata.id ? ` id="${elementMetadata.id}"` : ""}${elementMetadata.className ? ` class="${elementMetadata.className}"` : ""} -->`;
+          htmlContents.push(metadataText);
+          if (!result.metadata) {
+            result.metadata = elementMetadata;
+          }
+          htmlContents.push(html);
+          if (elements.length > 1) {
+            htmlContents.push('<hr class="element-separator" style="margin: 20px 0;"/>');
+          }
+          totalContentLength += html.length;
+        }
+        let combinedHtml = htmlContents.join(`
+
+`);
+        if (truncated || combinedHtml.length > MAX_CAPTURED_CONTENT_LENGTH) {
+          combinedHtml = combinedHtml.substring(0, MAX_CAPTURED_CONTENT_LENGTH);
+          truncated = true;
+        }
+        if (truncated) {
+          combinedHtml += `
+
+**Note: Content was truncated to ${MAX_CAPTURED_CONTENT_LENGTH} characters. Some elements may have been omitted.**`;
+        }
+        if (format === "markdown") {
+          try {
+            const markdownResult = convertToMarkdown(combinedHtml, selector);
+            result.html = markdownResult.html;
+            result.format = "markdown";
+            info("Successfully converted content to markdown");
+          } catch (conversionError) {
+            result.html = combinedHtml;
+            result.format = "html";
+            info("Error converting to markdown, falling back to HTML:", { error: conversionError });
+          }
+        } else {
+          result.html = combinedHtml;
+          result.format = "html";
+          info("Successfully captured content in HTML format");
+        }
+        delete result.error;
+        _extendedMetadata = {
+          elementCount: elements.length,
+          truncated,
+          originalLength: totalContentLength
+        };
+        break;
+      } else {
+        info("No elements found for selector:", { selector });
+      }
+    }
+    return result;
+  } catch (err) {
+    error("Error capturing content:", { error: err instanceof Error ? err.message : String(err) });
+    result.error = err instanceof Error ? err.message : String(err);
+    return result;
+  }
+}
+async function executePrintAction(page, action, options) {
+  try {
+    if (action.type !== "print") {
+      throw new Error(`Invalid action type: ${action.type}`);
+    }
+    const printAction = action;
+    if (!printAction.elements || !Array.isArray(printAction.elements) || printAction.elements.length === 0) {
+      throw new Error("No elements specified for print action");
+    }
+    const format = printAction.format || "html";
+    const result = await captureElementsHtml(page, printAction.elements, format, options);
+    if (result.error && page.url() !== "") {
+      info("Primary selectors not found, attempting fallback content extraction");
+      const fallbackSelectors = [
+        "main",
+        "article",
+        "#content",
+        "#main-content",
+        ".content",
+        "h1",
+        "body"
+      ];
+      for (const selector of fallbackSelectors) {
+        const fallbackResult = await captureElementsHtml(page, [selector], format, options);
+        if (!fallbackResult.error) {
+          return {
+            success: true,
+            message: `Fallback content captured from ${selector} after navigation`,
+            warning: `Original selectors "${printAction.elements.join(", ")}" not found; used fallback selector "${selector}"`,
+            data: [fallbackResult]
+          };
+        }
+      }
+    }
+    const elementCount = result.html.includes("Found ") ? result.html.match(/Found (\d+) element/)?.[1] : "";
+    return {
+      success: !result.error,
+      message: result.error || `Content captured successfully${elementCount ? ` (${elementCount} elements)` : ""}`,
+      data: [result]
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : String(err)
+    };
+  }
+}
+
 // src/core/handlers/wait.ts
 async function executeWaitAction(page, action, options) {
   const isInfiniteWait = action.timeout === -1 || options.timeout === -1;
@@ -22321,18 +22723,58 @@ async function executeWaitAction(page, action, options) {
         }]
       };
     }
-    if (isInfiniteWait) {
+    try {
+      const fallbackResult = await captureElementsHtml(page, ["h1", "main", "#content", ".content", "body"], "markdown", options);
+      const pageTitle = await page.title();
+      const elementTree = await page.evaluate(() => {
+        function getSimplifiedTree(element, depth = 0, maxDepth = 2) {
+          if (depth > maxDepth)
+            return "...";
+          const tagName = element.tagName.toLowerCase();
+          const id = element.id ? `#${element.id}` : "";
+          const className = Array.from(element.classList).join(".");
+          const classSelector = className ? `.${className}` : "";
+          const dataAttrs = Array.from(element.attributes).filter((attr) => attr.name.startsWith("data-")).map((attr) => `[${attr.name}="${attr.value}"]`).join("");
+          const identifier = `${tagName}${id}${classSelector}${dataAttrs}`;
+          let children = "";
+          if (depth < maxDepth && element.children.length > 0) {
+            children = `
+` + Array.from(element.children).map((child) => "  ".repeat(depth + 1) + getSimplifiedTree(child, depth + 1, maxDepth)).join(`
+`);
+          }
+          return `${identifier}${children}`;
+        }
+        return getSimplifiedTree(document.body);
+      });
       return {
         success: false,
-        message: "Infinite wait interrupted",
+        message: "Failed to find requested elements. View the extracted content to understand the current page.",
+        error: err instanceof Error ? err.message : "Unknown error occurred",
+        data: [
+          fallbackResult,
+          {
+            type: "print",
+            selector: "page-structure",
+            html: `<h3>Page Structure</h3><p>Current page title: "${pageTitle}"</p><pre><code>${elementTree}</code></pre>`,
+            format: "html"
+          }
+        ],
+        warning: `Try using broader selectors to see what's on the page. Current URL: "${page.url()}"`
+      };
+    } catch (fallbackErr) {
+      if (isInfiniteWait) {
+        return {
+          success: false,
+          message: "Infinite wait interrupted",
+          error: err instanceof Error ? err.message : "Unknown error occurred"
+        };
+      }
+      return {
+        success: false,
+        message: "Failed to find elements",
         error: err instanceof Error ? err.message : "Unknown error occurred"
       };
     }
-    return {
-      success: false,
-      message: "Failed to find elements",
-      error: err instanceof Error ? err.message : "Unknown error occurred"
-    };
   } finally {
     if (abortController) {
       abortController.abort();
@@ -22404,185 +22846,6 @@ async function executeTypingAction(page, action, options) {
     return {
       success: false,
       message: `Failed to type text: ${errorMessage}`
-    };
-  }
-}
-
-// src/utils/markdown.ts
-var import_turndown = __toESM(require_turndown_cjs(), 1);
-var turndownService = new import_turndown.default({
-  headingStyle: "atx",
-  codeBlockStyle: "fenced",
-  bulletListMarker: "-"
-});
-var convertToMarkdown = (html, selector) => {
-  try {
-    const markdown = turndownService.turndown(html).trim();
-    info("Converting HTML to Markdown:", { selector, length: markdown.length });
-    return {
-      selector,
-      html: markdown,
-      type: "print",
-      format: "markdown"
-    };
-  } catch (err) {
-    error("Error converting to markdown", { error: err instanceof Error ? err.message : String(err) });
-    return {
-      selector,
-      html,
-      type: "print",
-      format: "html",
-      error: err instanceof Error ? err.message : "Unknown error during markdown conversion"
-    };
-  }
-};
-
-// src/core/handlers/print.ts
-var MAX_CAPTURED_CONTENT_LENGTH = 1e4;
-async function captureElementsHtml(page, selectors, format = "html", options) {
-  const result = {
-    selector: selectors.join(", "),
-    type: "print",
-    format,
-    error: "No content captured",
-    html: ""
-  };
-  let _extendedMetadata;
-  try {
-    await waitForPageStability(page, options);
-    for (const selector of selectors) {
-      info("Searching for elements:", { selector });
-      const elements = await page.$$(selector);
-      if (elements.length > 0) {
-        const htmlContents = [];
-        let totalContentLength = 0;
-        let truncated = false;
-        const headerText = `Found ${elements.length} element${elements.length > 1 ? "s" : ""} matching "${selector}"`;
-        htmlContents.push(`## ${headerText}`);
-        for (const element of elements) {
-          const html = await page.evaluate((el) => {
-            const clone = el.cloneNode(true);
-            const scripts = clone.querySelectorAll("script");
-            scripts.forEach((script) => script.remove());
-            const styles = clone.querySelectorAll("style");
-            styles.forEach((style) => style.remove());
-            const emptyDivs = clone.querySelectorAll("div:empty");
-            emptyDivs.forEach((div) => div.remove());
-            return clone.outerHTML;
-          }, element);
-          if (totalContentLength + html.length > MAX_CAPTURED_CONTENT_LENGTH) {
-            truncated = true;
-            break;
-          }
-          const elementMetadata = await page.evaluate((el) => {
-            return {
-              tagName: el.tagName.toLowerCase(),
-              id: el.id || "",
-              className: Array.from(el.classList).join(" ") || "",
-              attributes: Array.from(el.attributes).map((attr) => `${attr.name}="${attr.value}"`).join(" ")
-            };
-          }, element);
-          const metadataText = `<!-- Element: ${elementMetadata.tagName}${elementMetadata.id ? ` id="${elementMetadata.id}"` : ""}${elementMetadata.className ? ` class="${elementMetadata.className}"` : ""} -->`;
-          htmlContents.push(metadataText);
-          if (!result.metadata) {
-            result.metadata = elementMetadata;
-          }
-          htmlContents.push(html);
-          if (elements.length > 1) {
-            htmlContents.push("---");
-          }
-          totalContentLength += html.length;
-        }
-        let combinedHtml = htmlContents.join(`
-
-`);
-        if (truncated || combinedHtml.length > MAX_CAPTURED_CONTENT_LENGTH) {
-          combinedHtml = combinedHtml.substring(0, MAX_CAPTURED_CONTENT_LENGTH);
-          truncated = true;
-        }
-        if (truncated) {
-          combinedHtml += `
-
-**Note: Content was truncated to ${MAX_CAPTURED_CONTENT_LENGTH} characters. Some elements may have been omitted.**`;
-        }
-        if (format === "markdown") {
-          try {
-            const markdownResult = convertToMarkdown(combinedHtml, selector);
-            result.html = markdownResult.html;
-            result.format = "markdown";
-            info("Successfully converted content to markdown");
-          } catch (conversionError) {
-            result.html = combinedHtml;
-            result.format = "html";
-            info("Error converting to markdown, falling back to HTML:", { error: conversionError });
-          }
-        } else {
-          result.html = combinedHtml;
-          result.format = "html";
-          info("Successfully captured content in HTML format");
-        }
-        delete result.error;
-        _extendedMetadata = {
-          elementCount: elements.length,
-          truncated,
-          originalLength: totalContentLength
-        };
-        break;
-      } else {
-        info("No elements found for selector:", { selector });
-      }
-    }
-    return result;
-  } catch (err) {
-    error("Error capturing content:", { error: err instanceof Error ? err.message : String(err) });
-    result.error = err instanceof Error ? err.message : String(err);
-    return result;
-  }
-}
-async function executePrintAction(page, action, options) {
-  try {
-    if (action.type !== "print") {
-      throw new Error(`Invalid action type: ${action.type}`);
-    }
-    const printAction = action;
-    if (!printAction.elements || !Array.isArray(printAction.elements) || printAction.elements.length === 0) {
-      throw new Error("No elements specified for print action");
-    }
-    const format = printAction.format || "html";
-    const result = await captureElementsHtml(page, printAction.elements, format, options);
-    if (result.error && page.url() !== "") {
-      info("Primary selectors not found, attempting fallback content extraction");
-      const fallbackSelectors = [
-        "main",
-        "article",
-        "#content",
-        "#main-content",
-        ".content",
-        "h1",
-        "body"
-      ];
-      for (const selector of fallbackSelectors) {
-        const fallbackResult = await captureElementsHtml(page, [selector], format, options);
-        if (!fallbackResult.error) {
-          return {
-            success: true,
-            message: `Fallback content captured from ${selector} after navigation`,
-            warning: `Original selectors "${printAction.elements.join(", ")}" not found; used fallback selector "${selector}"`,
-            data: [fallbackResult]
-          };
-        }
-      }
-    }
-    const elementCount = result.html.includes("Found ") ? result.html.match(/Found (\d+) element/)?.[1] : "";
-    return {
-      success: !result.error,
-      message: result.error || `Content captured successfully${elementCount ? ` (${elementCount} elements)` : ""}`,
-      data: [result]
-    };
-  } catch (err) {
-    return {
-      success: false,
-      message: err instanceof Error ? err.message : String(err)
     };
   }
 }
@@ -22660,6 +22923,7 @@ async function executeAction(page, action, options) {
 }
 
 // src/utils/output.ts
+var MAX_DISPLAYED_CONTENT_LENGTH = 50000;
 function normalizeFormat(format) {
   if (format === "json") {
     return "json";
@@ -22692,7 +22956,6 @@ function printPlan(plan) {
 `;
   return output;
 }
-var MAX_DISPLAYED_CONTENT_LENGTH = 5000;
 function createSectionHeader(title) {
   return `
 ${title}
@@ -22709,7 +22972,15 @@ function formatContent(content, format) {
     return content;
   }
   if (format === "markdown") {
-    return content;
+    return content.replace(/([^\n])(\#{1,6}\s)/g, `$1
+
+$2`).replace(/\](\()/g, "] $1").replace(/([^\n])(\-\-\-)/g, `$1
+
+$2`).replace(/(\-\-\-)([^\n])/g, `$1
+
+$2`).replace(/\n{3,}/g, `
+
+`);
   }
   return content.replace(/\n{3,}/g, `
 
@@ -22737,6 +23008,15 @@ function printAnalysis(analysis, format = "pretty", options = {}) {
   }
   output += `
 `;
+  if (analysis.error) {
+    output += `⚠️ Error Information:
+`;
+    output += "=".repeat(50) + `
+`;
+    output += `${analysis.error}
+
+`;
+  }
   output += `\uD83E\uDD16 AI Action Guidance:
 `;
   output += "=".repeat(50) + `
@@ -22903,8 +23183,10 @@ Recommended action pattern examples:
 `;
       if (result.error) {
         output += `⚠️ Error: ${result.error}
+
 `;
-      } else if (result.html) {
+      }
+      if (result.html) {
         if (result.html.length > MAX_DISPLAYED_CONTENT_LENGTH) {
           const truncatedContent = result.html.substring(0, MAX_DISPLAYED_CONTENT_LENGTH);
           output += formatContent(truncatedContent, result.format) + `
@@ -22958,6 +23240,8 @@ Element metadata:
   output += `- Wait for element: {"type": "wait", "elements": ["selector_here"], "timeout": 5000}
 `;
   output += `- Extract content: {"type": "print", "elements": ["selector_here"], "format": "markdown"}
+`;
+  output += `- See HTML Structure: {"type": "print", "elements": ["selector_here"], "format": "html"}
 `;
   output += `
 `;
@@ -23103,30 +23387,47 @@ async function executePlan(page, plan, options) {
         info(`Warning: ${status.result.warning}`);
       }
     }
-    if (!status.result?.success && contextChanges > 0) {
-      info(`Action failed after navigation. Attempting to extract content from current page...`);
-      try {
-        const fallbackAction = {
-          type: "print",
-          elements: ["h1", "main", "article", "body"]
-        };
-        const fallbackResult = await executeAction(page, fallbackAction, options);
-        if (fallbackResult.success) {
-          plannedActionResults.push({
-            type: "print",
-            selector: "navigation-fallback",
-            html: fallbackResult.data?.[0]?.html || "Navigation content captured",
-            format: fallbackResult.data?.[0]?.format
-          });
-          info("Successfully captured content after navigation");
-          continue;
+    if (!status.result?.success) {
+      plannedActionResults.push({
+        type: "print",
+        selector: "error-details",
+        html: `<div class="error-details">
+                    <h3>Error Details</h3>
+                    <p><strong>Action:</strong> ${description}</p>
+                    <p><strong>Error:</strong> ${status.result?.error || "Unknown error"}</p>
+                    <p><strong>Current URL:</strong> ${page.url()}</p>
+                    ${status.result?.warning ? `<p><strong>Warning:</strong> ${status.result.warning}</p>` : ""}
+                    <p><em>Suggestion: Try using broader selectors to see what's on the page.</em></p>
+                </div>`,
+        format: "html",
+        error: status.result?.error || "Action failed"
+      });
+      if (status.result?.data && status.result.data.length > 0) {
+        for (const dataItem of status.result.data) {
+          plannedActionResults.push(dataItem);
         }
-      } catch (fallbackError) {
-        info(`Failed to capture fallback content: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
+      } else if (contextChanges > 0) {
+        info(`Action failed after navigation. Attempting to extract content from current page...`);
+        try {
+          const fallbackAction = {
+            type: "print",
+            elements: ["h1", "main", "article", "#content", ".content", "body"]
+          };
+          const fallbackResult = await executeAction(page, fallbackAction, options);
+          if (fallbackResult.success && fallbackResult.data?.[0]) {
+            plannedActionResults.push({
+              ...fallbackResult.data[0],
+              selector: "navigation-fallback",
+              html: fallbackResult.data[0].html || "Navigation content captured"
+            });
+            info("Successfully captured content after navigation");
+          }
+        } catch (fallbackError) {
+          info(`Failed to capture fallback content: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
+        }
       }
-    }
-    if (!status.result?.success)
       break;
+    }
   }
   info(printActionSummary(actionStatuses));
   return { actionStatuses, plannedActionResults };

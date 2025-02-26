@@ -113,6 +113,13 @@ export function printAnalysis(
 	}
 	output += "\n";
 
+	// Add error information if present in the analysis
+	if (analysis.error) {
+		output += "⚠️ Error Information:\n";
+		output += "=".repeat(50) + "\n";
+		output += `${analysis.error}\n\n`;
+	}
+
 	// Add AI-friendly guidance section with enhanced structure analysis
 	output += "🤖 AI Action Guidance:\n";
 	output += "=".repeat(50) + "\n";
@@ -263,8 +270,11 @@ export function printAnalysis(
 			output += `📌 Content from: ${result.selector} ${formatLabel}\n\n`;
 			
 			if (result.error) {
-				output += `⚠️ Error: ${result.error}\n`;
-			} else if (result.html) {
+				output += `⚠️ Error: ${result.error}\n\n`;
+			}
+			
+			// Always show content if available, even if there was an error
+			if (result.html) {
 				// Check if content exceeds the maximum length
 				if (result.html.length > MAX_DISPLAYED_CONTENT_LENGTH) {
 					// Truncate the content and add a warning
@@ -313,6 +323,7 @@ export function printAnalysis(
 	
 	// Add example for extracting content
 	output += `- Extract content: {"type": "print", "elements": ["selector_here"], "format": "markdown"}\n`;
+	output += `- See HTML Structure: {"type": "print", "elements": ["selector_here"], "format": "html"}\n`;
 	
 	output += "\n";
 

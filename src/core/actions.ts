@@ -60,39 +60,60 @@ export async function executePlan(
             }
         }
 
-        // If action failed, check if we've had navigation events
-        if (!status.result?.success && contextChanges > 0) {
-            info(`Action failed after navigation. Attempting to extract content from current page...`);
+        // If action failed, include detailed error information
+        if (!status.result?.success) {
+            // Include error message in results
+            plannedActionResults.push({
+                type: "print",
+                selector: "error-details",
+                html: `<div class="error-details">
+                    <h3>Error Details</h3>
+                    <p><strong>Action:</strong> ${description}</p>
+                    <p><strong>Error:</strong> ${status.result?.error || "Unknown error"}</p>
+                    <p><strong>Current URL:</strong> ${page.url()}</p>
+                    ${status.result?.warning ? `<p><strong>Warning:</strong> ${status.result.warning}</p>` : ''}
+                    <p><em>Suggestion: Try using broader selectors to see what's on the page.</em></p>
+                </div>`,
+                format: "html",
+                error: status.result?.error || "Action failed"
+            });
             
-            try {
-                // Create a fallback print action to extract content from the current page
-                const fallbackAction = {
-                    type: "print" as const,
-                    elements: ['h1', 'main', 'article', 'body']
-                };
-                
-                const fallbackResult = await executeAction(page, fallbackAction, options);
-                
-                if (fallbackResult.success) {
-                    plannedActionResults.push({
-                        type: "print",
-                        selector: "navigation-fallback",
-                        html: fallbackResult.data?.[0]?.html || "Navigation content captured",
-                        format: fallbackResult.data?.[0]?.format
-                    });
-                    
-                    info('Successfully captured content after navigation');
-                    
-                    // Continue to next action instead of breaking
-                    continue;
+            // Include any additional data provided with the error
+            if (status.result?.data && status.result.data.length > 0) {
+                for (const dataItem of status.result.data) {
+                    plannedActionResults.push(dataItem);
                 }
-            } catch (fallbackError) {
-                // Just log and continue with normal flow
-                info(`Failed to capture fallback content: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
             }
+            // If no data was provided with the error, try a fallback content extraction
+            else if (contextChanges > 0) {
+                info(`Action failed after navigation. Attempting to extract content from current page...`);
+                
+                try {
+                    // Create a fallback print action to extract content from the current page
+                    const fallbackAction = {
+                        type: "print" as const,
+                        elements: ['h1', 'main', 'article', '#content', '.content', 'body']
+                    };
+                    
+                    const fallbackResult = await executeAction(page, fallbackAction, options);
+                    
+                    if (fallbackResult.success && fallbackResult.data?.[0]) {
+                        plannedActionResults.push({
+                            ...fallbackResult.data[0],
+                            selector: "navigation-fallback",
+                            html: fallbackResult.data[0].html || "Navigation content captured"
+                        });
+                        
+                        info('Successfully captured content after navigation');
+                    }
+                } catch (fallbackError) {
+                    // Just log and continue with normal flow
+                    info(`Failed to capture fallback content: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
+                }
+            }
+            
+            break;
         }
-
-        if (!status.result?.success) break;
     }
 
     info(printActionSummary(actionStatuses));

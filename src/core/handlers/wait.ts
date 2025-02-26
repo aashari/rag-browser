@@ -3,6 +3,7 @@ import type { WaitAction, ActionResult, BrowserOptions } from "../../types";
 import { waitForActionStability } from "../stability";
 import { DEFAULT_TIMEOUT } from "../../config/constants";
 import { error, info } from "../../utils/logging";
+import { captureElementsHtml } from "./print";
 
 export async function executeWaitAction(
     page: Page,
@@ -170,18 +171,84 @@ export async function executeWaitAction(
             };
         }
         
-        if (isInfiniteWait) {
+        // When elements aren't found, extract broader page content to help AI understand the context
+        try {
+            // Try to capture content from broader selectors to give context
+            const fallbackResult = await captureElementsHtml(
+                page, 
+                ['h1', 'main', '#content', '.content', 'body'], 
+                'markdown',
+                options
+            );
+            
+            // Get current page title for additional context
+            const pageTitle = await page.title();
+            
+            // Get a simplified element tree to help understand page structure
+            const elementTree = await page.evaluate(() => {
+                // Create a simplified tree representation of main page elements
+                function getSimplifiedTree(element: Element, depth = 0, maxDepth = 2) {
+                    if (depth > maxDepth) return '...';
+                    
+                    const tagName = element.tagName.toLowerCase();
+                    const id = element.id ? `#${element.id}` : '';
+                    const className = Array.from(element.classList).join('.');
+                    const classSelector = className ? `.${className}` : '';
+                    
+                    // Get relevant attributes
+                    const dataAttrs = Array.from(element.attributes)
+                        .filter((attr: Attr) => attr.name.startsWith('data-'))
+                        .map((attr: Attr) => `[${attr.name}="${attr.value}"]`)
+                        .join('');
+                    
+                    // Build identifier string
+                    const identifier = `${tagName}${id}${classSelector}${dataAttrs}`;
+                    
+                    // Build children tree (limited depth)
+                    let children = '';
+                    if (depth < maxDepth && element.children.length > 0) {
+                        children = '\n' + Array.from(element.children)
+                            .map(child => '  '.repeat(depth + 1) + getSimplifiedTree(child, depth + 1, maxDepth))
+                            .join('\n');
+                    }
+                    
+                    return `${identifier}${children}`;
+                }
+                
+                // Start from body and build a simplified tree
+                return getSimplifiedTree(document.body);
+            });
+            
             return {
                 success: false,
-                message: "Infinite wait interrupted",
+                message: "Failed to find requested elements. View the extracted content to understand the current page.",
+                error: err instanceof Error ? err.message : "Unknown error occurred",
+                data: [
+                    fallbackResult,
+                    {
+                        type: 'print',
+                        selector: 'page-structure',
+                        html: `<h3>Page Structure</h3><p>Current page title: "${pageTitle}"</p><pre><code>${elementTree}</code></pre>`,
+                        format: 'html'
+                    }
+                ],
+                warning: `Try using broader selectors to see what's on the page. Current URL: "${page.url()}"`
+            };
+        } catch (fallbackErr) {
+            // If even the fallback content extraction fails, return the original error
+            if (isInfiniteWait) {
+                return {
+                    success: false,
+                    message: "Infinite wait interrupted",
+                    error: err instanceof Error ? err.message : "Unknown error occurred",
+                };
+            }
+            return {
+                success: false,
+                message: "Failed to find elements",
                 error: err instanceof Error ? err.message : "Unknown error occurred",
             };
         }
-        return {
-            success: false,
-            message: "Failed to find elements",
-            error: err instanceof Error ? err.message : "Unknown error occurred",
-        };
     } finally {
         // Clean up abort controller
         if (abortController) {

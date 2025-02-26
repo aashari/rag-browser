@@ -65,6 +65,13 @@ I'll assume you want me to use this tool unless you explicitly say otherwise (e.
 3. I'll share the results or ask for clarification if stuck (e.g., 'Here are your unread messages' or 'I need more details').
 4. If an action fails (element not found, timeout), I'll provide feedback and suggest alternatives.
 
+### Element Selection Strategy:
+- Always PROACTIVELY check for what elements are actually available on the page
+- When specific selectors fail, I should automatically try broader selectors to understand the page context
+- Use a progression from specific to broad: exact element → container → main content → body
+- If waiting for specific elements fails, I'll get broader page content to analyze why (e.g., login wall, error page)
+- For initial exploration, try 'body' or common content containers ('main', 'article', '.content') to see what's available
+
 ### Understanding Results:
 When I use this tool, the results will contain:
 - Page analysis: Title, description, and summary of elements (inputs, buttons, links)
@@ -110,23 +117,33 @@ For best results, I'll:
 							`A JSON string containing an object with an 'actions' array that will be executed in sequence. Format must be: {"actions": [{action1}, {action2}, ...]}. If omitted, I'll just analyze the URL without executing actions. Each action must have a 'type' property and type-specific properties. The action plan executes sequentially until completion or until an action fails.
 
 Actions include:
-- \`wait\`: Waits for elements (e.g., \`elements: ['body', '.login']\`). You can specify a \`timeout\` in milliseconds (default: 30000). Use \`timeout: -1\` for an indefinite wait, which is useful for authentication flows where user interaction is required.
+- \`wait\`: Waits for elements (e.g., \`elements: ['body', '.login']\`). You can specify a \`timeout\` in milliseconds (default: 30000). Use \`timeout: -1\` for an indefinite wait, which is useful for authentication flows where user interaction is required. If elements aren't found, I should try broader selectors (e.g., 'main', 'article', 'body') to understand the context.
 - \`click\`: Clicks an element (e.g., \`element: 'button.submit'\`). Be sure to wait for the element to appear before clicking.
 - \`typing\`: Types text (e.g., \`element: 'input', value: 'hello'\`). Optional \`delay\` parameter (in ms) controls typing speed.
 - \`keyPress\`: Presses a key (e.g., \`key: 'Enter'\`). Specify an \`element\` to target a specific element, or omit to press the key globally.
-- \`print\`: Gets content from elements. Use \`elements: ['selector1', 'selector2']\` to specify target elements. The \`format\` property can be \`'html'\` (default) for raw HTML or \`'markdown'\` for formatted text.
+- \`print\`: Gets content from elements. Use \`elements: ['selector1', 'selector2']\` to specify target elements. The \`format\` property can be \`'html'\` (default) for raw HTML or \`'markdown'\` for formatted text. Always prioritize markdown format for better readability. If specific selectors fail, I should try broader ones like '.content', 'main', or 'body' to get context.
 
 For selectors, use valid CSS selectors (e.g., '#id', '.class'). For best results, prefer:
 - IDs (#login-form) and data attributes ([data-testid='submit'])
 - Specific class names (.login-button) over generic ones (.button)
 - Multiple selectors for fallbacks ('button.submit, [type="submit"]')
+- Always be ready to try broader selectors (main, article, body) if specific ones fail
 
 Common patterns:
 - For page load: wait → extract content
 - For interaction: wait → interact (click/type) → wait for result → extract content
 - For authentication: wait with timeout: -1 → extract content after user logs in
+- For exploring unknown pages: wait for 'body' → print 'body' in markdown format → analyze structure
 
-If an action fails (element not found, timeout, etc.), execution stops and returns results collected up to that point.
+HANDLING AUTHENTICATION WALLS:
+When encountering authentication walls or unexpected content:
+1. If waiting for specific elements fails (like tweets or dashboard items), the tool will automatically extract broader page content to show what's actually displayed
+2. Check the returned page title, URL, and structure - these will often indicate a login page or other block
+3. If you see a login form (inputs and buttons), inform the user that authentication is required
+4. For sites requiring login, use the infinite wait approach: {"actions": [{"type": "wait", "elements": [".authenticated-content, .login-form"], "timeout": -1}]}
+5. Let users know they should manually log in when the browser opens
+
+If an action fails (element not found, timeout, etc.), execution stops and returns results collected up to that point. When wait or print actions fail, broader page content will be automatically captured to help understand the context.
 
 PRACTICAL EXAMPLES:
 
@@ -170,7 +187,8 @@ PRACTICAL EXAMPLES:
 ERROR HANDLING TIPS:
 - If an element isn't found, try using a more general selector or multiple alternative selectors
 - For pages with dynamic content, increase timeout values (e.g., 10000 or 15000 ms)
-- For complex UIs, break down interactions into smaller steps with appropriate waits between them`
+- For complex UIs, break down interactions into smaller steps with appropriate waits between them
+- When authentication is required, let users know they'll need to log in manually when the browser opens`
 					}
 				},
 				required: ["url"]
