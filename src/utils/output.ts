@@ -64,17 +64,22 @@ function createSectionDivider(): string {
 
 // Helper function to format content based on format type
 function formatContent(content: string, format: 'html' | 'markdown' | undefined): string {
-	// For markdown content, we don't need additional formatting
-	if (format === 'markdown') {
+	// Skip formatting for empty content or "Content captured successfully" messages
+	if (!content || content.startsWith('Content captured successfully')) {
 		return content;
 	}
 	
-	// For HTML or undefined format, add some basic formatting
-	// Remove excessive newlines and add proper spacing
+	// For markdown content, we return as is with minimal cleanup
+	if (format === 'markdown') {
+		return content;
+	}
+
+	// For HTML or undefined format, add some basic formatting to make it more readable
 	return content
 		.replace(/\n{3,}/g, '\n\n') // Replace 3+ consecutive newlines with 2
 		.replace(/<\/p>\s*<p>/g, '\n\n') // Add proper paragraph spacing
-		.replace(/<br\s*\/?>/g, '\n'); // Replace <br> with newlines
+		.replace(/<br\s*\/?>/g, '\n') // Replace <br> with newlines
+		.replace(/<\/?[^>]+(>|$)/g, ''); // Remove HTML tags for cleaner CLI output
 }
 
 export function printAnalysis(
@@ -86,70 +91,65 @@ export function printAnalysis(
 		return JSON.stringify(analysis, null, 2);
 	}
 
-	let output = "\n📄 Page Analysis:\n\n";
+	let output = "";
 
-	// Show error first if present
-	if (analysis.error) {
-		output += "⚠️ Error encountered:\n";
-		output += "=".repeat(50) + "\n";
-		output += analysis.error + "\n";
-		output += "=".repeat(50) + "\n\n";
+	// Add title and description
+	output += "\n📄 Page Analysis:\n\n";
+	if (analysis.title) {
+		output += `Title: ${analysis.title}\n`;
 	}
-
-	output += `Title: ${analysis.title}\n`;
 	if (analysis.description) {
 		output += `Description: ${analysis.description}\n`;
 	}
+	output += "\n";
 
-	output += "\nPage Elements Summary:\n";
+	// Add page elements summary
+	output += "Page Elements Summary:\n";
 	output += "=".repeat(50) + "\n";
 
-	// Show inputs
-	output += `Total Input Elements: ${analysis.inputs.length}\n`;
+	// Show input elements
 	if (analysis.inputs.length > 0) {
+		output += `Total Input Elements: ${analysis.inputs.length}\n`;
 		if (options.showInputs) {
 			output += "[Showing all inputs]\n";
 			analysis.inputs.forEach((input) => {
-				output += `- ${input.label || input.type}${!input.isVisible ? " (hidden)" : ""}\n`;
+				output += `- ${input.label || 'No label'}\n`;
 			});
 		} else {
 			output += "[Showing top visible 5 inputs]\n";
-			analysis.inputs
-				.filter((input) => input.isVisible)
-				.slice(0, 5)
-				.forEach((input) => {
-					output += `- ${input.label || input.type}\n`;
-				});
+			analysis.inputs.slice(0, 5).forEach((input) => {
+				output += `- ${input.label || 'No label'}\n`;
+			});
 			if (analysis.inputs.length > 5) {
 				output += "> to get list of all inputs add --inputs\n";
 			}
 		}
+		output += "\n";
 	}
-	output += "\n";
 
-	// Show buttons
-	output += `Total Button Elements: ${analysis.buttons.length}\n`;
+	// Show button elements
 	if (analysis.buttons.length > 0) {
+		output += `Total Button Elements: ${analysis.buttons.length}\n`;
 		if (options.showButtons) {
 			output += "[Showing all buttons]\n";
 			analysis.buttons.forEach((button) => {
-				output += `- ${button.text || "No text"}\n`;
+				output += `- ${button.text || 'No text'}\n`;
 			});
 		} else {
 			output += "[Showing top visible 5 buttons]\n";
 			analysis.buttons.slice(0, 5).forEach((button) => {
-				output += `- ${button.text || "No text"}\n`;
+				output += `- ${button.text || 'No text'}\n`;
 			});
 			if (analysis.buttons.length > 5) {
 				output += "> to get list of all buttons add --buttons\n";
 			}
 		}
+		output += "\n";
 	}
-	output += "\n";
 
-	// Show links
-	output += `Total Link Elements: ${analysis.links.length}\n`;
+	// Show link elements
 	if (analysis.links.length > 0) {
+		output += `Total Link Elements: ${analysis.links.length}\n`;
 		if (options.showLinks) {
 			output += "[Showing all links]\n";
 			analysis.links.forEach((link) => {

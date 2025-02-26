@@ -144,6 +144,7 @@ export async function captureElementsHtml(
 				} else {
 					// For HTML format, just use the HTML content
 					result.html = combinedHtml;
+					result.format = 'html';
 					info('Successfully captured HTML content');
 				}
 				

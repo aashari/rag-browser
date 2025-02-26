@@ -1,6 +1,6 @@
 import type { PlannedActionResult } from '../types';
 import TurndownService from 'turndown';
-import { error } from './logging';
+import { error, info } from './logging';
 
 // Initialize turndown service with minimal options
 export const turndownService = new TurndownService({
@@ -13,6 +13,7 @@ export const turndownService = new TurndownService({
 export const convertToMarkdown = (html: string, selector: string): PlannedActionResult => {
     try {
         const markdown = turndownService.turndown(html).trim();
+        info('Converting HTML to Markdown:', { selector, length: markdown.length });
         
         return {
             selector,
