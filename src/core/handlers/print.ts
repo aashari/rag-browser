@@ -5,7 +5,10 @@ import { convertToMarkdown } from "../../utils/markdown";
 import { waitForPageStability } from "../stability";
 
 // Maximum length for captured content to prevent excessive content sizes
-const MAX_CAPTURED_CONTENT_LENGTH = 10000;
+const MAX_CAPTURED_CONTENT_LENGTH = 50000;
+
+// Minimum number of items to capture before considering truncation
+const MIN_ELEMENTS_TO_CAPTURE = 5;
 
 // Additional metadata we'll track internally
 interface ExtendedMetadata {
@@ -52,7 +55,7 @@ export async function captureElementsHtml(
 				
 				// Add a header with element count information
 				const headerText = `Found ${elements.length} element${elements.length > 1 ? 's' : ''} matching "${selector}"`;
-				htmlContents.push(`## ${headerText}`);
+				htmlContents.push(`<h2>${headerText}</h2>`);
 				
 				for (const element of elements) {
 					// Get element content in HTML format (will be converted to markdown later if requested)
@@ -75,7 +78,9 @@ export async function captureElementsHtml(
 					}, element);
 					
 					// Check if adding this content would exceed the maximum length
-					if (totalContentLength + html.length > MAX_CAPTURED_CONTENT_LENGTH) {
+					// Always capture at least MIN_ELEMENTS_TO_CAPTURE elements if possible
+					if (totalContentLength + html.length > MAX_CAPTURED_CONTENT_LENGTH && 
+						htmlContents.length > (MIN_ELEMENTS_TO_CAPTURE * 3)) { // * 3 because each element adds 3 entries (metadata, content, separator)
 						truncated = true;
 						break;
 					}
@@ -106,7 +111,7 @@ export async function captureElementsHtml(
 					
 					// Add a separator between elements if there are multiple
 					if (elements.length > 1) {
-						htmlContents.push('---');
+						htmlContents.push('<hr class="element-separator" style="margin: 20px 0;"/>');
 					}
 					
 					totalContentLength += html.length;

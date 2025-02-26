@@ -9,6 +9,9 @@ export interface DisplayOptions {
 	showLinks?: boolean;
 }
 
+// Maximum character limit for each planned action result
+const MAX_DISPLAYED_CONTENT_LENGTH = 50000;
+
 // Helper function to normalize format
 function normalizeFormat(format: string | undefined): OutputFormat {
 	if (format === "json") {
@@ -49,9 +52,6 @@ export function printPlan(plan: Plan): string {
 	return output;
 }
 
-// Maximum character limit for each planned action result
-const MAX_DISPLAYED_CONTENT_LENGTH = 5000;
-
 // Helper function to create consistent section headers
 function createSectionHeader(title: string): string {
 	return `\n${title}\n${"=".repeat(80)}\n`;
@@ -68,10 +68,20 @@ function formatContent(content: string, format: 'html' | 'markdown' | undefined)
 	if (!content || content.startsWith('Content captured successfully')) {
 		return content;
 	}
-	
-	// For markdown content, we return as is with minimal cleanup
+
+	// For markdown content, apply minimal formatting to ensure proper display
 	if (format === 'markdown') {
-		return content;
+		// Fix common markdown formatting issues
+		return content
+			// Ensure proper newlines around headings
+			.replace(/([^\n])(\#{1,6}\s)/g, '$1\n\n$2')
+			// Ensure proper spacing around links
+			.replace(/\](\()/g, '] $1')
+			// Fix newlines around horizontal rules
+			.replace(/([^\n])(\-\-\-)/g, '$1\n\n$2')
+			.replace(/(\-\-\-)([^\n])/g, '$1\n\n$2')
+			// Cleanup excessive newlines
+			.replace(/\n{3,}/g, '\n\n');
 	}
 
 	// For HTML or undefined format, add some basic formatting to make it more readable
@@ -392,11 +402,11 @@ function detectFormStructure(analysis: PageAnalysis): boolean {
 	const hasSubmitButton = analysis.buttons.some(button => {
 		const text = button.text.toLowerCase();
 		return text.includes('submit') || 
-			   text.includes('search') || 
-			   text.includes('send') || 
-			   text.includes('save') ||
-			   text.includes('log in') ||
-			   text.includes('sign in');
+				   text.includes('search') || 
+				   text.includes('send') || 
+				   text.includes('save') ||
+				   text.includes('log in') ||
+				   text.includes('sign in');
 	});
 	
 	if (hasSubmitButton) return true;
@@ -404,10 +414,10 @@ function detectFormStructure(analysis: PageAnalysis): boolean {
 	// Look for forms by checking input types
 	const hasFormInputs = analysis.inputs.some(input => {
 		return input.type === 'text' || 
-			   input.type === 'password' || 
-			   input.type === 'email' || 
-			   input.type === 'checkbox' ||
-			   input.type === 'radio';
+				   input.type === 'password' || 
+				   input.type === 'email' || 
+				   input.type === 'checkbox' ||
+				   input.type === 'radio';
 	});
 	
 	return hasFormInputs;
@@ -432,8 +442,8 @@ function detectNavigationMenu(analysis: PageAnalysis): boolean {
 	const selectors = analysis.links.map(link => link.selector);
 	const navSelectors = selectors.filter(selector => {
 		return selector.toLowerCase().includes('nav') || 
-			   selector.toLowerCase().includes('menu') ||
-			   selector.toLowerCase().includes('header');
+				   selector.toLowerCase().includes('menu') ||
+				   selector.toLowerCase().includes('header');
 	});
 	
 	return navSelectors.length >= 2;
@@ -457,17 +467,17 @@ function findCommonSelectorPattern(selectors: string[]): string | null {
 		// Check for similarity in these parts
 		const firstPart = partsAtDepth[0];
 		const similarityCount = partsAtDepth.filter(part => 
-			part === firstPart || 
-			(part.includes('[') && firstPart.includes('[')) || // Handle attribute selectors
-			(part.includes('#') && firstPart.includes('#')) || // Handle ID selectors
-			(part.includes('.') && firstPart.includes('.'))    // Handle class selectors
+				part === firstPart || 
+				(part.includes('[') && firstPart.includes('[')) || // Handle attribute selectors
+				(part.includes('#') && firstPart.includes('#')) || // Handle ID selectors
+				(part.includes('.') && firstPart.includes('.'))    // Handle class selectors
 		).length;
 		
 		// If most selectors follow a similar pattern, return it
 		if (similarityCount >= selectors.length * 0.7) {
-			return firstPart;
+				return firstPart;
 		}
 	}
 	
 	return null;
-} 
+}
