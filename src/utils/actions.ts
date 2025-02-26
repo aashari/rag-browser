@@ -12,8 +12,6 @@ export function getActionSymbol(action: Action): string {
 			return "🔤";
 		case "print":
 			return "📝";
-		case "markdown":
-			return "📄";
 		default:
 			return "❓";
 	}
@@ -31,8 +29,6 @@ export function getActionDescription(action: Action): string {
 			return `Press ${action.key}${action.element ? ` on ${action.element}` : ""}`;
 		case "print":
 			return `Print HTML content of: ${action.elements.join(", ")}`;
-		case "markdown":
-			return `Convert HTML to Markdown: ${action.elements.join(", ")}`;
 		default:
 			return "Unknown action";
 	}

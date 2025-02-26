@@ -26,8 +26,6 @@ function validateAction(action: any): action is Action {
 			return typeof action.key === "string" && (!action.element || typeof action.element === "string");
 		case "print":
 			return Array.isArray(action.elements) && action.elements.every((e: unknown) => typeof e === "string");
-		case "markdown":
-			return Array.isArray(action.elements) && action.elements.every((e: unknown) => typeof e === "string");
 		default:
 			return false;
 	}

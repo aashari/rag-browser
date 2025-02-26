@@ -30,13 +30,16 @@ export async function executePlan(
         // Track success for all actions
         if (status.result?.success) {
             plannedActionResults.push({
-                type: action.type as "print" | "markdown",
-                selector: action.type === "wait" || action.type === "print" || action.type === "markdown" 
+                type: "print",
+                selector: action.type === "wait" || action.type === "print"
                     ? action.elements[0] 
                     : action.type === "click" || action.type === "typing"
                     ? action.element
                     : "",
-                html: status.result.message
+                // Use actual HTML content from data if available, otherwise fall back to message
+                html: status.result.data?.[0]?.html || status.result.message,
+                // Include the format from the result data
+                format: status.result.data?.[0]?.format
             });
         }
 

@@ -51,11 +51,6 @@ export type PrintAction = {
 	format?: "html" | "markdown";
 };
 
-export type MarkdownAction = {
-	type: "markdown";
-	elements: string[];
-};
-
 export type Action = WaitAction | ClickAction | TypingAction | KeyPressAction | PrintAction;
 
 export type Plan = {
