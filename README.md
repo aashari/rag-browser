@@ -1,6 +1,6 @@
 # RAG Browser
 
-A versatile browser automation and analysis tool optimized for AI-driven workflows. It provides both a command-line interface (CLI) and Model Context Protocol (MCP) server mode for seamless integration with AI systems like Claude Desktop.
+A versatile browser automation and analysis tool optimized for AI-driven workflows. It provides both a command-line interface (CLI) and Model Context Protocol (MCP) server mode for seamless integration with AI systems like Claude.
 
 [![Version](https://img.shields.io/npm/v/@aashari/rag-browser)](https://www.npmjs.com/package/@aashari/rag-browser)
 [![License](https://img.shields.io/npm/l/@aashari/rag-browser)](https://github.com/aashari/rag-browser/blob/main/LICENSE)
@@ -55,7 +55,7 @@ bun install
 
 # Run locally
 bun run start        # MCP server mode
-bun run browser      # CLI mode
+bun run browser      # CLI mode with --url parameter
 ```
 
 ## 🎯 Features
@@ -67,14 +67,17 @@ bun run browser      # CLI mode
   - Extracts interactive elements (links, buttons, inputs)
   - Generates unique, stable CSS selectors
   - Supports both full and simplified selector paths
+  - Detects page structures (lists, forms, navigation menus)
 - **Powerful Automation**
   - Execute complex action sequences
-  - Built-in stability checks
-  - Supports headless operation
+  - Built-in stability detection and waiting
+  - Support for authentication flows with infinite wait
+  - Fallback content extraction on navigation
 - **AI Integration Ready**
-  - MCP protocol support
-  - Resource management (stores recent analyses)
-  - Structured JSON output option
+  - Full MCP protocol support (v1.5.0+)
+  - Resource management with caching
+  - Built-in error handling and recovery
+  - Markdown formatting for human-readable content
 
 ## 💻 CLI Mode Usage
 
@@ -106,9 +109,10 @@ rag-browser --url "https://wikipedia.org" --plan '{
 }'
 
 # Wait indefinitely for authentication
-rag-browser --url "https://x.com" --plan '{
+rag-browser --url "https://app.slack.com" --plan '{
   "actions": [
-    {"type": "wait", "elements": ["[aria-label=\"Timeline: Your Home Timeline\"]"], "timeout": -1}
+    {"type": "wait", "elements": [".p-workspace__primary_view_contents, .p-signin_form"], "timeout": -1},
+    {"type": "print", "elements": [".p-channel_sidebar__channel--unread"], "format": "markdown"}
   ]
 }' --timeout -1
 ```
@@ -142,6 +146,21 @@ bunx github:aashari/rag-browser
 rag-browser
 ```
 
+### MCP Inspector Tool
+
+For testing and debugging the MCP server, you can use the MCP Inspector:
+
+```bash
+# Run the MCP Inspector with the rag-browser server
+bun run inspector
+```
+
+This will start both the rag-browser MCP server and the inspector UI, allowing you to:
+- Test tool calls interactively
+- View resources stored by the server
+- Examine request and response formats
+- Debug action plans before using them with AI
+
 ### Tool: `action`
 
 A unified tool for both analysis and automation:
@@ -155,30 +174,68 @@ A unified tool for both analysis and automation:
     "arguments": {
       "url": "https://example.com",
       "inputs": "true",
-      "plan": {
-        "actions": [
-          {"type": "wait", "elements": ["#searchInput"]},
-          {"type": "typing", "element": "#searchInput", "value": "test"}
-        ]
-      }
+      "plan": "{\"actions\": [
+        {\"type\": \"wait\", \"elements\": [\"#searchInput\"]},
+        {\"type\": \"typing\", \"element\": \"#searchInput\", \"value\": \"test\"}
+      ]}"
     }
-  }
+  },
+  "id": 1
 }
 ```
 
 ### Supported Actions
 
-| Action     | Description                                                           | Required Fields              | Optional Fields   |
-| ---------- | --------------------------------------------------------------------- | ---------------------------- | ----------------- |
-| `wait`     | Wait for elements to appear (supports infinite wait with timeout: -1) | `elements: string[]`         | `timeout: number` |
-| `click`    | Click element                                                         | `element: string`            | -                 |
-| `typing`   | Type text                                                             | `element: string`, `value: string` | `delay: number`   |
-| `keyPress` | Press keyboard key                                                    | `key: string`                | `element: string` |
-| `print`    | Capture content from elements                                         | `elements: string[]`         | `format: 'html' \| 'markdown'` |
+| Action     | Description                                                   | Required Fields           | Optional Fields          |
+| ---------- | ------------------------------------------------------------- | ------------------------- | ------------------------ |
+| `wait`     | Wait for elements to appear                                   | `elements: string[]`      | `timeout: number`        |
+| `click`    | Click element                                                 | `element: string`         | -                        |
+| `typing`   | Type text                                                     | `element: string`, `value: string` | `delay: number` |
+| `keyPress` | Press keyboard key                                            | `key: string`             | `element: string`        |
+| `print`    | Capture content from elements                                 | `elements: string[]`      | `format: 'html' \| 'markdown'` |
 
-### Claude Desktop Integration
+### Action Plan Patterns
 
-Add to your `claude_desktop_config.json`:
+For best results, use these established patterns:
+
+1. **Authentication Flow**:
+   ```json
+   {
+     "actions": [
+       {"type": "wait", "elements": [".authenticated-content, .login-form"], "timeout": -1},
+       {"type": "print", "elements": [".content-container"], "format": "markdown"}
+     ]
+   }
+   ```
+
+2. **Form Submission**:
+   ```json
+   {
+     "actions": [
+       {"type": "wait", "elements": ["form input"], "timeout": 5000},
+       {"type": "typing", "element": "input[name='search']", "value": "search query"},
+       {"type": "keyPress", "key": "Enter"},
+       {"type": "wait", "elements": [".results"], "timeout": 10000},
+       {"type": "print", "elements": [".results"], "format": "markdown"}
+     ]
+   }
+   ```
+
+3. **Navigation and Content Extraction**:
+   ```json
+   {
+     "actions": [
+       {"type": "wait", "elements": ["nav a"], "timeout": 5000},
+       {"type": "click", "element": "a.next-page"},
+       {"type": "wait", "elements": [".content"], "timeout": 5000},
+       {"type": "print", "elements": [".content"], "format": "markdown"}
+     ]
+   }
+   ```
+
+### AI Integration
+
+For Claude and other AI systems, add to your configuration:
 
 ```json
 {
@@ -198,7 +255,10 @@ Add to your `claude_desktop_config.json`:
 ```
 src/
 ├── cli/          # CLI implementation
+├── config/       # Configuration and constants
 ├── core/         # Core browser automation
+│   ├── browser/  # Browser control functions
+│   ├── handlers/ # Action type handlers
 ├── mcp/          # MCP server implementation
 ├── utils/        # Shared utilities
 └── types/        # TypeScript definitions
@@ -207,21 +267,29 @@ src/
 ### Available Commands
 
 ```bash
+bun run browser     # Run CLI
+bun run start       # Start MCP server
+bun run inspector   # Run with MCP Inspector
 bun run typecheck   # Type checking
 bun run test        # Run tests
 bun run build       # Build for distribution
-bun run start       # Start MCP server
 bun run clean       # Clean processes
+bun run lint        # Lint codebase
+bun run lint:fix    # Fix linting issues
+bun run version:sync # Sync version across files
 ```
 
 ### Configuration
 
-Key settings in `src/config/constants.ts`:
+Key settings in `src/config/constants.ts` and `src/config/version.ts`:
 
 ```typescript
+// Version
+export const VERSION = "1.22.3";
+
+// Constants
 export const DEFAULT_TIMEOUT = 30000;
 export const MAX_STORED_ANALYSES = 10;
-export const DEBUG = false;
 ```
 
 ## 📝 License

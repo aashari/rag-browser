@@ -21583,7 +21583,7 @@ class StdioServerTransport {
 }
 
 // src/config/version.ts
-var VERSION = "1.22.3";
+var VERSION = "1.22.4";
 var [MAJOR, MINOR, PATCH] = VERSION.split(".").map(Number);
 var GIT_VERSION = `v${VERSION}`;
 var PACKAGE_NAME = "@aashari/rag-browser";
