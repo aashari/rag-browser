@@ -36,7 +36,7 @@ export async function executePlan(
                     : action.type === "click" || action.type === "typing"
                     ? action.element
                     : "",
-                // Use actual HTML content from data if available, otherwise fall back to message
+                // Use actual content from data if available, otherwise fall back to message
                 html: status.result.data?.[0]?.html || status.result.message,
                 // Include the format from the result data
                 format: status.result.data?.[0]?.format

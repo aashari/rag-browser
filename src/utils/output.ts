@@ -50,7 +50,7 @@ export function printPlan(plan: Plan): string {
 }
 
 // Maximum character limit for each planned action result
-const MAX_CONTENT_LENGTH = 5000;
+const MAX_DISPLAYED_CONTENT_LENGTH = 5000;
 
 // Helper function to create consistent section headers
 function createSectionHeader(title: string): string {
@@ -185,11 +185,11 @@ export function printAnalysis(
 				output += `⚠️ Error: ${result.error}\n`;
 			} else if (result.html) {
 				// Check if content exceeds the maximum length
-				if (result.html.length > MAX_CONTENT_LENGTH) {
+				if (result.html.length > MAX_DISPLAYED_CONTENT_LENGTH) {
 					// Truncate the content and add a warning
-					const truncatedContent = result.html.substring(0, MAX_CONTENT_LENGTH);
+					const truncatedContent = result.html.substring(0, MAX_DISPLAYED_CONTENT_LENGTH);
 					output += formatContent(truncatedContent, result.format) + "\n";
-					output += `\n⚠️ Content was truncated (${result.html.length} characters, showing first ${MAX_CONTENT_LENGTH})\n`;
+					output += `\n⚠️ Content was truncated (${result.html.length} characters, showing first ${MAX_DISPLAYED_CONTENT_LENGTH})\n`;
 				} else {
 					output += formatContent(result.html, result.format) + "\n";
 				}

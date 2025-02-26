@@ -4,8 +4,8 @@ import type { Action, ActionResult, BrowserOptions, PlannedActionResult, PrintAc
 import { convertToMarkdown } from "../../utils/markdown";
 import { waitForPageStability } from "../stability";
 
-// Maximum length for captured HTML content to prevent excessive content sizes
-const MAX_CONTENT_LENGTH = 10000;
+// Maximum length for captured content to prevent excessive content sizes
+const MAX_CAPTURED_CONTENT_LENGTH = 10000;
 
 // Additional metadata we'll track internally
 interface ExtendedMetadata {
@@ -15,7 +15,7 @@ interface ExtendedMetadata {
 }
 
 /**
- * Capture HTML content from specified selectors
+ * Capture content from specified selectors in either HTML or markdown format
  */
 export async function captureElementsHtml(
 	page: Page,
@@ -45,7 +45,7 @@ export async function captureElementsHtml(
 			const elements = await page.$$(selector);
 
 			if (elements.length > 0) {
-				// Capture HTML content from all matching elements
+				// Capture content from all matching elements
 				const htmlContents: string[] = [];
 				let totalContentLength = 0;
 				let truncated = false;
@@ -55,7 +55,7 @@ export async function captureElementsHtml(
 				htmlContents.push(`## ${headerText}`);
 				
 				for (const element of elements) {
-					// Get HTML content
+					// Get element content in HTML format (will be converted to markdown later if requested)
 					const html = await page.evaluate((el) => {
 						// Clone the element to avoid modifying the original
 						const clone = el.cloneNode(true) as HTMLElement;
@@ -75,7 +75,7 @@ export async function captureElementsHtml(
 					}, element);
 					
 					// Check if adding this content would exceed the maximum length
-					if (totalContentLength + html.length > MAX_CONTENT_LENGTH) {
+					if (totalContentLength + html.length > MAX_CAPTURED_CONTENT_LENGTH) {
 						truncated = true;
 						break;
 					}
@@ -116,17 +116,17 @@ export async function captureElementsHtml(
 				let combinedHtml = htmlContents.join('\n\n');
 				
 				// Check if content exceeds maximum length
-				if (truncated || combinedHtml.length > MAX_CONTENT_LENGTH) {
-					combinedHtml = combinedHtml.substring(0, MAX_CONTENT_LENGTH);
+				if (truncated || combinedHtml.length > MAX_CAPTURED_CONTENT_LENGTH) {
+					combinedHtml = combinedHtml.substring(0, MAX_CAPTURED_CONTENT_LENGTH);
 					truncated = true;
 				}
 				
 				// Add truncation notice if needed
 				if (truncated) {
-					combinedHtml += `\n\n**Note: Content was truncated to ${MAX_CONTENT_LENGTH} characters. Some elements may have been omitted.**`;
+					combinedHtml += `\n\n**Note: Content was truncated to ${MAX_CAPTURED_CONTENT_LENGTH} characters. Some elements may have been omitted.**`;
 				}
 				
-				// Convert to markdown if requested
+				// Convert to markdown if requested, otherwise keep as HTML
 				if (format === "markdown") {
 					try {
 						// convertToMarkdown returns a PlannedActionResult
@@ -142,10 +142,10 @@ export async function captureElementsHtml(
 						info('Error converting to markdown, falling back to HTML:', { error: conversionError });
 					}
 				} else {
-					// For HTML format, just use the HTML content
+					// For HTML format, keep the original HTML content
 					result.html = combinedHtml;
 					result.format = 'html';
-					info('Successfully captured HTML content');
+					info('Successfully captured content in HTML format');
 				}
 				
 				// We found content, so we can remove the error

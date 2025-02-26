@@ -28,7 +28,7 @@ export function getActionDescription(action: Action): string {
 		case "keyPress":
 			return `Press ${action.key}${action.element ? ` on ${action.element}` : ""}`;
 		case "print":
-			return `Print HTML content of: ${action.elements.join(", ")}`;
+			return `Capture content from: ${action.elements.join(", ")}`;
 		default:
 			return "Unknown action";
 	}
