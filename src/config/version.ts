@@ -1,4 +1,4 @@
-export const VERSION = "1.23.0";
+export const VERSION = "1.24.0";
 
 // Semantic version components
 export const [MAJOR, MINOR, PATCH] = VERSION.split(".").map(Number);
@@ -7,7 +7,4 @@ export const [MAJOR, MINOR, PATCH] = VERSION.split(".").map(Number);
 export const GIT_VERSION = `v${VERSION}`;
 
 // Package name for npm
-export const PACKAGE_NAME = "@aashari/rag-browser";
-
-// Full name with version
-export const FULL_NAME = `${PACKAGE_NAME}@${VERSION}`; 
+export const PACKAGE_NAME = "rag-browser";
