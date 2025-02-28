@@ -9,7 +9,7 @@
     "rag-browser": "src/index.ts"
   },
   "scripts": {
-    "browser": "bun run src/cli/index.ts",
+    "browser": "bun run src/index.ts",
     "clean": "((lsof -ti:3000,5173 | xargs kill -9) || true) && ((pkill -f 'bun run src/index.ts') || true) && ((pkill -f 'rag-browser') || true)",
     "docs:generate": "repomix --ignore '**/*.md,.cursorrules,**/*.log,**/*.lock,**/*.json'",
     "inspector": "bun run clean && npx @modelcontextprotocol/inspector bun run start",
