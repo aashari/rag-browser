@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 import { analyzePage } from "../core/browser";
 import type { Plan } from "../types";

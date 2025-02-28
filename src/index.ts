@@ -1,5 +1,4 @@
-#!/usr/bin/env node
-
+#!/usr/bin/env bun
 import { runServer } from "./mcp/server";
 import { main as runCli } from "./cli/index";
 
