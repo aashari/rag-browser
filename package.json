@@ -1,10 +1,10 @@
 {
-  "name": "@aashari/rag-browser",
+  "name": "rag-browser",
   "version": "1.23.0",
-  "description": "A Model Context Protocol server for browser automation using Playwright.",
-  "license": "MIT",
+  "module": "src/index.ts",
   "type": "module",
-  "main": "src/index.ts",
+  "private": false,
+  "description": "A Model Context Protocol server for browser automation using Playwright.",
   "bin": {
     "rag-browser": "src/index.ts"
   },
