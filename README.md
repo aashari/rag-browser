@@ -43,6 +43,7 @@ npx -y github:aashari/rag-browser
 ### Basic Examples
 
 ```bash
+# Using Bun (Recommended)
 # Simple page analysis
 bunx github:aashari/rag-browser --url "https://example.com"
 
@@ -51,6 +52,16 @@ bunx github:aashari/rag-browser --url "https://example.com" --headless --json
 
 # Show all interactive elements
 bunx github:aashari/rag-browser --url "https://example.com" --inputs --buttons --links
+
+# Using Node.js/npm
+# Simple page analysis
+npx -y github:aashari/rag-browser --url "https://example.com"
+
+# Headless mode with JSON output
+npx -y github:aashari/rag-browser --url "https://example.com" --headless --json
+
+# Show all interactive elements
+npx -y github:aashari/rag-browser --url "https://example.com" --inputs --buttons --links
 ```
 
 ### CLI Options
@@ -70,8 +81,19 @@ bunx github:aashari/rag-browser --url "https://example.com" --inputs --buttons -
 ### Automation Example
 
 ```bash
-# Search on Wikipedia
+# Using Bun (Recommended)
 bunx github:aashari/rag-browser --url "https://wikipedia.org" --plan '{
+  "actions": [
+    {"type": "wait", "elements": ["#searchInput"]},
+    {"type": "typing", "element": "#searchInput", "value": "AI Tools"},
+    {"type": "keyPress", "key": "Enter"},
+    {"type": "wait", "elements": [".mw-search-results-container"]},
+    {"type": "print", "elements": [".mw-search-result"], "format": "markdown"}
+  ]
+}'
+
+# Using Node.js/npm
+npx -y github:aashari/rag-browser --url "https://wikipedia.org" --plan '{
   "actions": [
     {"type": "wait", "elements": ["#searchInput"]},
     {"type": "typing", "element": "#searchInput", "value": "AI Tools"},
