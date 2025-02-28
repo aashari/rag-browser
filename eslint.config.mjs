@@ -14,13 +14,13 @@ const compat = new FlatCompat({
 const eslintConfig = [
   // Ignore patterns (equivalent to .eslintignore or ignorePatterns)
   {
+    files: ["**/*.ts"],
     ignores: [
       "node_modules/**",
       "dist/**",
       "build/**",
       "*.d.ts",
-      "*.js",
-      "scripts/**" // Exclude all scripts directory files
+      "*.js"
     ]
   },
   ...compat.extends("prettier"),
