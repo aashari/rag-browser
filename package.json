@@ -6,7 +6,7 @@
   "private": false,
   "description": "A Model Context Protocol server for browser automation using Playwright.",
   "bin": {
-    "rag-browser": "src/index.ts"
+    "rag-browser": "./src/index.ts"
   },
   "scripts": {
     "start": "bun run src/index.ts"
