@@ -5,11 +5,19 @@ A versatile browser automation and analysis tool optimized for AI-driven workflo
 ## 🚀 Quick Start
 
 ```bash
+# Using Bun (Recommended)
 # CLI Mode - Analyze a webpage
 bunx github:aashari/rag-browser --url "https://example.com"
 
 # MCP Server Mode - Start AI integration server
 bunx github:aashari/rag-browser
+
+# Using Node.js/npm
+# CLI Mode - Analyze a webpage
+npx -y github:aashari/rag-browser --url "https://example.com"
+
+# MCP Server Mode - Start AI integration server
+npx -y github:aashari/rag-browser
 ```
 
 ## 🎯 Features
@@ -79,8 +87,11 @@ bunx github:aashari/rag-browser --url "https://wikipedia.org" --plan '{
 ### Starting the Server
 
 ```bash
-# Using bun
+# Using Bun (Recommended)
 bunx github:aashari/rag-browser
+
+# Using Node.js/npm
+npx -y github:aashari/rag-browser
 ```
 
 ### Supported Actions
@@ -98,11 +109,22 @@ bunx github:aashari/rag-browser
 For Claude and other AI systems, add to your configuration:
 
 ```json
+// Using Bun (Recommended)
 {
   "mcpServers": {
     "rag-browser": {
       "command": "bunx",
       "args": ["github:aashari/rag-browser"]
+    }
+  }
+}
+
+// Using Node.js/npm
+{
+  "mcpServers": {
+    "rag-browser": {
+      "command": "npx",
+      "args": ["-y", "github:aashari/rag-browser"]
     }
   }
 }
