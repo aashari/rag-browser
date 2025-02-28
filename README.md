@@ -25,11 +25,13 @@
 ## Installation
 
 ### Prerequisites
+
 - **Bun** (recommended): `curl -fsSL https://bun.sh/install | bash`
 - **Node.js** (optional): Version 16+ with npm
 - No local installation required—use `bunx` or `npx` to run directly from GitHub.
 
 ### Running the Tool
+
 Use `bunx` (preferred) or `npx` to execute `rag-browser` without cloning the repository:
 
 ```bash
@@ -54,9 +56,11 @@ bun run src/index.ts
 ## Usage
 
 ### CLI Mode
+
 Analyze a webpage or execute a sequence of actions.
 
 #### Simple Page Analysis
+
 ```bash
 # Using Bun
 bunx github:aashari/rag-browser --url "https://example.com"
@@ -68,19 +72,25 @@ npx -y github:aashari/rag-browser --url "https://example.com"
 **Output**: Displays page title, description, and top 5 inputs, buttons, and links.
 
 #### Headless Mode with JSON Output
+
 ```bash
 bunx github:aashari/rag-browser --url "https://example.com" --headless --json
 ```
+
 **Output**: JSON object with full page analysis.
 
 #### Show All Interactive Elements
+
 ```bash
 bunx github:aashari/rag-browser --url "https://example.com" --inputs --buttons --links
 ```
+
 **Output**: Lists all inputs, buttons, and links with selectors.
 
 #### Execute an Action Plan
+
 Search Wikipedia and capture results:
+
 ```bash
 bunx github:aashari/rag-browser --url "https://wikipedia.org" --plan '{
   "actions": [
@@ -92,25 +102,29 @@ bunx github:aashari/rag-browser --url "https://wikipedia.org" --plan '{
   ]
 }'
 ```
+
 **Output**: Executes the plan and prints search results in Markdown.
 
 #### CLI Options
-| Option             | Description                              | Example Value            |
-|--------------------|------------------------------------------|--------------------------|
-| `--url`           | Target URL (required)                   | `"https://example.com"` |
-| `--headless`      | Run without UI                         | (flag)                  |
-| `--json`          | Output in JSON format                  | (flag)                  |
-| `--simple-selectors` | Use simpler CSS selectors            | (flag)                  |
-| `--plan`          | JSON string of actions                 | See above example       |
-| `--timeout`       | Timeout in ms (-1 for infinite)        | `5000`                  |
-| `--inputs`        | Show all inputs                        | (flag)                  |
-| `--buttons`       | Show all buttons                       | (flag)                  |
-| `--links`         | Show all links                         | (flag)                  |
+
+| Option               | Description                     | Example Value           |
+| -------------------- | ------------------------------- | ----------------------- |
+| `--url`              | Target URL (required)           | `"https://example.com"` |
+| `--headless`         | Run without UI                  | (flag)                  |
+| `--json`             | Output in JSON format           | (flag)                  |
+| `--simple-selectors` | Use simpler CSS selectors       | (flag)                  |
+| `--plan`             | JSON string of actions          | See above example       |
+| `--timeout`          | Timeout in ms (-1 for infinite) | `5000`                  |
+| `--inputs`           | Show all inputs                 | (flag)                  |
+| `--buttons`          | Show all buttons                | (flag)                  |
+| `--links`            | Show all links                  | (flag)                  |
 
 ### MCP Server Mode
+
 Run as a server for AI integration.
 
 #### Start the Server
+
 ```bash
 # Using Bun
 bunx github:aashari/rag-browser
@@ -120,7 +134,9 @@ npx -y github:aashari/rag-browser
 ```
 
 #### AI Configuration
+
 Add to your AI system’s MCP configuration:
+
 ```json
 // For Bun
 {
@@ -144,24 +160,27 @@ Add to your AI system’s MCP configuration:
 ```
 
 #### Supported Actions
-| Action     | Description                | Required Fields           | Optional Fields          |
-|------------|----------------------------|---------------------------|--------------------------|
-| `wait`     | Wait for elements          | `elements: string[]`      | `timeout: number`        |
-| `click`    | Click an element           | `element: string`         | -                        |
-| `typing`   | Type text                  | `element: string`, `value: string` | `delay: number` |
-| `keyPress` | Press a key                | `key: string`             | `element: string`        |
-| `print`    | Capture content            | `elements: string[]`      | `format: "html" \| "markdown"` |
+
+| Action     | Description       | Required Fields                    | Optional Fields                |
+| ---------- | ----------------- | ---------------------------------- | ------------------------------ |
+| `wait`     | Wait for elements | `elements: string[]`               | `timeout: number`              |
+| `click`    | Click an element  | `element: string`                  | -                              |
+| `typing`   | Type text         | `element: string`, `value: string` | `delay: number`                |
+| `keyPress` | Press a key       | `key: string`                      | `element: string`              |
+| `print`    | Capture content   | `elements: string[]`               | `format: "html" \| "markdown"` |
 
 ---
 
 ## ForHumans
 
 ### Why Use rag-browser?
+
 - **Explore Webpages**: Quickly analyze a page’s structure and interactive elements.
 - **Automate Tasks**: Define and execute browser actions without coding.
 - **Debugging**: Use detailed output to understand page behavior.
 
 ### Example Workflow
+
 1. Analyze a login page:
    ```bash
    bunx github:aashari/rag-browser --url "https://example.com/login" --inputs --buttons
@@ -186,12 +205,15 @@ Add to your AI system’s MCP configuration:
 ## ForAI
 
 ### Integration with AI Systems
+
 `rag-browser` exposes browser automation via MCP, allowing AI to:
+
 - Navigate webpages
 - Extract content
 - Perform actions
 
 ### Example AI Request
+
 ```json
 {
   "tool": "rag-browser",
@@ -208,9 +230,11 @@ Add to your AI system’s MCP configuration:
   }
 }
 ```
+
 **Response**: Markdown content of search results.
 
 ### Capabilities
+
 - **Dynamic Interaction**: Responds to page changes (e.g., navigation).
 - **Content Extraction**: Returns structured data (HTML/Markdown).
 - **Error Handling**: Provides detailed feedback on failures.
@@ -220,6 +244,7 @@ Add to your AI system’s MCP configuration:
 ## Development
 
 ### Project Structure
+
 ```
 src/
 ├── cli/         # CLI entry point
@@ -232,12 +257,14 @@ src/
 ```
 
 ### Build and Run Locally
+
 ```bash
 bun install
 bun run src/index.ts --url "https://example.com"
 ```
 
 ### Contributing
+
 1. Fork the repository.
 2. Create a feature branch (`git checkout -b feature/new-action`).
 3. Commit changes (`git commit -m "Add new action type"`).
@@ -257,4 +284,5 @@ File issues at [github.com/aashari/rag-browser/issues](https://github.com/aashar
 ---
 
 ## License
+
 MIT © Andi Ashari. See [LICENSE](LICENSE) for details.
