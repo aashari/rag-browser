@@ -4,7 +4,7 @@
 
 `rag-browser` is a versatile tool built with [Playwright](https://playwright.dev/) that enables webpage analysis and automation. It operates in two modes: a **CLI mode** for direct webpage analysis and an **MCP Server mode** for integration with AI systems via the Model Context Protocol (MCP). Whether you're a developer exploring a webpage's structure or an AI system executing complex browser tasks, `rag-browser` provides a robust and flexible solution.
 
-- **Version**: 2.0.0
+- **Version**: 2.1.0
 - **License**: Open-source (MIT, see [LICENSE](LICENSE))
 - **Repository**: [github.com/aashari/rag-browser](https://github.com/aashari/rag-browser)
 - **Author**: Andi Ashari
@@ -40,6 +40,53 @@ bunx github:aashari/rag-browser --url "https://example.com"
 
 # Using Node.js/npm
 npx -y github:aashari/rag-browser --url "https://example.com"
+```
+
+### Installing Locally
+
+If you prefer to install the tool locally without publishing to npm, you have two simple options:
+
+#### Option 1: Install Directly from GitHub
+
+This is the easiest way to install the tool globally on your machine:
+
+```bash
+# Using Bun (Recommended)
+bun install -g github:aashari/rag-browser
+
+# Using npm
+npm install -g github:aashari/rag-browser
+```
+
+After installation, you can run it directly:
+
+```bash
+rag-browser --url "https://example.com"
+```
+
+#### Option 2: Clone and Install Locally
+
+For development or customization:
+
+```bash
+# Clone the repository
+git clone https://github.com/aashari/rag-browser.git
+cd rag-browser
+
+# Install dependencies
+bun install  # or npm install
+
+# Build the project
+npm run build
+
+# Link the package globally
+bun link     # or npm link
+```
+
+After linking, you can run it directly:
+
+```bash
+rag-browser --url "https://example.com"
 ```
 
 To contribute or modify, clone the repository:
