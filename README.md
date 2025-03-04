@@ -4,7 +4,7 @@
 
 `rag-browser` is a versatile tool built with [Playwright](https://playwright.dev/) that enables webpage analysis and automation. It operates in two modes: a **CLI mode** for direct webpage analysis and an **MCP Server mode** for integration with AI systems via the Model Context Protocol (MCP). Whether you're a developer exploring a webpage's structure or an AI system executing complex browser tasks, `rag-browser` provides a robust and flexible solution.
 
-- **Version**: 2.1.0
+- **Version**: 2.1.1
 - **License**: Open-source (MIT, see [LICENSE](LICENSE))
 - **Repository**: [github.com/aashari/rag-browser](https://github.com/aashari/rag-browser)
 - **Author**: Andi Ashari

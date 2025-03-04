@@ -207,6 +207,6 @@ export const tools = {
 
 export const compatibility = {
 	minimumVersion: "1.0.0",
-	version: "2.1.0",
+	version: "2.1.1",
 	// ... existing code ...
 };

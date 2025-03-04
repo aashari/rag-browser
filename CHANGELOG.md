@@ -2,7 +2,7 @@
 
 All notable changes to the `rag-browser` project will be documented in this file.
 
-## [2.1.0] - 2024-07-10
+## [2.1.1] - 2025-03-04
 
 ### Added
 - Added local installation options

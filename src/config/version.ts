@@ -1,4 +1,4 @@
-export const VERSION = "2.1.0";
+export const VERSION = "2.1.1";
 
 // Semantic version components
 export const [MAJOR, MINOR, PATCH] = VERSION.split(".").map(Number);
