@@ -131,3 +131,17 @@ export interface StoredAnalysis {
 	timestamp: Date;
 	url: string;
 }
+
+export interface StorageState {
+	cookies?: Array<{
+		name: string;
+		value: string;
+		domain: string;
+		path: string;
+	}>;
+	origins?: Array<{
+		origin: string;
+		localStorage?: Record<string, string>;
+		sessionStorage?: Record<string, string>;
+	}>;
+}
