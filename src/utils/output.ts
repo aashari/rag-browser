@@ -62,9 +62,9 @@ function formatContent(content: string, format: 'html' | 'markdown' | undefined)
 		return content;
 	}
 
-	// For markdown content, apply minimal formatting to ensure proper display
+	// For markdown content, apply enhanced formatting to ensure proper display
 	if (format === 'markdown') {
-		// Fix common markdown formatting issues
+		// Fix common markdown formatting issues and improve readability
 		return content
 			// Ensure proper newlines around headings
 			.replace(/([^\n])(\#{1,6}\s)/g, '$1\n\n$2')
@@ -73,23 +73,38 @@ function formatContent(content: string, format: 'html' | 'markdown' | undefined)
 			// Fix newlines around horizontal rules
 			.replace(/([^\n])(\-\-\-)/g, '$1\n\n$2')
 			.replace(/(\-\-\-)([^\n])/g, '$1\n\n$2')
+			// Improve list formatting
+			.replace(/([^\n])(\-\s|\*\s|\d+\.\s)/g, '$1\n\n$2')
+			// Improve code block formatting
+			.replace(/([^\n])```/g, '$1\n\n```')
+			.replace(/```([^\n])/g, '```\n$1')
 			// Cleanup excessive newlines
 			.replace(/\n{3,}/g, '\n\n');
 	}
 
-	// For HTML format, preserve the HTML tags but clean up whitespace
+	// For HTML format, preserve the HTML tags but clean up whitespace and improve readability
 	if (format === 'html') {
 		return content
-			.replace(/\n{3,}/g, '\n\n') // Replace 3+ consecutive newlines with 2
-			.replace(/>\s+</g, '>\n<'); // Add newlines between tags for better readability
+			// Replace 3+ consecutive newlines with 2
+			.replace(/\n{3,}/g, '\n\n')
+			// Add newlines between tags for better readability
+			.replace(/>\s*</g, '>\n<')
+			// Indent nested tags for better readability
+			.replace(/(<[^\/][^>]*>)\n/g, '$1\n  ')
+			// Clean up excessive whitespace
+			.replace(/\s{2,}/g, ' ')
+			// Ensure proper spacing around attributes
+			.replace(/([a-zA-Z0-9])=(["\'])/g, '$1 = $2');
 	}
 
 	// For undefined format, add some basic formatting to make it more readable
 	return content
-		.replace(/\n{3,}/g, '\n\n') // Replace 3+ consecutive newlines with 2
-		.replace(/<\/p>\s*<p>/g, '\n\n') // Add proper paragraph spacing
-		.replace(/<br\s*\/?>/g, '\n') // Replace <br> with newlines
-		.replace(/<\/?[^>]+(>|$)/g, ''); // Remove HTML tags for cleaner CLI output
+		// Replace 3+ consecutive newlines with 2
+		.replace(/\n{3,}/g, '\n\n')
+		// Clean up excessive whitespace
+		.replace(/\s{2,}/g, ' ')
+		// Add newlines after periods for better readability
+		.replace(/\.\s+([A-Z])/g, '.\n$1');
 }
 
 export function printAnalysis(
@@ -172,46 +187,188 @@ export function printAnalysis(
 	// Filter visible inputs (those with a valid selector)
 	const visibleInputs = analysis.inputs.filter(input => input && input.selector && input.selector.trim() !== '');
 
+	// Categorize inputs by type
+	const textInputs = visibleInputs.filter(input => input.type === 'text' || input.type === 'textarea' || input.type === 'search' || input.type === 'email' || input.type === 'password');
+	const buttonInputs = visibleInputs.filter(input => input.type === 'submit' || input.type === 'button' || input.type === 'reset');
+	const checkboxInputs = visibleInputs.filter(input => input.type === 'checkbox' || input.type === 'radio');
+	const otherInputs = visibleInputs.filter(input => !textInputs.includes(input) && !buttonInputs.includes(input) && !checkboxInputs.includes(input));
+
 	// Show input elements with more details - always show top 5 only
 	if (visibleInputs.length > 0) {
 		output += `Total Input Elements: ${analysis.inputs.length}\n`;
-		output += "[Showing top visible 5 inputs]\n";
-		visibleInputs.slice(0, 5).forEach((input, index) => {
-			const inputType = input.type ? `(${input.type})` : '';
-			const placeholder = input.placeholder ? ` placeholder="${input.placeholder}"` : '';
-			output += `- ${index + 1}. ${input.label || 'No label'} ${inputType}${placeholder}\n`;
-			output += `  Selector: ${input.selector}\n`;
-		});
-		output += "\n";
+		
+		if (textInputs.length > 0) {
+			output += "[Text Inputs]\n";
+			textInputs.slice(0, 3).forEach((input, index) => {
+				const placeholder = input.placeholder ? ` placeholder="${input.placeholder}"` : '';
+				output += `- ${index + 1}. ${input.label || 'No label'} (${input.type || 'text'})${placeholder}\n`;
+				output += `  Selector: ${input.selector}\n`;
+			});
+			if (textInputs.length > 3) {
+				output += `  ... and ${textInputs.length - 3} more text inputs\n`;
+			}
+			output += "\n";
+		}
+		
+		if (buttonInputs.length > 0) {
+			output += "[Button Inputs]\n";
+			buttonInputs.slice(0, 2).forEach((input, index) => {
+				output += `- ${index + 1}. ${input.label || 'No label'} (${input.type})\n`;
+				output += `  Selector: ${input.selector}\n`;
+			});
+			if (buttonInputs.length > 2) {
+				output += `  ... and ${buttonInputs.length - 2} more button inputs\n`;
+			}
+			output += "\n";
+		}
+		
+		if (checkboxInputs.length > 0) {
+			output += "[Checkbox/Radio Inputs]\n";
+			checkboxInputs.slice(0, 2).forEach((input, index) => {
+				output += `- ${index + 1}. ${input.label || 'No label'} (${input.type})\n`;
+				output += `  Selector: ${input.selector}\n`;
+			});
+			if (checkboxInputs.length > 2) {
+				output += `  ... and ${checkboxInputs.length - 2} more checkbox/radio inputs\n`;
+			}
+			output += "\n";
+		}
+		
+		if (otherInputs.length > 0) {
+			output += "[Other Inputs]\n";
+			otherInputs.slice(0, 2).forEach((input, index) => {
+				output += `- ${index + 1}. ${input.label || 'No label'} (${input.type || 'unknown'})\n`;
+				output += `  Selector: ${input.selector}\n`;
+			});
+			if (otherInputs.length > 2) {
+				output += `  ... and ${otherInputs.length - 2} more inputs\n`;
+			}
+			output += "\n";
+		}
 	}
 
 	// Filter visible buttons (those with a valid selector)
 	const visibleButtons = analysis.buttons.filter(button => button && button.selector && button.selector.trim() !== '');
 
+	// Categorize buttons by text content
+	const primaryButtons = visibleButtons.filter(button => 
+			button.text && 
+			(button.text.toLowerCase().includes('submit') || 
+			 button.text.toLowerCase().includes('search') || 
+			 button.text.toLowerCase().includes('login') || 
+			 button.text.toLowerCase().includes('sign in') ||
+			 button.text.toLowerCase().includes('continue')));
+	const navigationButtons = visibleButtons.filter(button => 
+			button.text && 
+			(button.text.toLowerCase().includes('next') || 
+			 button.text.toLowerCase().includes('previous') || 
+			 button.text.toLowerCase().includes('back') || 
+			 button.text.toLowerCase().includes('menu')));
+	const otherButtons = visibleButtons.filter(button => !primaryButtons.includes(button) && !navigationButtons.includes(button));
+
 	// Show button elements with more details - always show top 5 only
 	if (visibleButtons.length > 0) {
 		output += `Total Button Elements: ${analysis.buttons.length}\n`;
-		output += "[Showing top visible 5 buttons]\n";
-		visibleButtons.slice(0, 5).forEach((button, index) => {
-			output += `- ${index + 1}. ${button.text || 'No text'}\n`;
-			output += `  Selector: ${button.selector}\n`;
-		});
-		output += "\n";
+		
+		if (primaryButtons.length > 0) {
+			output += "[Primary Action Buttons]\n";
+			primaryButtons.slice(0, 2).forEach((button, index) => {
+				output += `- ${index + 1}. ${button.text || 'No text'}\n`;
+				output += `  Selector: ${button.selector}\n`;
+			});
+			if (primaryButtons.length > 2) {
+				output += `  ... and ${primaryButtons.length - 2} more primary buttons\n`;
+			}
+			output += "\n";
+		}
+		
+		if (navigationButtons.length > 0) {
+			output += "[Navigation Buttons]\n";
+			navigationButtons.slice(0, 2).forEach((button, index) => {
+				output += `- ${index + 1}. ${button.text || 'No text'}\n`;
+				output += `  Selector: ${button.selector}\n`;
+			});
+			if (navigationButtons.length > 2) {
+				output += `  ... and ${navigationButtons.length - 2} more navigation buttons\n`;
+			}
+			output += "\n";
+		}
+		
+		if (otherButtons.length > 0) {
+			output += "[Other Buttons]\n";
+			otherButtons.slice(0, 3).forEach((button, index) => {
+				output += `- ${index + 1}. ${button.text || 'No text'}\n`;
+				output += `  Selector: ${button.selector}\n`;
+			});
+			if (otherButtons.length > 3) {
+				output += `  ... and ${otherButtons.length - 3} more buttons\n`;
+			}
+			output += "\n";
+		}
 	}
 
 	// Filter visible links (those with a valid selector)
 	const visibleLinks = analysis.links.filter(link => link && link.selector && link.selector.trim() !== '');
 
+	// Categorize links by purpose
+	const navigationLinks = visibleLinks.filter(link => 
+			(link.title && (
+					link.title.toLowerCase().includes('home') || 
+					link.title.toLowerCase().includes('about') || 
+					link.title.toLowerCase().includes('contact') || 
+					link.title.toLowerCase().includes('login') ||
+					link.title.toLowerCase().includes('sign in'))) ||
+			(link.selector && (
+					link.selector.toLowerCase().includes('nav') || 
+					link.selector.toLowerCase().includes('menu') || 
+					link.selector.toLowerCase().includes('header'))));
+	const contentLinks = visibleLinks.filter(link => 
+			!navigationLinks.includes(link) && 
+			link.url && 
+			link.url.includes(analysis.url || ''));
+	const externalLinks = visibleLinks.filter(link => 
+			!navigationLinks.includes(link) && 
+			!contentLinks.includes(link));
+
 	// Show link elements with more details including URLs - always show top 5 only
 	if (visibleLinks.length > 0) {
 		output += `Total Link Elements: ${analysis.links.length}\n`;
-		output += "[Showing top visible 5 links]\n";
-		visibleLinks.slice(0, 5).forEach((link, index) => {
-			output += `- ${index + 1}. ${link.title || ''} → ${link.url || ''}\n`;
-			output += `  Selector: ${link.selector}\n`;
-		});
+		
+		if (navigationLinks.length > 0) {
+			output += "[Navigation Links]\n";
+			navigationLinks.slice(0, 3).forEach((link, index) => {
+				output += `- ${index + 1}. ${link.title || ''} → ${link.url || ''}\n`;
+				output += `  Selector: ${link.selector}\n`;
+			});
+			if (navigationLinks.length > 3) {
+				output += `  ... and ${navigationLinks.length - 3} more navigation links\n`;
+			}
+			output += "\n";
+		}
+		
+		if (contentLinks.length > 0) {
+			output += "[Content Links]\n";
+			contentLinks.slice(0, 3).forEach((link, index) => {
+				output += `- ${index + 1}. ${link.title || ''} → ${link.url || ''}\n`;
+				output += `  Selector: ${link.selector}\n`;
+			});
+			if (contentLinks.length > 3) {
+				output += `  ... and ${contentLinks.length - 3} more content links\n`;
+			}
+			output += "\n";
+		}
+		
+		if (externalLinks.length > 0) {
+			output += "[External Links]\n";
+			externalLinks.slice(0, 3).forEach((link, index) => {
+				output += `- ${index + 1}. ${link.title || ''} → ${link.url || ''}\n`;
+				output += `  Selector: ${link.selector}\n`;
+			});
+			if (externalLinks.length > 3) {
+				output += `  ... and ${externalLinks.length - 3} more external links\n`;
+			}
+		}
 	}
-	output += "\n";
 
 	// Show action results if present
 	if (analysis.plannedActions && analysis.plannedActions.length > 0) {
@@ -259,29 +416,58 @@ export function printAnalysis(
 	// Add next actions suggestions
 	output += "\n🚀 Next Actions Suggestions:\n";
 	output += "=".repeat(50) + "\n";
-	
-	// Suggest typing into inputs
-	if (visibleInputs.length > 0) {
-		const firstInput = visibleInputs[0];
-		output += `- Type into input: {"type": "typing", "element": "${firstInput.selector}", "value": "your text here"}\n`;
+
+	// Suggest form interactions if we have both inputs and buttons
+	if (textInputs.length > 0 && (buttonInputs.length > 0 || primaryButtons.length > 0)) {
+		output += "📝 Form Interaction:\n";
+		const formInput = textInputs[0];
+		const formButton = primaryButtons.length > 0 ? primaryButtons[0] : 
+						  (buttonInputs.length > 0 ? buttonInputs[0] : 
+						  (visibleButtons.length > 0 ? visibleButtons[0] : null));
+		
+		if (formInput && formButton) {
+			output += `- Fill and submit form: {"actions": [\n  {"type": "typing", "element": "${formInput.selector}", "value": "your text here"},\n  {"type": "click", "element": "${formButton.selector}"}\n]}\n\n`;
+		} else if (formInput) {
+			output += `- Type into input: {"type": "typing", "element": "${formInput.selector}", "value": "your text here"}\n\n`;
+		}
 	}
-	
-	// Suggest clicking buttons
-	if (visibleButtons.length > 0) {
-		const firstButton = visibleButtons[0];
-		output += `- Click button: {"type": "click", "element": "${firstButton.selector}"}\n`;
+
+	// Suggest navigation if we have navigation links or buttons
+	if (navigationLinks.length > 0 || navigationButtons.length > 0) {
+		output += "🧭 Navigation:\n";
+		if (navigationLinks.length > 0) {
+			output += `- Navigate to: {"type": "click", "element": "${navigationLinks[0].selector}"}\n`;
+		}
+		if (navigationButtons.length > 0) {
+			output += `- Open menu: {"type": "click", "element": "${navigationButtons[0].selector}"}\n`;
+		}
+		output += "\n";
 	}
-	
-	// Suggest clicking links
-	if (visibleLinks.length > 0) {
-		const firstLink = visibleLinks[0];
-		output += `- Click link: {"type": "click", "element": "${firstLink.selector}"}\n`;
+
+	// Suggest content extraction based on page structure
+	output += "📋 Content Extraction:\n";
+	if (hasListStructure) {
+		output += `- Extract list content: {"type": "print", "elements": ["ul", "ol", ".list", "[role=list]"], "format": "markdown"}\n`;
 	}
-	
-	// Always suggest these generic actions
-	output += `- Wait for element: {"type": "wait", "elements": ["selector_here"], "timeout": 5000}\n`;
-	output += `- Extract content: {"type": "print", "elements": ["selector_here"], "format": "markdown"}\n`;
-	output += `- See HTML Structure: {"type": "print", "elements": ["selector_here"], "format": "html"}\n`;
+	if (hasFormStructure) {
+		output += `- Extract form fields: {"type": "print", "elements": ["form"], "format": "html"}\n`;
+	}
+	if (hasNavigationMenu) {
+		output += `- Extract navigation menu: {"type": "print", "elements": ["nav", "header", ".menu"], "format": "markdown"}\n`;
+	}
+	output += `- Extract main content: {"type": "print", "elements": ["main", "article", "#content", ".content"], "format": "markdown"}\n`;
+	output += `- View page structure: {"type": "print", "elements": ["body"], "format": "html"}\n\n`;
+
+	// Suggest advanced interactions
+	output += "🔄 Advanced Interactions:\n";
+	if (textInputs.length > 1) {
+		const inputs = textInputs.slice(0, 2).map(input => input.selector);
+		output += `- Multi-field form: {"actions": [\n  {"type": "typing", "element": "${inputs[0]}", "value": "first value"},\n  {"type": "typing", "element": "${inputs[1]}", "value": "second value"},\n  {"type": "keyPress", "key": "Enter"}\n]}\n`;
+	}
+	if (checkboxInputs.length > 0) {
+		output += `- Toggle checkbox: {"type": "click", "element": "${checkboxInputs[0].selector}"}\n`;
+	}
+	output += `- Wait and click: {"actions": [\n  {"type": "wait", "elements": ["selector_here"], "timeout": 5000},\n  {"type": "click", "element": "selector_here"}\n]}\n`;
 
 	output += "\n\nAnalysis complete.\n";
 
