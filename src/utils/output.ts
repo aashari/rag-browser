@@ -471,8 +471,6 @@ export function printAnalysis(
 	output += `- Extract content: \`--extract "selector"\`\n`;
 	output += `- View HTML structure: \`--debug\`\n`;
 
-	output += "\nAnalysis complete.\n";
-
 	return output;
 }
 

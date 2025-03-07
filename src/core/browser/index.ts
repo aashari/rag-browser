@@ -176,7 +176,6 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
             }
 
             // Close browser unless we're in infinite wait and action hasn't succeeded
-            // For infinite wait actions (like login forms), keep the browser open until the action succeeds
             const hasInfiniteWait = options.timeout === -1;
             
             if (actionSucceeded || !hasInfiniteWait) {
@@ -193,29 +192,9 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
                     await processAndSaveState(state, options);
                     info("State processed and saved", { timestamp: new Date().toISOString() });
                     
-                    // Unroute all routes before closing
-                    info("Unrouting all routes", { timestamp: new Date().toISOString() });
-                    for (const page of browser.pages()) {
-                        if (page.isClosed()) continue;
-                        
-                        try {
-                            // First remove all listeners to prevent callbacks after closing
-                            page.removeAllListeners();
-                            
-                            // Then unroute all routes
-                            await page.unrouteAll({ behavior: 'ignoreErrors' });
-                        } catch (e) {
-                            // Ignore errors during unrouting
-                        }
-                    }
-                    info("All routes unrouted", { timestamp: new Date().toISOString() });
+                    // Skip unrouting to speed up browser closure
                     
-                    // Wait a longer time to ensure all operations are complete
-                    info("Starting wait before browser close", { timestamp: new Date().toISOString() });
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    info("Wait completed", { timestamp: new Date().toISOString() });
-                    
-                    // Close the browser
+                    // Close the browser immediately
                     info("Closing browser", { timestamp: new Date().toISOString() });
                     await browser.close().catch(e => {
                         warn("Error during browser close", { error: e instanceof Error ? e.message : String(e) });
@@ -226,7 +205,7 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
                     error("Error closing browser", closeErr);
                     try {
                         // Wait a short time before trying to close again
-                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        await new Promise(resolve => setTimeout(resolve, 500));
                         await browser.close();
                     } catch (e) {
                         // Ignore additional errors during closure
