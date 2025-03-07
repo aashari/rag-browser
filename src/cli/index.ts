@@ -70,10 +70,12 @@ export async function main(): Promise<void> {
 		
 		console.warn(formatAnalysis(analysis, format));
 		
-		// Add a small delay to allow async operations to complete
+		// Add a longer delay before exiting to ensure all browser operations are complete
+		console.warn("Analysis complete, waiting for cleanup before exiting...");
 		setTimeout(() => {
+			console.warn("Exiting process");
 			process.exit(0);
-		}, 100);
+		}, 2000); // 2 second delay
 	} catch (error) {
 		console.error("Error:", error instanceof Error ? error.message : String(error));
 		process.exit(1);

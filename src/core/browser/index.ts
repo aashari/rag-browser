@@ -4,7 +4,7 @@ import { setupEventHandlers } from "./eventHandlers";
 import { applyStorageState } from "./storageManager";
 import { injectUtilityScripts, injectLinkModifiers } from "./scriptInjector";
 import { analyzePage } from "./pageAnalyzer";
-import { info, error } from "../../utils/logging";
+import { info, error, warn } from "../../utils/logging";
 import type { Cookie } from "playwright";
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -86,6 +86,35 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
         // Set up all event handlers
         setupEventHandlers(page);
         
+        // Set up console log streaming for this page if in debug mode
+        if (options.debug) {
+            page.on('console', message => {
+                const type = message.type();
+                const text = message.text();
+                
+                // Log with appropriate level based on console message type
+                switch (type) {
+                    case 'log':
+                    case 'info':
+                        info(`[Browser Console] ${text}`);
+                        break;
+                    case 'warning':
+                        warn(`[Browser Console] ${text}`);
+                        break;
+                    case 'error':
+                        error(`[Browser Console] ${text}`);
+                        break;
+                    default:
+                        info(`[Browser Console] [${type}] ${text}`);
+                }
+            });
+            
+            // Also capture page errors
+            page.on('pageerror', exception => {
+                error(`[Browser Exception] ${exception.message}`);
+            });
+        }
+        
         // Apply storage state if provided
         if (options.storageState) {
             await applyStorageState(page, options.storageState);
@@ -136,11 +165,28 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
                 // Get browser state before closing
                 const state = await browser.storageState();
                 
-                // Close the browser first
-                await browser.close();
+                // Process and save state before closing the browser
+                await processAndSaveState(state, options);
                 
-                // Process and save state asynchronously (don't await)
-                processAndSaveState(state, options);
+                // Unroute all routes to prevent "Target page, context or browser has been closed" errors
+                if (options.debug) {
+                    info("Cleaning up browser routes before closing");
+                    const pages = browser.pages();
+                    for (const page of pages) {
+                        try {
+                            await page.unrouteAll({ behavior: 'ignoreErrors' });
+                        } catch (e) {
+                            // Ignore errors during unrouting
+                        }
+                    }
+                }
+                
+                // Add a small delay to ensure all operations are complete
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Close the browser
+                info("Closing browser");
+                await browser.close();
                 
             } catch (closeErr) {
                 error("Error closing browser", closeErr);
@@ -154,58 +200,29 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
     }
 }
 
-// Process and save browser state asynchronously
+// Process and save browser state
 async function processAndSaveState(state: any, options: BrowserOptions): Promise<void> {
     try {
-        // Process cookies
-        const cookies = state.cookies.map(({ 
-            name, 
-            value, 
-            domain, 
-            path 
-        }: Cookie) => ({
-            name,
-            value,
-            domain: domain || '',
-            path: path || '/'
-        }));
+        // Process cookies if needed
+        if (state.cookies) {
+            // Filter out any problematic cookies if needed
+            state.cookies = state.cookies.filter((cookie: Cookie) => {
+                // Keep all cookies by default
+                return true;
+            });
+        }
 
-        // Process origins
-        const origins = state.origins.map((origin: BrowserStorageOrigin) => {
-            const processedOrigin: {
-                origin: string;
-                localStorage?: Record<string, string>;
-                sessionStorage?: Record<string, string>;
-            } = {
-                origin: origin.origin,
-            };
-            
-            if (origin.localStorage) {
-                processedOrigin.localStorage = Object.fromEntries(
-                    origin.localStorage.map((item: BrowserStorageItem) => [item.name, item.value])
-                );
-            }
-            
-            if (origin.sessionStorage) {
-                processedOrigin.sessionStorage = Object.fromEntries(
-                    origin.sessionStorage.map((item: BrowserStorageItem) => [item.name, item.value])
-                );
-            }
-            
-            return processedOrigin;
-        });
+        // Process origins if needed
+        if (state.origins) {
+            // Filter out any problematic origins if needed
+            state.origins = state.origins.filter((origin: BrowserStorageOrigin) => {
+                // Keep all origins by default
+                return true;
+            });
+        }
 
-        // Create processed state
-        const processedState = {
-            cookies,
-            origins
-        };
-
-        // Update the user's storage state for next run
-        options.storageState = processedState;
-        
-        // Save to file for persistence
-        await saveStorageStateToFile(processedState);
+        // Save the processed state to a file
+        await saveStorageStateToFile(state);
     } catch (err) {
         error("Error processing browser state", err);
     }
