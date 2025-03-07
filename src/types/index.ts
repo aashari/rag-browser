@@ -92,6 +92,7 @@ export interface BrowserOptions {
 	timeout?: number;
 	selectorMode?: SelectorMode;
 	plan?: Plan;
+	debug?: boolean;
 	userDataDir?: string;
 	storageState?: {
 		cookies?: {

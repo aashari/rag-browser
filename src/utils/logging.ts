@@ -3,6 +3,14 @@ import { DEBUG } from "../config/constants";
 // Maximum length for data in logs to prevent excessive log sizes
 const MAX_LOG_DATA_LENGTH = 1000;
 
+// Global debug flag that can be set by the application
+let isDebugMode = false;
+
+// Function to set debug mode
+export function setDebugMode(debug: boolean): void {
+	isDebugMode = debug;
+}
+
 interface JsonRpcMessage {
 	jsonrpc: "2.0";
 	method: string;
@@ -56,6 +64,10 @@ function truncateLogData(data: unknown): unknown {
  * Send a log message following JSON-RPC 2.0 notification format
  */
 export function log(message: string, level: "debug" | "info" | "warn" | "error" = "info", data?: unknown): void {
+	// Skip logging if in debug mode
+	if (isDebugMode) return;
+	
+	// Skip debug logs if DEBUG constant is false
 	if (!DEBUG && level === "debug") return;
 
 	const notification: JsonRpcNotification = {

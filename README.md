@@ -162,6 +162,8 @@ bunx github:aashari/rag-browser --url "https://wikipedia.org" --plan '{
 | `--simple-selectors` | Use simpler CSS selectors       | (flag)                  |
 | `--plan`             | JSON string of actions          | See above example       |
 | `--timeout`          | Timeout in ms (-1 for infinite) | `5000`                  |
+| `--debug`            | Suppress all logging            | (flag)                  |
+| `--debug`            | Suppress all logging            | (flag)                  |
 
 ### MCP Server Mode
 
@@ -263,6 +265,7 @@ Add to your AI system's MCP configuration:
   "tool": "rag-browser",
   "action": {
     "url": "https://wikipedia.org",
+    "debug": false,
     "plan": {
       "actions": [
         {"type": "wait", "elements": ["#searchInput"]},
@@ -306,27 +309,3 @@ src/
 bun install
 bun run src/index.ts --url "https://example.com"
 ```
-
-### Contributing
-
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/new-action`).
-3. Commit changes (`git commit -m "Add new action type"`).
-4. Push to the branch (`git push origin feature/new-action`).
-5. Open a Pull Request.
-
----
-
-## Troubleshooting
-
-- **Error: "Timeout exceeded"**: Increase `--timeout` or check selector validity.
-- **No elements found**: Use `--simple-selectors` or verify page structure.
-- **Server not starting**: Ensure port availability and MCP SDK compatibility.
-
-File issues at [github.com/aashari/rag-browser/issues](https://github.com/aashari/rag-browser/issues).
-
----
-
-## License
-
-MIT © Andi Ashari. See [LICENSE](LICENSE) for details.

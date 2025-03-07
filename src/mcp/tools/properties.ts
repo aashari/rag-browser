@@ -26,5 +26,9 @@ export const commonProperties = {
 		type: "string",
 		enum: ["json", "pretty"],
 		description: "Controls the output format for the page analysis. Set to 'json' to return the analysis as a structured JSON object (useful for programmatic processing), or 'pretty' (default) for a human-readable formatted text. Note: This is different from the 'format' property in print actions, which controls HTML vs markdown output for captured content.",
+	},
+	debug: {
+		type: "boolean",
+		description: "Controls whether logging (including errors and warnings) should be suppressed. When set to 'true', all logging will be suppressed, making the tool run silently. Default is 'false', which shows normal logging output.",
 	}
 }; 
