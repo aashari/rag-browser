@@ -135,7 +135,7 @@ export async function captureElementsHtml(
 				if (format === "markdown") {
 					try {
 						// convertToMarkdown returns a PlannedActionResult
-						const markdownResult = convertToMarkdown(combinedHtml, selector);
+						const markdownResult = convertToMarkdown(combinedHtml, selector, 'markdown');
 						// Update our result with the markdown content
 						result.html = markdownResult.html;
 						result.format = 'markdown';
@@ -148,7 +148,9 @@ export async function captureElementsHtml(
 					}
 				} else {
 					// For HTML format, keep the original HTML content
-					result.html = combinedHtml;
+					// Use convertToMarkdown to properly clean the HTML
+					const htmlResult = convertToMarkdown(combinedHtml, selector, 'html');
+					result.html = htmlResult.html;
 					result.format = 'html';
 					info('Successfully captured content in HTML format');
 				}

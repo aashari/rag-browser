@@ -99,6 +99,7 @@ export interface BrowserOptions {
 	plan?: Plan;
 	debug?: boolean;
 	userDataDir?: string;
+	maxElementsPerType?: number;
 	storageState?: {
 		cookies?: {
 			name: string;

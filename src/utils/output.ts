@@ -77,7 +77,14 @@ function formatContent(content: string, format: 'html' | 'markdown' | undefined)
 			.replace(/\n{3,}/g, '\n\n');
 	}
 
-	// For HTML or undefined format, add some basic formatting to make it more readable
+	// For HTML format, preserve the HTML tags but clean up whitespace
+	if (format === 'html') {
+		return content
+			.replace(/\n{3,}/g, '\n\n') // Replace 3+ consecutive newlines with 2
+			.replace(/>\s+</g, '>\n<'); // Add newlines between tags for better readability
+	}
+
+	// For undefined format, add some basic formatting to make it more readable
 	return content
 		.replace(/\n{3,}/g, '\n\n') // Replace 3+ consecutive newlines with 2
 		.replace(/<\/p>\s*<p>/g, '\n\n') // Add proper paragraph spacing
@@ -327,93 +334,118 @@ export function printActionSummary(statuses: ActionStatus[]): string {
 function detectListStructure(analysis: PageAnalysis): boolean {
 	// Look for repeated element patterns that might indicate a list
 	// Common indicators: multiple similar selectors, class names containing 'list', 'item', etc.
-	
+
 	// Check link patterns
-	if (analysis.links.length >= 3) {
-		const selectors = analysis.links.map(link => link.selector);
+	if (analysis.links && analysis.links.length >= 3) {
+		const selectors = analysis.links
+			.filter(link => link && typeof link.selector === 'string')
+			.map(link => link.selector);
+			
 		const commonParentPattern = findCommonSelectorPattern(selectors);
 		if (commonParentPattern) return true;
 	}
-	
+
 	// Check button patterns
-	if (analysis.buttons.length >= 3) {
-		const selectors = analysis.buttons.map(button => button.selector);
+	if (analysis.buttons && analysis.buttons.length >= 3) {
+		const selectors = analysis.buttons
+			.filter(button => button && typeof button.selector === 'string')
+			.map(button => button.selector);
+			
 		const commonParentPattern = findCommonSelectorPattern(selectors);
 		if (commonParentPattern) return true;
 	}
-	
-	// Look for CSS class names that suggest lists
+
 	const listIndicators = ['list', 'item', 'collection', 'row', 'card', 'grid'];
-	
+
 	// Check for list indicators in links
-	for (const link of analysis.links) {
-		if (listIndicators.some(indicator => link.selector.toLowerCase().includes(indicator))) {
-			return true;
+	if (analysis.links) {
+		for (const link of analysis.links) {
+			if (link && typeof link.selector === 'string' && 
+				listIndicators.some(indicator => link.selector.toLowerCase().includes(indicator))) {
+				return true;
+			}
 		}
 	}
-	
+
 	// Check for list indicators in buttons
-	for (const button of analysis.buttons) {
-		if (listIndicators.some(indicator => button.selector.toLowerCase().includes(indicator))) {
-			return true;
+	if (analysis.buttons) {
+		for (const button of analysis.buttons) {
+			if (button && typeof button.selector === 'string' && 
+				listIndicators.some(indicator => button.selector.toLowerCase().includes(indicator))) {
+				return true;
+			}
 		}
 	}
-	
+
 	return false;
 }
 
 function detectFormStructure(analysis: PageAnalysis): boolean {
 	// Forms typically have inputs and submit buttons
-	if (analysis.inputs.length === 0) return false;
-	
+	if (!analysis.inputs || analysis.inputs.length === 0) return false;
+
 	// Check for submit buttons or buttons near inputs
-	const hasSubmitButton = analysis.buttons.some(button => {
-		const text = button.text.toLowerCase();
-		return text.includes('submit') || 
-				   text.includes('search') || 
-				   text.includes('send') || 
-				   text.includes('save') ||
-				   text.includes('log in') ||
-				   text.includes('sign in');
-	});
-	
-	if (hasSubmitButton) return true;
-	
-	// Look for forms by checking input types
+	if (analysis.buttons && analysis.buttons.length > 0) {
+		const hasSubmitButton = analysis.buttons.some(button => {
+			if (!button || typeof button.text !== 'string') return false;
+			
+			const text = button.text.toLowerCase();
+			return text.includes('submit') || 
+					   text.includes('search') || 
+					   text.includes('send') || 
+					   text.includes('save') ||
+					   text.includes('log in') ||
+					   text.includes('sign in');
+		});
+
+		if (hasSubmitButton) return true;
+	}
+
+	// Check for input types that suggest forms
 	const hasFormInputs = analysis.inputs.some(input => {
-		return input.type === 'text' || 
-				   input.type === 'password' || 
-				   input.type === 'email' || 
-				   input.type === 'checkbox' ||
-				   input.type === 'radio';
+		return input && (
+			(input.type === 'text') || 
+			(input.type === 'password') || 
+			(input.type === 'email') ||
+			(input.type === 'search')
+		);
 	});
-	
+
 	return hasFormInputs;
 }
 
 function detectNavigationMenu(analysis: PageAnalysis): boolean {
 	// Navigation menus typically have multiple links in a common container
-	if (analysis.links.length < 3) return false;
-	
+	if (!analysis.links || analysis.links.length < 3) return false;
+
 	// Check for common navigation terms in link text
 	const navTerms = ['home', 'about', 'contact', 'menu', 'nav', 'navigation'];
-	
+
 	// Count links with navigation-like terms
 	const navLinks = analysis.links.filter(link => {
+		// Ensure link and link.title exists before calling toLowerCase
+		if (!link || typeof link.title !== 'string') return false;
+		
 		const title = link.title.toLowerCase();
 		return navTerms.some(term => title.includes(term));
 	});
-	
+
 	if (navLinks.length >= 2) return true;
-	
+
 	// Check for common selector patterns in navigation menus
-	const selectors = analysis.links.map(link => link.selector);
+	const selectors = analysis.links
+		.filter(link => link && typeof link.selector === 'string')
+		.map(link => link.selector);
+		
 	const navSelectors = selectors.filter(selector => {
-		return selector.toLowerCase().includes('nav') || 
-				   selector.toLowerCase().includes('menu') ||
-				   selector.toLowerCase().includes('header');
+		if (!selector) return false;
+		
+		const lowerSelector = selector.toLowerCase();
+		return lowerSelector.includes('nav') || 
+			   lowerSelector.includes('menu') ||
+			   lowerSelector.includes('header');
 	});
-	
+
 	return navSelectors.length >= 2;
 }
 
