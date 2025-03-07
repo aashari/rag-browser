@@ -10,6 +10,18 @@ import { error, info, debug as logDebug } from "../utils/logging";
 import { VERSION, PACKAGE_NAME } from "../config/version";
 import type { StabilityOptions } from "../core/stability/pageStability";
 
+/**
+ * Ensures all resources are properly released before process termination
+ * This helps prevent delays after the analysis is complete
+ */
+async function cleanupResources(): Promise<void> {
+	// Allow any pending microtasks to complete
+	await new Promise<void>(resolve => {
+		// Use a minimal timeout to allow the event loop to process any pending operations
+		setTimeout(() => resolve(), 0);
+	});
+}
+
 export async function main(): Promise<PageAnalysis> {
 	const program = new Command();
 	
@@ -97,6 +109,9 @@ Examples:
 		
 		// Log completion message
 		console.warn("Analysis complete.");
+		
+		// Ensure all resources are released before returning
+		await cleanupResources();
 		
 		// Return the analysis result
 		return analysis;

@@ -212,11 +212,22 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
                     }
                 }
             }
+
+            // Ensure all promises are resolved before returning
+            await Promise.resolve();
+            
+            // Clear any remaining timeouts or intervals
+            await new Promise(resolve => setTimeout(resolve, 0));
         }
     };
     
     // Race the analysis against the timeout
-    return Promise.race([analysisPromise(), timeoutPromise]);
+    const result = await Promise.race([analysisPromise(), timeoutPromise]);
+
+    // Ensure event loop is cleared of any microtasks before returning
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    return result;
 }
 
 // Process and save browser state

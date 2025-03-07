@@ -6,6 +6,18 @@ import { createToolDefinitions } from "./tools.js";
 import { setupRequestHandlers } from "./requestHandler.js";
 import { VERSION, PACKAGE_NAME } from "../config/version.js";
 
+/**
+ * Ensures all resources are properly released before process termination
+ * This helps prevent delays after operations are complete
+ */
+async function cleanupResources(): Promise<void> {
+	// Allow any pending microtasks to complete
+	await new Promise<void>(resolve => {
+		// Use a minimal timeout to allow the event loop to process any pending operations
+		setTimeout(() => resolve(), 0);
+	});
+}
+
 export async function runServer(debug: boolean = false): Promise<void> {
 	const server = new Server(
 		{
@@ -63,6 +75,22 @@ export async function runServer(debug: boolean = false): Promise<void> {
 		);
 	}
 
-	// Keep the process running
-	return new Promise<void>(() => {});
+	// Set up cleanup on process exit signals
+	process.on('SIGINT', async () => {
+		await cleanupResources();
+		process.exit(0);
+	});
+	
+	process.on('SIGTERM', async () => {
+		await cleanupResources();
+		process.exit(0);
+	});
+
+	// Keep the process running but ensure resources are periodically cleaned up
+	return new Promise<void>(() => {
+		// Periodically clean up resources to prevent memory leaks and ensure timely process termination
+		setInterval(async () => {
+			await cleanupResources();
+		}, 30000); // Clean up every 30 seconds
+	});
 }

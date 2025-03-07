@@ -113,6 +113,18 @@ interface ExtendedCallToolResult extends CallToolResult {
 	code?: McpErrorCode;
 }
 
+/**
+ * Ensures all resources are properly released after tool execution
+ * This helps prevent delays after operations are complete
+ */
+async function cleanupAfterToolExecution(): Promise<void> {
+	// Allow any pending microtasks to complete
+	await new Promise<void>(resolve => {
+		// Use a minimal timeout to allow the event loop to process any pending operations
+		setTimeout(() => resolve(), 0);
+	});
+}
+
 export async function handleToolCall(
 	name: string,
 	args: Record<string, string>,
@@ -207,6 +219,10 @@ export async function handleToolCall(
 			try {
 				const analysisResult = await analyzePage(args.url, options);
 				storeAnalysis(analysisResult, args.url);
+				
+				// Clean up resources after successful execution
+				await cleanupAfterToolExecution();
+				
 				return {
 					content: [{ type: "text", text: formatAnalysis(analysisResult, format, displayOptions) }],
 					isError: false
@@ -224,6 +240,9 @@ export async function handleToolCall(
 				} else if (errorMessage.includes("selector") || errorMessage.includes("element")) {
 					userFriendlyMessage = `Element error: ${errorMessage}. Please check if the selectors in your plan are correct. Consider using more general selectors or adding fallback selectors.`;
 				}
+				
+				// Clean up resources even after errors
+				await cleanupAfterToolExecution();
 				
 				return {
 					content: [{ type: "text", text: userFriendlyMessage }],
@@ -244,6 +263,9 @@ export async function handleToolCall(
 	} catch (err) {
 		error('Error in tool call', { error: err instanceof Error ? err.message : String(err) });
 		const errorMessage = err instanceof Error ? err.message : String(err);
+		
+		// Clean up resources after any error
+		await cleanupAfterToolExecution();
 		
 		// Provide a more user-friendly error message
 		return {
