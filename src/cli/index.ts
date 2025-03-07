@@ -4,7 +4,7 @@ import { Command } from 'commander';
 import { analyzePage } from "../core/browser";
 import type { Plan, PageAnalysis } from "../types";
 import { formatAnalysis, printPlan, type OutputFormat } from "../utils/output";
-import { DEFAULT_TIMEOUT, VISIBLE_MODE_SLOW_MO, NETWORK_IDLE_TIMEOUT, LOADING_INDICATORS } from "../config/constants";
+import { DEFAULT_TIMEOUT, VISIBLE_MODE_SLOW_MO } from "../config/constants";
 import { fileURLToPath } from 'url';
 import { error, info, debug as logDebug } from "../utils/logging";
 import { VERSION, PACKAGE_NAME } from "../config/version";
@@ -24,19 +24,13 @@ export async function main(): Promise<PageAnalysis> {
 		.option('--plan <json>', 'JSON string defining actions to perform')
 		.option('--timeout <ms>', 'Timeout in ms, use -1 for infinite wait', DEFAULT_TIMEOUT.toString())
 		.option('--debug', 'Enable verbose debug logging', false)
-		// Stability options
-		.option('--skip-network-idle', 'Skip waiting for network idle state', false)
-		.option('--network-idle-timeout <ms>', 'Timeout for network idle in ms', NETWORK_IDLE_TIMEOUT.toString())
-		.option('--skip-loading-indicators', 'Skip checking for loading indicators', false)
-		.option('--loading-indicator-selector <selector>', 'Custom loading indicator selector', LOADING_INDICATORS)
-		.option('--skip-animations', 'Skip waiting for animations to complete', false)
-		.option('--animation-settle-time <ms>', 'Animation settling time in ms', '500')
+		.option('--expect-navigation', 'Expect navigation during stability checks', false)
 		.addHelpText('after', `
 Examples:
   $ bun run src/index.ts --url https://example.com
   $ bun run src/index.ts --url https://example.com --headless --json
   $ bun run src/index.ts --url https://example.com --plan '{"actions":[{"type":"wait","elements":[".main-content"]}]}'
-  $ bun run src/index.ts --url https://example.com --skip-network-idle --skip-animations
+  $ bun run src/index.ts --url https://example.com --expect-navigation
 		`);
 	
 	program.parse();
@@ -64,12 +58,7 @@ Examples:
 	// Parse and validate stability options
 	const stabilityOptions: StabilityOptions = {
 		timeout,
-		waitForNetworkIdle: !options.skipNetworkIdle,
-		networkIdleTimeout: parseInt(options.networkIdleTimeout, 10) || NETWORK_IDLE_TIMEOUT,
-		checkLoadingIndicators: !options.skipLoadingIndicators,
-		loadingIndicatorSelector: options.loadingIndicatorSelector || LOADING_INDICATORS,
-		waitForAnimations: !options.skipAnimations,
-		animationSettleTime: parseInt(options.animationSettleTime, 10) || 500
+		expectNavigation: options.expectNavigation
 	};
 	
 	// Parse and validate plan if provided

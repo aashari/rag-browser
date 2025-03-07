@@ -1,11 +1,11 @@
 /**
  * Stability Module
  * 
- * This module provides functions for checking and ensuring page stability
- * during navigation, actions, and content loading.
+ * This module provides simplified functions for checking page stability
+ * during navigation and actions.
  */
 
-// Re-export all functions from the stability modules
+// Export all functions from the stability modules
 export * from './pageStability';
 export * from './actionStability';
 export * from './contentStability'; 
