@@ -5,10 +5,19 @@ export const DEFAULT_EXPIRATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export function createStoredAnalysis(analysis: PageAnalysis, url: string): StoredAnalysis {
     const currentTime = Date.now();
+    
+    // Use a simpler hashing approach for better performance
+    // Only compute hash if not already present
+    const cacheKey = analysis.cacheKey || 
+        createHash("md5")
+            .update(`${url}-${currentTime}`)
+            .digest("hex")
+            .substring(0, 16); // Use only first 16 chars for efficiency
+    
     return {
         analysis: {
             ...analysis,
-            cacheKey: createHash("md5").update(`${url}-${currentTime}`).digest("hex"),
+            cacheKey,
             timestamp: currentTime,
             expiresAt: currentTime + DEFAULT_EXPIRATION_MS,
         },
@@ -34,7 +43,10 @@ export function formatReadableTimestamp(date: Date): string {
 }
 
 export function createResourceUri(stored: StoredAnalysis): string {
-    const hash = createHash("md5").update(stored.url).digest("hex");
+    // Use the existing cacheKey if available to avoid recomputing the hash
+    const hash = stored.analysis.cacheKey || 
+        createHash("md5").update(stored.url).digest("hex").substring(0, 16);
+    
     const timestamp = stored.analysis.timestamp || Date.now();
     const version = "1"; // Simple versioning for now
     return `page://${hash}-${timestamp}?v=${version}`;

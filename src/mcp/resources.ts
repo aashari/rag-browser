@@ -25,16 +25,23 @@ function log(level: "info" | "error" | "debug", message: string): void {
 }
 
 export function storeAnalysis(analysis: PageAnalysis, url: string): void {
-    log("debug", `Storing analysis for page: ${analysis.title}`);
-    
-    const storedAnalysis = createStoredAnalysis(analysis, url);
-    const validAnalyses = filterExpiredAnalyses(analyses);
-    
-    // Clear and repopulate the array
-    analyses.length = 0;
-    analyses.push(...trimAnalysesList([storedAnalysis, ...validAnalyses], MAX_STORED_ANALYSES));
-    
-    log("debug", `Total stored analyses: ${analyses.length}`);
+    // Use setTimeout to make this operation non-blocking
+    setTimeout(() => {
+        try {
+            log("debug", `Storing analysis for page: ${analysis.title}`);
+            
+            const storedAnalysis = createStoredAnalysis(analysis, url);
+            const validAnalyses = filterExpiredAnalyses(analyses);
+            
+            // Clear and repopulate the array
+            analyses.length = 0;
+            analyses.push(...trimAnalysesList([storedAnalysis, ...validAnalyses], MAX_STORED_ANALYSES));
+            
+            log("debug", `Total stored analyses: ${analyses.length}`);
+        } catch (err) {
+            log("error", `Error storing analysis: ${err instanceof Error ? err.message : String(err)}`);
+        }
+    }, 0);
 }
 
 export function getAnalyses(): StoredAnalysis[] {

@@ -27,25 +27,37 @@ function getStorageStatePath(): string {
     return path.join(storageDir, 'storage-state.json');
 }
 
-// Save storage state to a file asynchronously
+// Save storage state to a file asynchronously with timeout
 async function saveStorageStateToFile(state: any): Promise<void> {
-    try {
-        const storageDir = path.join(os.homedir(), '.rag-browser');
+    return new Promise<void>(async (resolve) => {
+        // Set a timeout to ensure this operation doesn't block for too long
+        const timeoutId = setTimeout(() => {
+            info("Storage state save operation timed out, continuing execution");
+            resolve();
+        }, 1000); // 1 second timeout
         
-        // Create directory if it doesn't exist
-        await fs.mkdir(storageDir, { recursive: true });
+        try {
+            const storageDir = path.join(os.homedir(), '.rag-browser');
+            
+            // Create directory if it doesn't exist
+            await fs.mkdir(storageDir, { recursive: true });
+            
+            // Write state to file
+            await fs.writeFile(
+                getStorageStatePath(),
+                JSON.stringify(state, null, 2),
+                'utf8'
+            );
+            
+            clearTimeout(timeoutId);
+            info("Browser state saved successfully");
+        } catch (err) {
+            clearTimeout(timeoutId);
+            error("Failed to save browser state", err);
+        }
         
-        // Write state to file
-        await fs.writeFile(
-            getStorageStatePath(),
-            JSON.stringify(state, null, 2),
-            'utf8'
-        );
-        
-        info("Browser state saved successfully");
-    } catch (err) {
-        error("Failed to save browser state", err);
-    }
+        resolve();
+    });
 }
 
 // Load storage state from file
@@ -187,14 +199,13 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
                     const state = await browser.storageState();
                     info("Browser state retrieved", { timestamp: new Date().toISOString() });
                     
-                    // Process and save state before closing the browser
+                    // Process and save state in the background (non-blocking)
                     info("Processing and saving state", { timestamp: new Date().toISOString() });
-                    await processAndSaveState(state, options);
-                    info("State processed and saved", { timestamp: new Date().toISOString() });
+                    processAndSaveState(state, options).catch(e => {
+                        error("Error in background state processing", { error: e instanceof Error ? e.message : String(e) });
+                    });
                     
-                    // Skip unrouting to speed up browser closure
-                    
-                    // Close the browser immediately
+                    // Close the browser immediately without waiting for state saving
                     info("Closing browser", { timestamp: new Date().toISOString() });
                     await browser.close().catch(e => {
                         warn("Error during browser close", { error: e instanceof Error ? e.message : String(e) });
@@ -230,30 +241,40 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
     return result;
 }
 
-// Process and save browser state
+// Process and save browser state without blocking
 async function processAndSaveState(state: any, options: BrowserOptions): Promise<void> {
-    try {
-        // Process cookies if needed
-        if (state.cookies) {
-            // Filter out any problematic cookies if needed
-            state.cookies = state.cookies.filter((cookie: Cookie) => {
-                // Keep all cookies by default
-                return true;
-            });
-        }
+    // Create a non-blocking promise that will resolve immediately
+    // while the actual processing happens in the background
+    return new Promise<void>(resolve => {
+        // Resolve immediately to avoid blocking
+        resolve();
+        
+        // Process in the background
+        (async () => {
+            try {
+                // Process cookies if needed
+                if (state.cookies) {
+                    // Filter out any problematic cookies if needed
+                    state.cookies = state.cookies.filter((cookie: Cookie) => {
+                        // Keep all cookies by default
+                        return true;
+                    });
+                }
 
-        // Process origins if needed
-        if (state.origins) {
-            // Filter out any problematic origins if needed
-            state.origins = state.origins.filter((origin: BrowserStorageOrigin) => {
-                // Keep all origins by default
-                return true;
-            });
-        }
+                // Process origins if needed
+                if (state.origins) {
+                    // Filter out any problematic origins if needed
+                    state.origins = state.origins.filter((origin: BrowserStorageOrigin) => {
+                        // Keep all origins by default
+                        return true;
+                    });
+                }
 
-        // Save the processed state to a file
-        await saveStorageStateToFile(state);
-    } catch (err) {
-        error("Error processing browser state", err);
-    }
+                // Save the processed state to a file
+                await saveStorageStateToFile(state);
+            } catch (err) {
+                error("Error processing browser state", err);
+            }
+        })();
+    });
 } 
