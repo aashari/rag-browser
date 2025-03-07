@@ -2,7 +2,7 @@ import type { PageAnalysis, BrowserOptions, StorageState } from "../../types";
 import type { Page, Cookie } from "playwright";
 import { launchBrowserContext, setupPageConsoleLogging } from "./browserSetup";
 import { applyStorageState } from "./storageManager";
-import { setupEventHandlers } from "./eventHandlers";
+import { setupEventHandlers, onUserInteraction, getLastUserInteractionTime } from "./eventHandlers";
 import { analyzePage } from "./pageAnalyzer";
 import { info, error, warn } from "../../utils/logging";
 import { DEFAULT_TIMEOUT } from "../../config/constants";
@@ -76,15 +76,33 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
     }
     
     // Create a timeout promise to ensure the function doesn't run indefinitely
-    const timeoutPromise = new Promise<PageAnalysis>((_, reject) => {
-        // Handle the case where options.timeout is undefined
-        const timeout = options.timeout ?? DEFAULT_TIMEOUT;
-        // Use a reasonable timeout that won't hang the process
-        const timeoutMs = timeout !== -1 ? Math.min(timeout + 5000, 60000) : 60000;
-        setTimeout(() => {
-            reject(new Error(`Analysis timed out after ${timeoutMs}ms`));
-        }, timeoutMs);
-    });
+    let timeoutId: NodeJS.Timeout | null = null;
+    let timeoutReject: ((reason: Error) => void) | null = null;
+    
+    const createTimeoutPromise = () => {
+        return new Promise<PageAnalysis>((_, reject) => {
+            // Handle the case where options.timeout is undefined
+            const timeout = options.timeout ?? DEFAULT_TIMEOUT;
+            // Use a reasonable timeout that won't hang the process
+            const timeoutMs = timeout !== -1 ? Math.min(timeout + 5000, 60000) : 60000;
+            
+            // Clear any existing timeout
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            
+            // Store the reject function for later use
+            timeoutReject = reject;
+            
+            // Set a new timeout
+            timeoutId = setTimeout(() => {
+                reject(new Error(`Analysis timed out after ${timeoutMs}ms`));
+            }, timeoutMs);
+        });
+    };
+    
+    // Initial timeout promise
+    let timeoutPromise = createTimeoutPromise();
     
     // The actual analysis function
     const analysisPromise = async (): Promise<PageAnalysis> => {
@@ -104,6 +122,16 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
                 setupPageConsoleLogging(page);
             }
             
+            // Set up timeout reset on user interaction
+            const unregisterCallback = onUserInteraction(() => {
+                // Reset the timeout promise when user interaction is detected
+                if (timeoutId && timeoutReject) {
+                    clearTimeout(timeoutId);
+                    timeoutPromise = createTimeoutPromise();
+                    info("Timeout reset due to user interaction", { timestamp: new Date().toISOString() });
+                }
+            });
+            
             // Apply storage state if provided
             if (options.storageState) {
                 await applyStorageState(page, options.storageState);
@@ -118,6 +146,9 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
             actionSucceeded = analysis.plannedActions ? 
                 !analysis.plannedActions.some(action => action.error) : 
                 true;
+            
+            // Clean up the user interaction callback
+            unregisterCallback();
             
             return analysis;
         } catch (err) {

@@ -5,6 +5,7 @@ import {
     NETWORK_IDLE_TIMEOUT,
 } from "../../config/constants";
 import { debug, info, warn } from "../../utils/logging";
+import { getLastUserInteractionTime } from "../browser/eventHandlers";
 
 /**
  * Configuration options for page stability checks
@@ -73,18 +74,38 @@ export async function waitForPageStability(
         waitForAnimations
     });
 
+    // Track the start time and last user interaction time
+    const startTime = Date.now();
+    let lastInteractionTimeAtStart = getLastUserInteractionTime();
+
     try {
         // Wait for the page to load
         debug("Waiting for domcontentloaded state");
         await page.waitForLoadState("domcontentloaded", { timeout: Math.min(timeout || DEFAULT_TIMEOUT, 30000) })
-            .catch(() => debug("DOMContentLoaded timeout reached, continuing anyway"));
+            .catch(() => {
+                // Check if user interaction occurred during this wait
+                if (getLastUserInteractionTime() > lastInteractionTimeAtStart) {
+                    debug("User interaction detected during domcontentloaded wait, continuing");
+                    lastInteractionTimeAtStart = getLastUserInteractionTime();
+                } else {
+                    debug("DOMContentLoaded timeout reached, continuing anyway");
+                }
+            });
         
         // Wait for network to be idle if configured
         if (waitForNetworkIdle) {
             debug("Waiting for networkidle state");
             await page.waitForLoadState("networkidle", { 
                 timeout: Math.min(networkIdleTimeout || NETWORK_IDLE_TIMEOUT, 30000) 
-            }).catch(() => debug("Network idle timeout reached, continuing anyway"));
+            }).catch(() => {
+                // Check if user interaction occurred during this wait
+                if (getLastUserInteractionTime() > lastInteractionTimeAtStart) {
+                    debug("User interaction detected during networkidle wait, continuing");
+                    lastInteractionTimeAtStart = getLastUserInteractionTime();
+                } else {
+                    debug("Network idle timeout reached, continuing anyway");
+                }
+            });
         }
         
         // Check for loading indicators if configured

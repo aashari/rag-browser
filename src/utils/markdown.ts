@@ -1,6 +1,8 @@
 import type { PlannedActionResult } from '../types';
 import TurndownService from 'turndown';
+import imageWithStyle from 'turndown-plugin-image-with-style';
 import { error, info } from './logging';
+import { JSDOM } from 'jsdom';
 
 // Initialize turndown service with basic options
 export const turndownService = new TurndownService({
@@ -10,18 +12,8 @@ export const turndownService = new TurndownService({
     hr: '---'
 });
 
-/**
- * Basic image handling
- */
-turndownService.addRule('images', {
-    filter: 'img',
-    replacement: function (content, node) {
-        const element = node as HTMLElement;
-        const alt = element.getAttribute('alt')?.trim() || '';
-        const src = element.getAttribute('src')?.trim();
-        return src ? `![${alt}](${src})` : alt;
-    }
-});
+// Use the image handling plugin
+turndownService.use(imageWithStyle);
 
 /**
  * Basic link handling
@@ -43,10 +35,13 @@ turndownService.addRule('links', {
  * Clean HTML by removing scripts and styles
  */
 function cleanHtml(html: string): string {
-    return html
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-        .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '');
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+
+    // Remove script and style elements
+    document.querySelectorAll('script, style').forEach((el: Element) => el.remove());
+
+    return document.body.innerHTML;
 }
 
 /**

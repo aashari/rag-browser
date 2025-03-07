@@ -5,6 +5,7 @@ import {
 } from "../../config/constants";
 import { debug, warn } from "../../utils/logging";
 import type { StabilityOptions } from "./pageStability";
+import { getLastUserInteractionTime } from "../browser/eventHandlers";
 
 /**
  * Default action stability options
@@ -45,16 +46,35 @@ export async function waitForActionStability(
         waitForAnimations
     });
 
+    // Track the last user interaction time
+    let lastInteractionTimeAtStart = getLastUserInteractionTime();
+
     // If we expect navigation, wait for navigation events
     if (expectNavigation) {
         try {
             debug("Waiting for navigation to complete");
             await page.waitForLoadState("domcontentloaded", { timeout: Math.min(timeout || ACTION_STABILITY_TIMEOUT, 30000) })
-                .catch(() => debug("DOMContentLoaded timeout reached, continuing anyway"));
+                .catch(() => {
+                    // Check if user interaction occurred during this wait
+                    if (getLastUserInteractionTime() > lastInteractionTimeAtStart) {
+                        debug("User interaction detected during navigation wait, continuing");
+                        lastInteractionTimeAtStart = getLastUserInteractionTime();
+                    } else {
+                        debug("DOMContentLoaded timeout reached, continuing anyway");
+                    }
+                });
                 
             if (waitForNetworkIdle) {
                 await page.waitForLoadState("networkidle", { timeout: Math.min(timeout || ACTION_STABILITY_TIMEOUT, 30000) })
-                    .catch(() => debug("Network idle timeout reached, continuing anyway"));
+                    .catch(() => {
+                        // Check if user interaction occurred during this wait
+                        if (getLastUserInteractionTime() > lastInteractionTimeAtStart) {
+                            debug("User interaction detected during networkidle wait, continuing");
+                            lastInteractionTimeAtStart = getLastUserInteractionTime();
+                        } else {
+                            debug("Network idle timeout reached, continuing anyway");
+                        }
+                    });
             }
             
             debug("Navigation completed");
@@ -81,7 +101,15 @@ export async function waitForActionStability(
             debug("Waiting for network to settle after action");
             await page.waitForLoadState("networkidle", { 
                 timeout: Math.min(networkIdleTimeout || 5000, 10000) 
-            }).catch(() => debug("Network idle timeout reached, continuing anyway"));
+            }).catch(() => {
+                // Check if user interaction occurred during this wait
+                if (getLastUserInteractionTime() > lastInteractionTimeAtStart) {
+                    debug("User interaction detected during network wait, continuing");
+                    lastInteractionTimeAtStart = getLastUserInteractionTime();
+                } else {
+                    debug("Network idle timeout reached, continuing anyway");
+                }
+            });
         }
         
         // Wait for animations to complete if configured
