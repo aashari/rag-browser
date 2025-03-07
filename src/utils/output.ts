@@ -311,7 +311,7 @@ export function printAnalysis(
 
 	// Group links by purpose
 	const navigationLinks = visibleLinks.filter(link => 
-			link.text && link.text.toLowerCase().match(/(home|menu|about|contact|login|sign|account|profile|settings)/));
+			link.title && link.title.toLowerCase().match(/(home|menu|about|contact|login|sign|account|profile|settings)/));
 	const contentLinks = visibleLinks.filter(link => 
 			!navigationLinks.includes(link) && link.url && !link.url.startsWith('http'));
 	const externalLinks = visibleLinks.filter(link => 
@@ -433,7 +433,7 @@ export function printAnalysis(
 	if (hasNavigation) {
 		// Suggest clicking a navigation link
 		if (navigationLinks.length > 0) {
-			output += `- Navigate to ${navigationLinks[0].text || 'link'}: \`--click "${navigationLinks[0].selector}"\`\n`;
+			output += `- Navigate to ${navigationLinks[0].title || 'link'}: \`--click "${navigationLinks[0].selector}"\`\n`;
 		}
 		
 		// Suggest clicking a navigation button
