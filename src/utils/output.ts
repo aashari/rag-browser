@@ -187,13 +187,19 @@ export function printAnalysis(
 	// Filter visible inputs (those with a valid selector)
 	const visibleInputs = analysis.inputs.filter(input => input && input.selector && input.selector.trim() !== '');
 
-	// Categorize inputs by type
-	const textInputs = visibleInputs.filter(input => input.type === 'text' || input.type === 'textarea' || input.type === 'search' || input.type === 'email' || input.type === 'password');
-	const buttonInputs = visibleInputs.filter(input => input.type === 'submit' || input.type === 'button' || input.type === 'reset');
-	const checkboxInputs = visibleInputs.filter(input => input.type === 'checkbox' || input.type === 'radio');
-	const otherInputs = visibleInputs.filter(input => !textInputs.includes(input) && !buttonInputs.includes(input) && !checkboxInputs.includes(input));
+	// Group inputs by type
+	const textInputs = visibleInputs.filter(input => 
+			['text', 'textarea', 'search', 'email', 'password'].includes(input.type || ''));
+	const buttonInputs = visibleInputs.filter(input => 
+			['submit', 'button', 'reset'].includes(input.type || ''));
+	const checkboxInputs = visibleInputs.filter(input => 
+			['checkbox', 'radio'].includes(input.type || ''));
+	const otherInputs = visibleInputs.filter(input => 
+			!textInputs.includes(input) && 
+			!buttonInputs.includes(input) && 
+			!checkboxInputs.includes(input));
 
-	// Show input elements with more details - always show top 5 only
+	// Show input elements with more details
 	if (visibleInputs.length > 0) {
 		output += `Total Input Elements: ${analysis.inputs.length}\n`;
 		
@@ -250,21 +256,14 @@ export function printAnalysis(
 	// Filter visible buttons (those with a valid selector)
 	const visibleButtons = analysis.buttons.filter(button => button && button.selector && button.selector.trim() !== '');
 
-	// Categorize buttons by text content
+	// Group buttons by their characteristics
 	const primaryButtons = visibleButtons.filter(button => 
-			button.text && 
-			(button.text.toLowerCase().includes('submit') || 
-			 button.text.toLowerCase().includes('search') || 
-			 button.text.toLowerCase().includes('login') || 
-			 button.text.toLowerCase().includes('sign in') ||
-			 button.text.toLowerCase().includes('continue')));
+			button.text && button.text.toLowerCase().match(/(submit|search|login|sign in|continue|save|confirm)/));
 	const navigationButtons = visibleButtons.filter(button => 
-			button.text && 
-			(button.text.toLowerCase().includes('next') || 
-			 button.text.toLowerCase().includes('previous') || 
-			 button.text.toLowerCase().includes('back') || 
-			 button.text.toLowerCase().includes('menu')));
-	const otherButtons = visibleButtons.filter(button => !primaryButtons.includes(button) && !navigationButtons.includes(button));
+			button.text && button.text.toLowerCase().match(/(next|previous|back|menu|nav|navigation)/));
+	const otherButtons = visibleButtons.filter(button => 
+			!primaryButtons.includes(button) && 
+			!navigationButtons.includes(button));
 
 	// Show button elements with more details - always show top 5 only
 	if (visibleButtons.length > 0) {
@@ -310,25 +309,13 @@ export function printAnalysis(
 	// Filter visible links (those with a valid selector)
 	const visibleLinks = analysis.links.filter(link => link && link.selector && link.selector.trim() !== '');
 
-	// Categorize links by purpose
+	// Group links by purpose
 	const navigationLinks = visibleLinks.filter(link => 
-			(link.title && (
-					link.title.toLowerCase().includes('home') || 
-					link.title.toLowerCase().includes('about') || 
-					link.title.toLowerCase().includes('contact') || 
-					link.title.toLowerCase().includes('login') ||
-					link.title.toLowerCase().includes('sign in'))) ||
-			(link.selector && (
-					link.selector.toLowerCase().includes('nav') || 
-					link.selector.toLowerCase().includes('menu') || 
-					link.selector.toLowerCase().includes('header'))));
+			link.text && link.text.toLowerCase().match(/(home|menu|about|contact|login|sign|account|profile|settings)/));
 	const contentLinks = visibleLinks.filter(link => 
-			!navigationLinks.includes(link) && 
-			link.url && 
-			link.url.includes(analysis.url || ''));
+			!navigationLinks.includes(link) && link.url && !link.url.startsWith('http'));
 	const externalLinks = visibleLinks.filter(link => 
-			!navigationLinks.includes(link) && 
-			!contentLinks.includes(link));
+			!navigationLinks.includes(link) && !contentLinks.includes(link));
 
 	// Show link elements with more details including URLs - always show top 5 only
 	if (visibleLinks.length > 0) {
@@ -413,63 +400,78 @@ export function printAnalysis(
 		output += createSectionDivider();
 	}
 
-	// Add next actions suggestions
+	// Next Actions Suggestions
 	output += "\n🚀 Next Actions Suggestions:\n";
-	output += "=".repeat(50) + "\n";
 
-	// Suggest form interactions if we have both inputs and buttons
-	if (textInputs.length > 0 && (buttonInputs.length > 0 || primaryButtons.length > 0)) {
-		output += "📝 Form Interaction:\n";
-		const formInput = textInputs[0];
-		const formButton = primaryButtons.length > 0 ? primaryButtons[0] : 
-						  (buttonInputs.length > 0 ? buttonInputs[0] : 
-						  (visibleButtons.length > 0 ? visibleButtons[0] : null));
+	// Detect page structure to provide contextual suggestions
+	const hasForm = detectFormStructure(analysis);
+	const hasList = detectListStructure(analysis);
+	const hasNavigation = navigationLinks.length > 0 || navigationButtons.length > 0;
+
+	// Form interaction suggestions
+	if (textInputs.length > 0 && (primaryButtons.length > 0 || buttonInputs.length > 0)) {
+		// Get the first text input for suggestion
+		if (textInputs.length > 0) {
+			const firstInput = textInputs[0];
+			output += `- Type into ${firstInput.label || 'input field'}: \`--type "${firstInput.selector}" "your text"\`\n`;
+		}
 		
-		if (formInput && formButton) {
-			output += `- Fill and submit form: {"actions": [\n  {"type": "typing", "element": "${formInput.selector}", "value": "your text here"},\n  {"type": "click", "element": "${formButton.selector}"}\n]}\n\n`;
-		} else if (formInput) {
-			output += `- Type into input: {"type": "typing", "element": "${formInput.selector}", "value": "your text here"}\n\n`;
+		// Get the first button for suggestion
+		const submitButton = primaryButtons.length > 0 ? primaryButtons[0] : 
+							(buttonInputs.length > 0 ? buttonInputs[0] : null);
+		if (submitButton) {
+			output += `- Submit form: \`--click "${submitButton.selector}"\`\n`;
+		}
+		
+		// Suggest form fill and submit as a sequence
+		if (textInputs.length > 0 && submitButton) {
+			output += `- Fill and submit form: \`--plan '{"actions":[{"type":"type","selector":"${textInputs[0].selector}","text":"your text"},{"type":"click","selector":"${submitButton.selector}"}]}'\`\n`;
 		}
 	}
 
-	// Suggest navigation if we have navigation links or buttons
-	if (navigationLinks.length > 0 || navigationButtons.length > 0) {
-		output += "🧭 Navigation:\n";
+	// Navigation suggestions
+	if (hasNavigation) {
+		// Suggest clicking a navigation link
 		if (navigationLinks.length > 0) {
-			output += `- Navigate to: {"type": "click", "element": "${navigationLinks[0].selector}"}\n`;
+			output += `- Navigate to ${navigationLinks[0].text || 'link'}: \`--click "${navigationLinks[0].selector}"\`\n`;
 		}
+		
+		// Suggest clicking a navigation button
 		if (navigationButtons.length > 0) {
-			output += `- Open menu: {"type": "click", "element": "${navigationButtons[0].selector}"}\n`;
+			output += `- Open menu: \`--click "${navigationButtons[0].selector}"\`\n`;
 		}
-		output += "\n";
 	}
 
-	// Suggest content extraction based on page structure
-	output += "📋 Content Extraction:\n";
-	if (hasListStructure) {
-		output += `- Extract list content: {"type": "print", "elements": ["ul", "ol", ".list", "[role=list]"], "format": "markdown"}\n`;
+	// Content extraction suggestions
+	// Suggest extracting list content if detected
+	if (hasList) {
+		output += `- Extract list content: \`--extract ".list-item, li, .item"\`\n`;
 	}
-	if (hasFormStructure) {
-		output += `- Extract form fields: {"type": "print", "elements": ["form"], "format": "html"}\n`;
-	}
-	if (hasNavigationMenu) {
-		output += `- Extract navigation menu: {"type": "print", "elements": ["nav", "header", ".menu"], "format": "markdown"}\n`;
-	}
-	output += `- Extract main content: {"type": "print", "elements": ["main", "article", "#content", ".content"], "format": "markdown"}\n`;
-	output += `- View page structure: {"type": "print", "elements": ["body"], "format": "html"}\n\n`;
 
-	// Suggest advanced interactions
-	output += "🔄 Advanced Interactions:\n";
+	// Suggest extracting form fields if form detected
+	if (hasForm) {
+		output += `- Extract form fields: \`--extract "input, select, textarea"\`\n`;
+	}
+
+	// Always suggest extracting main content
+	output += `- Extract main content: \`--extract "main, #content, .content, article"\`\n`;
+
+	// Advanced interaction suggestions
+	// Multi-field form submission if multiple text inputs
 	if (textInputs.length > 1) {
-		const inputs = textInputs.slice(0, 2).map(input => input.selector);
-		output += `- Multi-field form: {"actions": [\n  {"type": "typing", "element": "${inputs[0]}", "value": "first value"},\n  {"type": "typing", "element": "${inputs[1]}", "value": "second value"},\n  {"type": "keyPress", "key": "Enter"}\n]}\n`;
+		const submitButton = primaryButtons.length > 0 ? primaryButtons[0] : 
+							(buttonInputs.length > 0 ? buttonInputs[0] : null);
+		if (submitButton) {
+			output += `- Fill multiple fields: \`--plan '{"actions":[{"type":"type","selector":"${textInputs[0].selector}","text":"text1"},{"type":"type","selector":"${textInputs[1].selector}","text":"text2"},{"type":"click","selector":"${submitButton.selector}"}]}'\`\n`;
+		}
 	}
-	if (checkboxInputs.length > 0) {
-		output += `- Toggle checkbox: {"type": "click", "element": "${checkboxInputs[0].selector}"}\n`;
-	}
-	output += `- Wait and click: {"actions": [\n  {"type": "wait", "elements": ["selector_here"], "timeout": 5000},\n  {"type": "click", "element": "selector_here"}\n]}\n`;
 
-	output += "\n\nAnalysis complete.\n";
+	// Generic actions
+	output += `- Wait for element: \`--wait "selector"\`\n`;
+	output += `- Extract content: \`--extract "selector"\`\n`;
+	output += `- View HTML structure: \`--debug\`\n`;
+
+	output += "\nAnalysis complete.\n";
 
 	return output;
 }
