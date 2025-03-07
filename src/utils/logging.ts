@@ -18,11 +18,13 @@ interface JsonRpcMessage {
 	id?: string | number | null;
 }
 
-interface JsonRpcNotification extends JsonRpcMessage {
-	method: "notification/log";
+interface JsonRpcNotification {
+	jsonrpc: string;
+	method: string;
 	params: {
 		level: "debug" | "info" | "warn" | "error";
 		message: string;
+		timestamp?: string;
 		data?: unknown;
 	};
 }
@@ -60,6 +62,12 @@ function truncateLogData(data: unknown): unknown {
 	return data;
 }
 
+// Get current timestamp in a consistent format
+function getTimestamp(): string {
+	const now = new Date();
+	return now.toISOString();
+}
+
 /**
  * Send a log message following JSON-RPC 2.0 notification format
  */
@@ -73,12 +81,14 @@ export function log(message: string, level: "debug" | "info" | "warn" | "error" 
 	// Skip debug logs if DEBUG constant is false and not in debug mode
 	if (!DEBUG && level === "debug" && !isDebugMode) return;
 
+	const timestamp = getTimestamp();
 	const notification: JsonRpcNotification = {
 		jsonrpc: "2.0",
 		method: "notification/log",
 		params: {
 			level,
 			message,
+			timestamp,
 			data: data ? truncateLogData(data) : undefined,
 		},
 	};

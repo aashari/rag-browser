@@ -28,9 +28,12 @@ export async function analyzePage(page: Page, url: string, options: BrowserOptio
             
             plannedActionResults = result.plannedActionResults || [];
             actionSucceeded = result.actionStatuses.every(status => status.result?.success || false);
+            info(`Action succeeded: ${actionSucceeded}`);
             
             if (!actionSucceeded) {
                 error("Plan execution failed");
+            } else {
+                info("Plan execution succeeded");
             }
         }
 
