@@ -147,48 +147,36 @@ export function printAnalysis(
 		}
 	}
 
-	// Add interaction recommendations with more context
+	// Add possible interactions based on element types
 	output += "\nPossible interactions:\n";
-
-	// Suggest form interactions if inputs and buttons exist
-	if (analysis.inputs.length > 0 && analysis.buttons.length > 0) {
+	if (analysis.inputs.length > 0) {
 		output += "- This page has forms that can be filled (use typing actions on inputs followed by click actions on buttons)\n";
 	}
-
-	// Suggest navigation if links exist
 	if (analysis.links.length > 0) {
 		output += "- This page has navigation links (use click actions on links to navigate)\n";
 	}
-
-	// Suggest content extraction if there's meaningful content
 	output += "- Content can be extracted with print actions on specific elements\n";
 
-	// Enhanced action patterns with outcome predictions
+	// Add recommended action patterns
 	output += "\nRecommended action pattern examples:\n";
 	output += "1. To fill a form: wait → type → click → wait for response (expect form submission or validation feedback)\n";
 	output += "2. To navigate: wait → click link → wait for new page (expect URL change and page content refresh)\n";
 	output += "3. To extract content: wait → print elements with specific selectors (use container selectors for grouped content)\n";
-	
-	// Add contextual interaction advice based on page type
-	if (hasListStructure) {
-		output += "4. To interact with list items: wait → identify item by index → click on specific elements within the item\n";
-	}
-	
-	if (hasFormStructure && analysis.inputs.length > 1) {
+	if (analysis.inputs.length > 1) {
 		output += "5. To complete multi-field forms: wait → type in first field → press Tab or click next field → type → ... → submit\n";
 	}
-	
-	output += "\n";
 
-	// Add page elements summary with enhanced details
-	output += "Page Elements Summary:\n";
+	output += "\nPage Elements Summary:\n";
 	output += "=".repeat(50) + "\n";
 
+	// Filter visible inputs (those with a valid selector)
+	const visibleInputs = analysis.inputs.filter(input => input && input.selector && input.selector.trim() !== '');
+
 	// Show input elements with more details - always show top 5 only
-	if (analysis.inputs.length > 0) {
+	if (visibleInputs.length > 0) {
 		output += `Total Input Elements: ${analysis.inputs.length}\n`;
 		output += "[Showing top visible 5 inputs]\n";
-		analysis.inputs.slice(0, 5).forEach((input, index) => {
+		visibleInputs.slice(0, 5).forEach((input, index) => {
 			const inputType = input.type ? `(${input.type})` : '';
 			const placeholder = input.placeholder ? ` placeholder="${input.placeholder}"` : '';
 			output += `- ${index + 1}. ${input.label || 'No label'} ${inputType}${placeholder}\n`;
@@ -197,23 +185,29 @@ export function printAnalysis(
 		output += "\n";
 	}
 
+	// Filter visible buttons (those with a valid selector)
+	const visibleButtons = analysis.buttons.filter(button => button && button.selector && button.selector.trim() !== '');
+
 	// Show button elements with more details - always show top 5 only
-	if (analysis.buttons.length > 0) {
+	if (visibleButtons.length > 0) {
 		output += `Total Button Elements: ${analysis.buttons.length}\n`;
 		output += "[Showing top visible 5 buttons]\n";
-		analysis.buttons.slice(0, 5).forEach((button, index) => {
+		visibleButtons.slice(0, 5).forEach((button, index) => {
 			output += `- ${index + 1}. ${button.text || 'No text'}\n`;
 			output += `  Selector: ${button.selector}\n`;
 		});
 		output += "\n";
 	}
 
+	// Filter visible links (those with a valid selector)
+	const visibleLinks = analysis.links.filter(link => link && link.selector && link.selector.trim() !== '');
+
 	// Show link elements with more details including URLs - always show top 5 only
-	if (analysis.links.length > 0) {
+	if (visibleLinks.length > 0) {
 		output += `Total Link Elements: ${analysis.links.length}\n`;
 		output += "[Showing top visible 5 links]\n";
-		analysis.links.slice(0, 5).forEach((link, index) => {
-			output += `- ${index + 1}. ${link.title} → ${link.url}\n`;
+		visibleLinks.slice(0, 5).forEach((link, index) => {
+			output += `- ${index + 1}. ${link.title || ''} → ${link.url || ''}\n`;
 			output += `  Selector: ${link.selector}\n`;
 		});
 	}
@@ -243,10 +237,10 @@ export function printAnalysis(
 				if (result.html.length > MAX_DISPLAYED_CONTENT_LENGTH) {
 					// Truncate the content and add a warning
 					const truncatedContent = result.html.substring(0, MAX_DISPLAYED_CONTENT_LENGTH);
-					output += formatContent(truncatedContent, result.format) + "\n";
-					output += `\n⚠️ Content was truncated (${result.html.length} characters, showing first ${MAX_DISPLAYED_CONTENT_LENGTH})\n`;
+					output += truncatedContent + "\n\n";
+					output += `⚠️ Content was truncated (${result.html.length} characters, showing first ${MAX_DISPLAYED_CONTENT_LENGTH})\n`;
 				} else {
-					output += formatContent(result.html, result.format) + "\n";
+					output += result.html + "\n";
 				}
 				
 				// Add metadata if available for easier element referencing in future actions
@@ -259,37 +253,37 @@ export function printAnalysis(
 			}
 		});
 		
-		output += "=".repeat(80) + "\n\n";
+		output += createSectionDivider();
 	}
 
-	// Add action suggestions based on the analysis
-	output += "🚀 Next Actions Suggestions:\n";
+	// Add next actions suggestions
+	output += "\n🚀 Next Actions Suggestions:\n";
 	output += "=".repeat(50) + "\n";
 	
-	// Provide concrete next action examples with selectors
-	if (analysis.inputs.length > 0) {
-		const exampleInput = analysis.inputs[0];
-		output += `- Type into input: {"type": "typing", "element": "${exampleInput.selector}", "value": "your text here"}\n`;
+	// Suggest typing into inputs
+	if (visibleInputs.length > 0) {
+		const firstInput = visibleInputs[0];
+		output += `- Type into input: {"type": "typing", "element": "${firstInput.selector}", "value": "your text here"}\n`;
 	}
 	
-	if (analysis.buttons.length > 0) {
-		const exampleButton = analysis.buttons[0];
-		output += `- Click button: {"type": "click", "element": "${exampleButton.selector}"}\n`;
+	// Suggest clicking buttons
+	if (visibleButtons.length > 0) {
+		const firstButton = visibleButtons[0];
+		output += `- Click button: {"type": "click", "element": "${firstButton.selector}"}\n`;
 	}
 	
-	if (analysis.links.length > 0) {
-		const exampleLink = analysis.links[0];
-		output += `- Click link: {"type": "click", "element": "${exampleLink.selector}"}\n`;
+	// Suggest clicking links
+	if (visibleLinks.length > 0) {
+		const firstLink = visibleLinks[0];
+		output += `- Click link: {"type": "click", "element": "${firstLink.selector}"}\n`;
 	}
 	
-	// Add example for waiting for specific elements
+	// Always suggest these generic actions
 	output += `- Wait for element: {"type": "wait", "elements": ["selector_here"], "timeout": 5000}\n`;
-	
-	// Add example for extracting content
 	output += `- Extract content: {"type": "print", "elements": ["selector_here"], "format": "markdown"}\n`;
 	output += `- See HTML Structure: {"type": "print", "elements": ["selector_here"], "format": "html"}\n`;
-	
-	output += "\n";
+
+	output += "\n\nAnalysis complete.\n";
 
 	return output;
 }
