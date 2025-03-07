@@ -110,7 +110,9 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
             }
             
             // Analyze the page
+            info("Starting page analysis", { timestamp: new Date().toISOString() });
             const analysis = await analyzePage(page, url, options, browser);
+            info("Page analysis completed", { timestamp: new Date().toISOString() });
             
             // Set actionSucceeded based on planned actions
             actionSucceeded = analysis.plannedActions ? 
@@ -148,13 +150,20 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
             
             if (actionSucceeded || !hasInfiniteWait) {
                 try {
+                    info("Starting browser cleanup", { timestamp: new Date().toISOString() });
+                    
                     // Get browser state before closing
+                    info("Getting browser state", { timestamp: new Date().toISOString() });
                     const state = await browser.storageState();
+                    info("Browser state retrieved", { timestamp: new Date().toISOString() });
                     
                     // Process and save state before closing the browser
+                    info("Processing and saving state", { timestamp: new Date().toISOString() });
                     await processAndSaveState(state, options);
+                    info("State processed and saved", { timestamp: new Date().toISOString() });
                     
                     // Unroute all routes before closing
+                    info("Unrouting all routes", { timestamp: new Date().toISOString() });
                     for (const page of browser.pages()) {
                         if (page.isClosed()) continue;
                         
@@ -168,16 +177,19 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
                             // Ignore errors during unrouting
                         }
                     }
+                    info("All routes unrouted", { timestamp: new Date().toISOString() });
                     
                     // Wait a longer time to ensure all operations are complete
+                    info("Starting wait before browser close", { timestamp: new Date().toISOString() });
                     await new Promise(resolve => setTimeout(resolve, 2000));
+                    info("Wait completed", { timestamp: new Date().toISOString() });
                     
                     // Close the browser
-                    info("Closing browser");
+                    info("Closing browser", { timestamp: new Date().toISOString() });
                     await browser.close().catch(e => {
                         warn("Error during browser close", { error: e instanceof Error ? e.message : String(e) });
                     });
-                    info("Browser closed successfully");
+                    info("Browser closed successfully", { timestamp: new Date().toISOString() });
                     
                 } catch (closeErr) {
                     error("Error closing browser", closeErr);
