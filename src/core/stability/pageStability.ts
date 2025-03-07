@@ -32,26 +32,14 @@ export async function waitForPageStability(
         await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 30000) })
             .catch(() => debug("Network idle timeout reached, continuing anyway"));
         
-        // Check for loading indicators
+        // Check for loading indicators once after network is idle
         debug("Checking for loading indicators");
         const hasLoadingIndicators = await page.$(LOADING_INDICATORS)
             .then(el => !!el)
             .catch(() => false);
             
         if (hasLoadingIndicators) {
-            debug("Loading indicators found, waiting a bit longer");
-            await page.waitForTimeout(1000);
-            
-            // Check again
-            const stillHasLoadingIndicators = await page.$(LOADING_INDICATORS)
-                .then(el => !!el)
-                .catch(() => false);
-                
-            if (stillHasLoadingIndicators) {
-                debug("Loading indicators still present after waiting");
-            } else {
-                debug("Loading indicators disappeared");
-            }
+            debug("Loading indicators found, but continuing anyway after network idle");
         }
         
         // Wait a bit more for any animations to complete

@@ -1,6 +1,6 @@
 import type { PageAnalysis, BrowserOptions, StorageState } from "../../types";
 import type { Page, Cookie } from "playwright";
-import { launchBrowserContext } from "./browserSetup";
+import { launchBrowserContext, setupPageConsoleLogging } from "./browserSetup";
 import { applyStorageState } from "./storageManager";
 import { setupEventHandlers } from "./eventHandlers";
 import { analyzePage } from "./pageAnalyzer";
@@ -101,31 +101,7 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
             
             // Set up console log streaming for this page if in debug mode
             if (options.debug) {
-                page.on('console', message => {
-                    const type = message.type();
-                    const text = message.text();
-                    
-                    // Log with appropriate level based on console message type
-                    switch (type) {
-                        case 'log':
-                        case 'info':
-                            info(`[Browser Console] ${text}`);
-                            break;
-                        case 'warning':
-                            warn(`[Browser Console] ${text}`);
-                            break;
-                        case 'error':
-                            error(`[Browser Console] ${text}`);
-                            break;
-                        default:
-                            info(`[Browser Console] [${type}] ${text}`);
-                    }
-                });
-                
-                // Also capture page errors
-                page.on('pageerror', exception => {
-                    error(`[Browser Exception] ${exception.message}`);
-                });
+                setupPageConsoleLogging(page);
             }
             
             // Apply storage state if provided
