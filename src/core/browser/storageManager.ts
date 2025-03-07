@@ -76,7 +76,7 @@ async function ensureStorageDir(): Promise<void> {
  * Save storage state to a file
  * Returns a promise that resolves when the cache is updated, but tracks the file operation
  */
-export function saveStorageState(state: any, url: string): Promise<void> {
+export function saveStorageState(url: string, state: any): Promise<void> {
 	return new Promise<void>(async (resolve, reject) => {
 		try {
 			// Process the state
@@ -198,7 +198,11 @@ function processState(state: any): StorageState {
 				name: cookie.name,
 				value: cookie.value,
 				domain: cookie.domain,
-				path: cookie.path
+				path: cookie.path,
+				expires: cookie.expires || -1,
+				httpOnly: cookie.httpOnly || false,
+				secure: cookie.secure || false,
+				sameSite: cookie.sameSite || "Lax"
 			}));
 	}
 
@@ -255,7 +259,7 @@ function processState(state: any): StorageState {
  * Load storage state for a specific URL
  * Checks the in-memory cache first, then falls back to disk
  */
-export async function loadStorageState(url: string): Promise<StorageState | undefined> {
+export async function loadStorageState(url: string): Promise<StorageState | null> {
 	try {
 		const urlHash = generateUrlHash(url);
 		
@@ -274,7 +278,7 @@ export async function loadStorageState(url: string): Promise<StorageState | unde
 			await fs.access(filePath);
 		} catch {
 			debug("No storage state file exists for this URL");
-			return undefined; // File doesn't exist
+			return null; // File doesn't exist
 		}
 		
 		// Get file stats to check age
@@ -285,7 +289,7 @@ export async function loadStorageState(url: string): Promise<StorageState | unde
 		if (fileAge > STORAGE_EXPIRATION_MS) {
 			debug("Storage state file is expired, deleting");
 			await fs.unlink(filePath).catch(() => {}); // Ignore errors
-			return undefined;
+			return null;
 		}
 		
 		// Create an AbortController for this operation
@@ -321,34 +325,130 @@ export async function loadStorageState(url: string): Promise<StorageState | unde
 			} else {
 				warn("Failed to load browser state from disk", readErr);
 			}
-			return undefined;
+			return null;
 		} finally {
 			clearTimeout(timeoutId);
 			activeOperations.delete(filePath);
 		}
 	} catch (err) {
 		warn("Failed to load browser state", err);
-		return undefined;
+		return null;
 	}
 }
 
 /**
  * Apply storage state to the browser context
- * This applies cookies without navigating to any URLs
+ * This applies cookies and storage for their respective domains
  */
 export async function applyStorageState(page: Page, storageState: StorageState) {
 	try {
 		// Apply cookies
 		if (storageState.cookies && storageState.cookies.length > 0) {
 			debug(`Applying ${storageState.cookies.length} cookies`);
-			await page.context().addCookies(storageState.cookies);
+			try {
+				await page.context().addCookies(storageState.cookies);
+				debug("Cookies applied successfully");
+			} catch (cookieErr) {
+				warn("Error applying cookies", { error: cookieErr instanceof Error ? cookieErr.message : String(cookieErr) });
+				
+				// Try applying cookies one by one to identify problematic ones
+				let appliedCount = 0;
+				for (const cookie of storageState.cookies) {
+					try {
+						await page.context().addCookies([cookie]);
+						appliedCount++;
+					} catch (singleCookieErr) {
+						debug(`Skipping problematic cookie: ${cookie.name} for domain ${cookie.domain}`);
+					}
+				}
+				debug(`Applied ${appliedCount} out of ${storageState.cookies.length} cookies individually`);
+			}
 		}
 
-		// We intentionally skip applying localStorage and sessionStorage
-		// to avoid navigating to any URLs, which would cause the browser
-		// to open the last stored page
+		// Apply localStorage and sessionStorage for each origin
 		if (storageState.origins && storageState.origins.length > 0) {
-			debug(`Skipping ${storageState.origins.length} origins for localStorage/sessionStorage to avoid navigation`);
+			debug(`Applying storage for ${storageState.origins.length} origins`);
+			
+			// First navigate to about:blank to ensure we're starting fresh
+			await page.goto('about:blank', { waitUntil: 'domcontentloaded' });
+			
+			// Apply storage for each origin
+			for (const origin of storageState.origins) {
+				try {
+					// Skip if origin is not valid
+					if (!origin.origin || (!origin.localStorage && !origin.sessionStorage)) {
+						continue;
+					}
+					
+					// Extract the domain from the origin
+					const url = new URL(origin.origin);
+					const domain = url.origin;
+					
+					debug(`Applying storage for domain: ${domain}`);
+					
+					// Navigate to the domain temporarily to set storage
+					// Use a special path that's unlikely to exist to minimize loading
+					await page.goto(`${domain}/__storage_state_setter__`, { 
+						waitUntil: 'domcontentloaded',
+						timeout: 5000
+					}).catch(() => {
+						// Ignore navigation errors - the page might not exist
+						// We just need to be on the correct domain
+					});
+					
+					// Check if we're on the correct domain
+					const currentUrl = page.url();
+					if (!currentUrl.startsWith(domain) && !currentUrl.includes(url.hostname)) {
+						debug(`Failed to navigate to ${domain}, skipping storage application`);
+						continue;
+					}
+					
+					// Apply localStorage if it exists
+					if (origin.localStorage) {
+						await page.evaluate((storage) => {
+							try {
+								// Clear existing localStorage
+								localStorage.clear();
+								
+								// Set new localStorage items
+								for (const [key, value] of Object.entries(storage)) {
+									localStorage.setItem(key, value);
+								}
+								return true;
+							} catch (e) {
+								console.error('Error setting localStorage:', e);
+								return false;
+							}
+						}, origin.localStorage);
+						debug(`Applied localStorage for ${domain}`);
+					}
+					
+					// Apply sessionStorage if it exists
+					if (origin.sessionStorage) {
+						await page.evaluate((storage) => {
+							try {
+								// Clear existing sessionStorage
+								sessionStorage.clear();
+								
+								// Set new sessionStorage items
+								for (const [key, value] of Object.entries(storage)) {
+									sessionStorage.setItem(key, value);
+								}
+								return true;
+							} catch (e) {
+								console.error('Error setting sessionStorage:', e);
+								return false;
+							}
+						}, origin.sessionStorage);
+						debug(`Applied sessionStorage for ${domain}`);
+					}
+				} catch (originErr) {
+					warn(`Error applying storage for origin ${origin.origin}`, originErr);
+				}
+			}
+			
+			// Navigate back to about:blank
+			await page.goto('about:blank', { waitUntil: 'domcontentloaded' });
 		}
 	} catch (err) {
 		warn("Error applying storage state", { error: err instanceof Error ? err.message : String(err) });
