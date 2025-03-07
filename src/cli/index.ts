@@ -69,6 +69,11 @@ export async function main(): Promise<void> {
 		});
 		
 		console.warn(formatAnalysis(analysis, format));
+		
+		// Add a small delay to allow async operations to complete
+		setTimeout(() => {
+			process.exit(0);
+		}, 100);
 	} catch (error) {
 		console.error("Error:", error instanceof Error ? error.message : String(error));
 		process.exit(1);
