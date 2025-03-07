@@ -60,11 +60,15 @@ export async function executeTypingAction(
         }
         
         // Wait for stability after typing
-        await waitForActionStability(page, options);
+        const isStable = await waitForActionStability(page).catch(() => false);
+        
+        // Mark the action as completed
+        action.completed = true;
         
         return {
             success: true,
-            message: "Text input successful"
+            message: `Typed "${action.value}" into ${action.element}`,
+            warning: !isStable ? "Page not fully stable after typing" : undefined,
         };
     } catch (e: unknown) {
         const errorMessage = e instanceof Error ? e.message : String(e);

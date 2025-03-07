@@ -12,6 +12,7 @@ export const VISIBLE_MODE_SLOW_MO = 100; // Increased from 50 to 100 for better 
 export const MUTATION_STABILITY_TIMEOUT = 500; // Increased to allow for more mutations
 export const LAYOUT_STABILITY_TIMEOUT = 300; // Increased to allow for more layout shifts
 export const ACTION_STABILITY_TIMEOUT = 3000; // Increased for dynamic apps
+export const CONTENT_STABILITY_TIMEOUT = 5000; // Timeout for content stability checks
 export const DEFAULT_TYPING_DELAY = 50; // ms delay between keystrokes
 
 // Selector generation

@@ -1,14 +1,12 @@
 import type { Page } from "playwright";
 import {
     ACTION_STABILITY_TIMEOUT,
-    MUTATION_CHECK_INTERVAL,
 } from "../../config/constants";
-import { debug, warn, error } from "../../utils/logging";
-import { injectStabilityScripts } from "./injectedScripts";
+import { debug, warn } from "../../utils/logging";
 
 /**
  * Waits for stability after an action (click, type, etc.) has been performed
- * This ensures that any resulting page changes have completed before proceeding
+ * This is a simplified version that uses basic Playwright methods
  */
 export async function waitForActionStability(
     page: Page,
@@ -19,114 +17,59 @@ export async function waitForActionStability(
     } = {}
 ): Promise<boolean> {
     const timeout = options.timeout || ACTION_STABILITY_TIMEOUT;
-    const startTime = Date.now();
+    debug("Starting simplified action stability check", { timeout });
 
+    // If we expect navigation, wait for navigation events
     if (options.expectNavigation) {
         try {
-            await page.waitForLoadState("networkidle", { timeout });
+            debug("Waiting for navigation to complete");
+            await page.waitForLoadState("domcontentloaded", { timeout: Math.min(timeout, 30000) })
+                .catch(() => debug("DOMContentLoaded timeout reached, continuing anyway"));
+                
+            await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 30000) })
+                .catch(() => debug("Network idle timeout reached, continuing anyway"));
+            
+            debug("Navigation completed");
             return true;
         } catch (err) {
             if (
                 err instanceof Error &&
-                (err.message.includes("Target closed") || err.message.includes("context was destroyed"))
+                (err.message.includes("Target closed") || 
+                 err.message.includes("context was destroyed") ||
+                 err.message.includes("Execution context was destroyed"))
             ) {
+                debug("Page context destroyed during navigation");
                 return true;
             }
-            warn("Network not idle after navigation, continuing anyway");
+            warn("Error during navigation wait", { error: err instanceof Error ? err.message : String(err) });
             return true;
         }
     }
 
+    // For regular actions, wait a short time for any effects to complete
     try {
-        await injectStabilityScripts(page);
+        // Wait for any network activity to settle
+        debug("Waiting for network to settle after action");
+        await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 5000) })
+            .catch(() => debug("Network idle timeout reached, continuing anyway"));
+        
+        // Wait a short time for any animations or DOM updates
+        debug("Waiting for animations and DOM updates");
+        await page.waitForTimeout(500);
+        
+        debug("Action stability check complete");
+        return true;
     } catch (err) {
-        warn("Failed to inject stability scripts for action check", {
-            error: err instanceof Error ? err.message : String(err),
-        });
+        if (
+            err instanceof Error &&
+            (err.message.includes("Target closed") || 
+             err.message.includes("context was destroyed") ||
+             err.message.includes("Execution context was destroyed"))
+        ) {
+            debug("Page context destroyed during action stability check");
+            return true;
+        }
+        warn("Error during action stability check", { error: err instanceof Error ? err.message : String(err) });
         return true;
     }
-
-    let consecutiveStableChecks = 0;
-    let lastContent = "";
-
-    while (Date.now() - startTime < timeout && !options.abortSignal?.aborted) {
-        try {
-            // Check layout stability first
-            const isLayoutStable = await page
-                .evaluate(() => {
-                    return window.checkLayoutStability?.() ?? true;
-                })
-                .catch((err) => {
-                    warn("Error in layout stability check", {
-                        error: err instanceof Error ? err.message : String(err),
-                    });
-                    return true;
-                });
-
-            if (!isLayoutStable) {
-                consecutiveStableChecks = 0;
-                debug("Layout not yet stable");
-                await page.waitForTimeout(MUTATION_CHECK_INTERVAL);
-                continue;
-            }
-
-            // Then check DOM stability
-            const isDomStable = await page
-                .evaluate(() => {
-                    return window.checkPageStability?.() ?? true;
-                })
-                .catch((err) => {
-                    warn("Error in DOM stability check", {
-                        error: err instanceof Error ? err.message : String(err),
-                    });
-                    return true;
-                });
-
-            if (!isDomStable) {
-                consecutiveStableChecks = 0;
-                debug("DOM not yet stable");
-                await page.waitForTimeout(MUTATION_CHECK_INTERVAL);
-                continue;
-            }
-
-            // Check content stability as a final measure
-            const content = await page.content().catch(() => "");
-            if (lastContent && content !== lastContent) {
-                consecutiveStableChecks = 0;
-                debug("Content changed");
-                lastContent = content;
-                await page.waitForTimeout(MUTATION_CHECK_INTERVAL);
-                continue;
-            }
-
-            lastContent = content;
-            consecutiveStableChecks++;
-            debug("Action appears stable", { consecutiveChecks: consecutiveStableChecks });
-
-            if (consecutiveStableChecks >= 2) {
-                return true;
-            }
-        } catch (err) {
-            if (
-                err instanceof Error &&
-                (err.message.includes("Target closed") || err.message.includes("context was destroyed"))
-            ) {
-                if (options.expectNavigation) {
-                    return true;
-                }
-                throw err;
-            }
-            warn("Error during action stability check", { error: err instanceof Error ? err.message : String(err) });
-        }
-
-        await page.waitForTimeout(MUTATION_CHECK_INTERVAL);
-    }
-
-    if (options.abortSignal?.aborted) {
-        debug("Action stability check aborted");
-    } else {
-        warn("Action stability check timed out", { duration: Date.now() - startTime });
-    }
-    
-    return true;
 } 

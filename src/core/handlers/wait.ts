@@ -95,6 +95,9 @@ export async function executeWaitAction(
                     abortSignal: abortController?.signal
                 }).catch(() => false);
                 
+                // Mark the action as completed
+                action.completed = true;
+
                 return {
                     success: true,
                     message: "Elements found and stable",
@@ -107,6 +110,9 @@ export async function executeWaitAction(
             // Infinite wait - keep retrying until element is found
             abortController = new AbortController();
             const signal = abortController.signal;
+
+            // Log that we're in infinite wait mode
+            info("Starting infinite wait for elements", { elements: action.elements.join(", ") });
 
             while (!signal.aborted) {
                 try {
@@ -147,6 +153,9 @@ export async function executeWaitAction(
             timeout: isInfiniteWait ? undefined : timeout,
             abortSignal: abortController?.signal
         }).catch(() => false);
+
+        // Mark the action as completed
+        action.completed = true;
 
         return {
             success: true,

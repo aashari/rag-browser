@@ -11,11 +11,20 @@ export async function executeClickAction(
     try {
         await page.click(action.element);
         const isStable = await waitForActionStability(page, { expectNavigation: true }).catch(() => false);
-        return {
-            success: true,
-            message: "Click successful",
-            warning: !isStable ? "Page not fully stable after click" : undefined,
-        };
+        if (isStable) {
+            // Mark the action as completed
+            action.completed = true;
+            return {
+                success: true,
+                message: `Clicked element: ${action.element}`,
+            };
+        } else {
+            return {
+                success: true,
+                message: "Click successful",
+                warning: "Page not fully stable after click",
+            };
+        }
     } catch (err) {
         error('Error in click action', { error: err instanceof Error ? err.message : String(err) });
         if (err instanceof Error && err.message.includes("context was destroyed")) {

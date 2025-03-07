@@ -25,11 +25,13 @@ export type WaitAction = {
 	type: "wait";
 	elements: string[];
 	timeout?: number;
+	completed?: boolean;
 };
 
 export type ClickAction = {
 	type: "click";
 	element: string;
+	completed?: boolean;
 };
 
 export type TypingAction = {
@@ -37,18 +39,21 @@ export type TypingAction = {
 	element: string;
 	value: string;
 	delay?: number;
+	completed?: boolean;
 };
 
 export type KeyPressAction = {
 	type: "keyPress";
 	key: string;
 	element?: string;
+	completed?: boolean;
 };
 
 export type PrintAction = {
 	type: "print";
 	elements: string[];
 	format?: "html" | "markdown";
+	completed?: boolean;
 };
 
 export type Action = WaitAction | ClickAction | TypingAction | KeyPressAction | PrintAction;

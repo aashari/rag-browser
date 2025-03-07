@@ -18,9 +18,12 @@ export async function executeKeyPressAction(
         const stabilityTimeout = options.headless ? 2000 : ACTION_STABILITY_TIMEOUT;
         const isStable = await waitForActionStability(page, { timeout: stabilityTimeout }).catch(() => false);
         
+        // Mark the action as completed
+        action.completed = true;
+        
         return {
             success: true,
-            message: "Key pressed",
+            message: `Pressed key "${action.key}"${action.element ? ` on ${action.element}` : ''}`,
             warning: !isStable ? "Page not fully stable after key press" : undefined,
         };
     } catch (err) {

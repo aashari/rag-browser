@@ -231,6 +231,12 @@ export async function executePrintAction(
 			result.html.match(/Found (\d+) element/)?.[1] : 
 			'';
 		
+		// Combine all results
+		const combinedResults = await Promise.all([result]);
+		
+		// Mark the action as completed
+		action.completed = true;
+		
 		return {
 			success: !result.error,
 			message: result.error || `Content captured successfully${elementCount ? ` (${elementCount} elements)` : ''}`,

@@ -1,8 +1,8 @@
-import type { Page, BrowserContext } from "playwright";
+import type { Page, BrowserContext, ElementHandle } from "playwright";
 import type { PageAnalysis, BrowserOptions, PlannedActionResult, SelectorMode } from "../../types";
 import { executePlan } from "../actions";
 import { waitForPageStability } from "../stability";
-import { getElementInfo } from "../../utils/element";
+import { getElementInfo, getFullPath } from "../../utils/element";
 import { info, error } from "../../utils/logging";
 import { DEFAULT_TIMEOUT, LINK_SELECTORS, BUTTON_SELECTORS, INPUT_SELECTORS } from "../../config/constants";
 
@@ -60,12 +60,7 @@ export async function analyzePage(page: Page, url: string, options: BrowserOptio
         for (const element of buttonElements) {
             try {
                 const text = await element.evaluate(el => el.textContent?.trim() || '');
-                const selector = await element.evaluate(el => {
-                    if (typeof window.getFullPath === 'function') {
-                        return window.getFullPath(el);
-                    }
-                    return '';
-                });
+                const selector = await getElementSelector(page, element);
                 
                 if (selector) {
                     buttons.push({ text, selector });
@@ -83,12 +78,7 @@ export async function analyzePage(page: Page, url: string, options: BrowserOptio
             try {
                 const title = await element.evaluate(el => el.textContent?.trim() || '');
                 const url = await element.evaluate(el => el.getAttribute('href') || '');
-                const selector = await element.evaluate(el => {
-                    if (typeof window.getFullPath === 'function') {
-                        return window.getFullPath(el);
-                    }
-                    return '';
-                });
+                const selector = await getElementSelector(page, element);
                 
                 if (selector && url && !url.startsWith('javascript:')) {
                     links.push({ title, url, selector });
@@ -117,5 +107,36 @@ export async function analyzePage(page: Page, url: string, options: BrowserOptio
             links: [],
             plannedActions: plannedActionResults.length > 0 ? plannedActionResults : undefined,
         };
+    }
+}
+
+/**
+ * Get a unique selector for an element
+ */
+async function getElementSelector(page: Page, el: ElementHandle<Element>): Promise<string> {
+    try {
+        // Try to get a full path using our utility function
+        const selector = await el.evaluate((el: Element) => {
+            // Use the imported getFullPath function
+            return getFullPath(el);
+        });
+        return selector;
+    } catch (error) {
+        // Fallback to a basic selector if getFullPath fails
+        return await el.evaluate((el: Element) => {
+            const element = el as HTMLElement;
+            let selector = element.tagName.toLowerCase();
+            
+            if (element.id) {
+                selector += `#${element.id}`;
+            } else if (element.className) {
+                const classes = Array.from(element.classList).join('.');
+                if (classes) {
+                    selector += `.${classes}`;
+                }
+            }
+            
+            return selector;
+        });
     }
 } 

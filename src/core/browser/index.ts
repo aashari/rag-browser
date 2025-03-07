@@ -1,12 +1,11 @@
 import type { PageAnalysis, BrowserOptions, StorageState } from "../../types";
+import type { Page, Cookie } from "playwright";
 import { launchBrowserContext } from "./browserSetup";
-import { setupEventHandlers } from "./eventHandlers";
 import { applyStorageState } from "./storageManager";
-import { injectUtilityScripts, injectLinkModifiers } from "./scriptInjector";
+import { setupEventHandlers } from "./eventHandlers";
 import { analyzePage } from "./pageAnalyzer";
 import { info, error, warn } from "../../utils/logging";
 import { DEFAULT_TIMEOUT } from "../../config/constants";
-import type { Cookie } from "playwright";
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -134,12 +133,6 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
                 await applyStorageState(page, options.storageState);
             }
             
-            // Inject utility scripts
-            await injectUtilityScripts(page);
-            
-            // Inject link modifiers
-            await injectLinkModifiers(page);
-            
             // Analyze the page
             const analysis = await analyzePage(page, url, options, browser);
             
@@ -174,7 +167,10 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
             }
 
             // Close browser unless we're in infinite wait and action hasn't succeeded
-            if (actionSucceeded || options.timeout !== -1) {
+            // For infinite wait actions (like login forms), keep the browser open until the action succeeds
+            const hasInfiniteWait = options.timeout === -1;
+            
+            if (actionSucceeded || !hasInfiniteWait) {
                 try {
                     // Get browser state before closing
                     const state = await browser.storageState();
@@ -182,29 +178,36 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
                     // Process and save state before closing the browser
                     await processAndSaveState(state, options);
                     
-                    // Unroute all routes to prevent "Target page, context or browser has been closed" errors
-                    if (options.debug) {
-                        info("Cleaning up browser routes before closing");
-                        const pages = browser.pages();
-                        for (const page of pages) {
-                            try {
-                                await page.unrouteAll({ behavior: 'ignoreErrors' });
-                            } catch (e) {
-                                // Ignore errors during unrouting
-                            }
+                    // Unroute all routes before closing
+                    for (const page of browser.pages()) {
+                        if (page.isClosed()) continue;
+                        
+                        try {
+                            // First remove all listeners to prevent callbacks after closing
+                            page.removeAllListeners();
+                            
+                            // Then unroute all routes
+                            await page.unrouteAll({ behavior: 'ignoreErrors' });
+                        } catch (e) {
+                            // Ignore errors during unrouting
                         }
                     }
                     
-                    // No need for artificial delay, just ensure all operations are properly awaited
+                    // Wait a longer time to ensure all operations are complete
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                     
                     // Close the browser
                     info("Closing browser");
-                    await browser.close();
+                    await browser.close().catch(e => {
+                        warn("Error during browser close", { error: e instanceof Error ? e.message : String(e) });
+                    });
                     info("Browser closed successfully");
                     
                 } catch (closeErr) {
                     error("Error closing browser", closeErr);
                     try {
+                        // Wait a short time before trying to close again
+                        await new Promise(resolve => setTimeout(resolve, 1000));
                         await browser.close();
                     } catch (e) {
                         // Ignore additional errors during closure
