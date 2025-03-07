@@ -5,17 +5,23 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { createToolDefinitions } from "./tools.js";
 import { setupRequestHandlers } from "./requestHandler.js";
 import { VERSION, PACKAGE_NAME } from "../config/version.js";
+import { handleToolCall } from "./toolsHandler";
+import { setDebugMode } from "../utils/logging";
+import { cleanupResources as cleanupBrowserResources } from "../core/browser";
+import { promiseTracker } from "../utils/promiseTracker";
+import { info, debug } from "../utils/logging";
 
 /**
- * Ensures all resources are properly released before process termination
- * This helps prevent delays after operations are complete
+ * Clean up resources before exiting
  */
 async function cleanupResources(): Promise<void> {
-	// Allow any pending microtasks to complete
-	await new Promise<void>(resolve => {
-		// Use a minimal timeout to allow the event loop to process any pending operations
-		setTimeout(() => resolve(), 0);
-	});
+	// Clean up browser resources
+	await cleanupBrowserResources();
+	
+	// Wait for any pending promises to complete
+	await promiseTracker.waitForPending(1000);
+	
+	debug("Resources cleaned up successfully");
 }
 
 export async function runServer(debug: boolean = false): Promise<void> {

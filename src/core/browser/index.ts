@@ -1,130 +1,75 @@
 import type { PageAnalysis, BrowserOptions, StorageState } from "../../types";
 import type { Page, Cookie } from "playwright";
 import { launchBrowserContext, setupPageConsoleLogging } from "./browserSetup";
-import { applyStorageState } from "./storageManager";
+import { applyStorageState, saveStorageState, loadStorageState, cleanupStorageFiles, abortActiveOperations } from "./storageManager";
 import { setupEventHandlers, onUserInteraction, getLastUserInteractionTime } from "./eventHandlers";
 import { analyzePage } from "./pageAnalyzer";
-import { info, error, warn } from "../../utils/logging";
+import { info, error, warn, debug } from "../../utils/logging";
 import { DEFAULT_TIMEOUT } from "../../config/constants";
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import * as os from 'os';
+import { promiseTracker } from "../../utils/promiseTracker";
+import { waitForPageStability } from "../stability/pageStability";
 
-interface BrowserStorageItem {
-    name: string;
-    value: string;
-}
-
-interface BrowserStorageOrigin {
-    origin: string;
-    localStorage?: BrowserStorageItem[];
-    sessionStorage?: BrowserStorageItem[];
-}
-
-// Get the path to the storage state file
-function getStorageStatePath(): string {
-    const storageDir = path.join(os.homedir(), '.rag-browser');
-    return path.join(storageDir, 'storage-state.json');
-}
-
-// Save storage state to a file asynchronously with timeout
-async function saveStorageStateToFile(state: any): Promise<void> {
-    return new Promise<void>(async (resolve) => {
-        // Set a timeout to ensure this operation doesn't block for too long
-        const timeoutId = setTimeout(() => {
-            info("Storage state save operation timed out, continuing execution");
-            resolve();
-        }, 1000); // 1 second timeout
-        
-        try {
-            const storageDir = path.join(os.homedir(), '.rag-browser');
-            
-            // Create directory if it doesn't exist
-            await fs.mkdir(storageDir, { recursive: true });
-            
-            // Write state to file
-            await fs.writeFile(
-                getStorageStatePath(),
-                JSON.stringify(state, null, 2),
-                'utf8'
-            );
-            
-            clearTimeout(timeoutId);
-            info("Browser state saved successfully");
-        } catch (err) {
-            clearTimeout(timeoutId);
-            error("Failed to save browser state", err);
-        }
-        
-        resolve();
-    });
-}
-
-// Load storage state from file
-export async function loadStorageStateFromFile(): Promise<StorageState | undefined> {
-    try {
-        const filePath = getStorageStatePath();
-        
-        // Check if file exists
-        try {
-            await fs.access(filePath);
-        } catch {
-            return undefined; // File doesn't exist
-        }
-        
-        // Read and parse file
-        const data = await fs.readFile(filePath, 'utf8');
-        return JSON.parse(data) as StorageState;
-    } catch (err) {
-        error("Failed to load browser state", err);
-        return undefined;
-    }
-}
+// Track active browser contexts for cleanup
+const activeBrowsers = new Set<any>();
 
 export async function analyzeBrowserPage(url: string, options: BrowserOptions): Promise<PageAnalysis> {
-    // Try to load storage state from file if not provided
+    // Try to load storage state from URL if not provided
     if (!options.storageState) {
-        options.storageState = await loadStorageStateFromFile();
+        options.storageState = await loadStorageState(url);
+        
+        // Periodically clean up expired storage files (1% chance per call)
+        if (Math.random() < 0.01) {
+            promiseTracker.track(
+                cleanupStorageFiles(),
+                'periodicCleanup'
+            ).catch(err => {
+                debug("Error cleaning up storage files", err);
+            });
+        }
     }
     
-    // Create a timeout promise to ensure the function doesn't run indefinitely
+    // Create a timeout controller
+    const timeoutController = new AbortController();
+    const timeoutSignal = timeoutController.signal;
     let timeoutId: NodeJS.Timeout | null = null;
-    let timeoutReject: ((reason: Error) => void) | null = null;
     
-    const createTimeoutPromise = () => {
+    // Create a timeout promise
+    const createTimeoutPromise = (timeoutMs: number) => {
         return new Promise<PageAnalysis>((_, reject) => {
-            // Handle the case where options.timeout is undefined
-            const timeout = options.timeout ?? DEFAULT_TIMEOUT;
-            // Use a reasonable timeout that won't hang the process
-            const timeoutMs = timeout !== -1 ? Math.min(timeout + 5000, 60000) : 60000;
-            
             // Clear any existing timeout
             if (timeoutId) {
                 clearTimeout(timeoutId);
             }
             
-            // Store the reject function for later use
-            timeoutReject = reject;
-            
             // Set a new timeout
             timeoutId = setTimeout(() => {
+                timeoutController.abort();
                 reject(new Error(`Analysis timed out after ${timeoutMs}ms`));
             }, timeoutMs);
         });
     };
     
+    // Calculate timeout value
+    const timeout = options.timeout ?? DEFAULT_TIMEOUT;
+    const timeoutMs = timeout !== -1 ? Math.min(timeout + 5000, 60000) : 60000;
+    
     // Initial timeout promise
-    let timeoutPromise = createTimeoutPromise();
+    let timeoutPromise = createTimeoutPromise(timeoutMs);
     
     // The actual analysis function
     const analysisPromise = async (): Promise<PageAnalysis> => {
         // Launch browser with persistent context
         const browser = await launchBrowserContext(options);
+        
+        // Track this browser for cleanup
+        activeBrowsers.add(browser);
+        
         let actionSucceeded = false;
+        let page: Page | null = null;
         
         try {
             // Create a new page
-            const page = await browser.newPage();
+            page = await browser.newPage();
             
             // Set up all event handlers
             setupEventHandlers(page);
@@ -137,17 +82,40 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
             // Set up timeout reset on user interaction
             const unregisterCallback = onUserInteraction(() => {
                 // Reset the timeout promise when user interaction is detected
-                if (timeoutId && timeoutReject) {
+                if (timeoutId) {
                     clearTimeout(timeoutId);
-                    timeoutPromise = createTimeoutPromise();
+                    timeoutPromise = createTimeoutPromise(timeoutMs);
                     info("Timeout reset due to user interaction", { timestamp: new Date().toISOString() });
                 }
+            });
+            
+            // First navigate to a blank page to ensure we don't start with the last visited page
+            await page.goto('about:blank', { waitUntil: 'domcontentloaded' }).catch(e => {
+                debug("Error navigating to blank page", e);
             });
             
             // Apply storage state if provided
             if (options.storageState) {
                 await applyStorageState(page, options.storageState);
             }
+            
+            // Check if the operation was aborted
+            if (timeoutSignal.aborted) {
+                throw new Error("Operation was aborted");
+            }
+            
+            // Navigate to the target URL
+            info(`Navigating to ${url}`);
+            await page.goto(url, {
+                timeout: options.timeout || DEFAULT_TIMEOUT,
+                waitUntil: 'domcontentloaded',
+            });
+            
+            // Wait for the page to stabilize with configurable options
+            await waitForPageStability(page, { 
+                timeout: options.timeout || DEFAULT_TIMEOUT,
+                ...options.stabilityOptions
+            });
             
             // Analyze the page
             info("Starting page analysis", { timestamp: new Date().toISOString() });
@@ -199,17 +167,24 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
                     const state = await browser.storageState();
                     info("Browser state retrieved", { timestamp: new Date().toISOString() });
                     
-                    // Process and save state in the background (non-blocking)
-                    info("Processing and saving state", { timestamp: new Date().toISOString() });
-                    processAndSaveState(state, options).catch(e => {
-                        error("Error in background state processing", { error: e instanceof Error ? e.message : String(e) });
+                    // Save state (tracked by promiseTracker)
+                    info("Saving browser state", { timestamp: new Date().toISOString() });
+                    await promiseTracker.track(
+                        saveStorageState(state, url),
+                        `saveBrowserState:${url}`
+                    ).catch(e => {
+                        error("Error saving browser state", { error: e instanceof Error ? e.message : String(e) });
                     });
                     
-                    // Close the browser immediately without waiting for state saving
+                    // Close the browser
                     info("Closing browser", { timestamp: new Date().toISOString() });
                     await browser.close().catch(e => {
                         warn("Error during browser close", { error: e instanceof Error ? e.message : String(e) });
                     });
+                    
+                    // Remove from active browsers
+                    activeBrowsers.delete(browser);
+                    
                     info("Browser closed successfully", { timestamp: new Date().toISOString() });
                     
                 } catch (closeErr) {
@@ -218,63 +193,68 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
                         // Wait a short time before trying to close again
                         await new Promise(resolve => setTimeout(resolve, 500));
                         await browser.close();
+                        activeBrowsers.delete(browser);
                     } catch (e) {
                         // Ignore additional errors during closure
                     }
                 }
             }
-
-            // Ensure all promises are resolved before returning
-            await Promise.resolve();
             
-            // Clear any remaining timeouts or intervals
-            await new Promise(resolve => setTimeout(resolve, 0));
+            // Clean up any remaining resources
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
         }
     };
     
-    // Race the analysis against the timeout
-    const result = await Promise.race([analysisPromise(), timeoutPromise]);
-
-    // Ensure event loop is cleared of any microtasks before returning
-    await new Promise(resolve => setTimeout(resolve, 0));
-
-    return result;
+    try {
+        // Race the analysis against the timeout
+        const result = await Promise.race([analysisPromise(), timeoutPromise]);
+        
+        // Wait for any pending promises to complete with a short timeout
+        await promiseTracker.waitForPending(1000);
+        
+        return result;
+    } catch (err: unknown) {
+        // If the timeout was triggered, make sure to clean up
+        if (err instanceof Error && err.message.includes('timed out')) {
+            // Abort any active operations
+            abortActiveOperations();
+            
+            // Close any active browsers
+            for (const browser of activeBrowsers) {
+                try {
+                    await browser.close().catch(() => {});
+                    activeBrowsers.delete(browser);
+                } catch (e) {
+                    // Ignore errors during forced closure
+                }
+            }
+        }
+        
+        throw err;
+    }
 }
 
-// Process and save browser state without blocking
-async function processAndSaveState(state: any, options: BrowserOptions): Promise<void> {
-    // Create a non-blocking promise that will resolve immediately
-    // while the actual processing happens in the background
-    return new Promise<void>(resolve => {
-        // Resolve immediately to avoid blocking
-        resolve();
-        
-        // Process in the background
-        (async () => {
-            try {
-                // Process cookies if needed
-                if (state.cookies) {
-                    // Filter out any problematic cookies if needed
-                    state.cookies = state.cookies.filter((cookie: Cookie) => {
-                        // Keep all cookies by default
-                        return true;
-                    });
-                }
-
-                // Process origins if needed
-                if (state.origins) {
-                    // Filter out any problematic origins if needed
-                    state.origins = state.origins.filter((origin: BrowserStorageOrigin) => {
-                        // Keep all origins by default
-                        return true;
-                    });
-                }
-
-                // Save the processed state to a file
-                await saveStorageStateToFile(state);
-            } catch (err) {
-                error("Error processing browser state", err);
-            }
-        })();
-    });
+/**
+ * Clean up all browser resources
+ * This should be called during application shutdown
+ */
+export async function cleanupBrowserResources(): Promise<void> {
+    // Abort any active file operations
+    abortActiveOperations();
+    
+    // Close any active browsers
+    for (const browser of activeBrowsers) {
+        try {
+            await browser.close().catch(() => {});
+            activeBrowsers.delete(browser);
+        } catch (e) {
+            // Ignore errors during forced closure
+        }
+    }
+    
+    // Wait for any pending promises to complete with a short timeout
+    await promiseTracker.waitForPending(1000);
 } 

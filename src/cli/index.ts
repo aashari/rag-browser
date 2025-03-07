@@ -1,25 +1,25 @@
 #!/usr/bin/env bun
 
 import { Command } from 'commander';
-import { analyzePage } from "../core/browser";
-import type { Plan, PageAnalysis } from "../types";
+import { analyzePage, cleanupResources as cleanupBrowserResources } from "../core/browser";
+import type { Plan, PageAnalysis, BrowserOptions } from "../types";
 import { formatAnalysis, printPlan, type OutputFormat } from "../utils/output";
 import { DEFAULT_TIMEOUT, VISIBLE_MODE_SLOW_MO } from "../config/constants";
 import { fileURLToPath } from 'url';
-import { error, info, debug as logDebug } from "../utils/logging";
+import { error, info, debug as logDebug, setDebugMode } from "../utils/logging";
 import { VERSION, PACKAGE_NAME } from "../config/version";
 import type { StabilityOptions } from "../core/stability/pageStability";
+import { promiseTracker } from "../utils/promiseTracker";
 
 /**
- * Ensures all resources are properly released before process termination
- * This helps prevent delays after the analysis is complete
+ * Clean up resources before exiting
  */
 async function cleanupResources(): Promise<void> {
-	// Allow any pending microtasks to complete
-	await new Promise<void>(resolve => {
-		// Use a minimal timeout to allow the event loop to process any pending operations
-		setTimeout(() => resolve(), 0);
-	});
+	// Clean up browser resources
+	await cleanupBrowserResources();
+	
+	// Wait for any pending promises to complete
+	await promiseTracker.waitForPending(1000);
 }
 
 export async function main(): Promise<PageAnalysis> {

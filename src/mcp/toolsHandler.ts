@@ -1,6 +1,6 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { analyzePage } from "../core/browser";
+import { analyzePage, cleanupResources as cleanupBrowserResources } from "../core/browser";
 import { formatAnalysis } from "../utils/output";
 import type { Plan, Action } from "../types";
 import { storeAnalysis } from "./resources";
@@ -8,6 +8,7 @@ import { DEFAULT_TIMEOUT, VISIBLE_MODE_SLOW_MO } from "../config/constants";
 import { MCP_ERROR_CODES, type McpErrorCode } from "../config/errorCodes";
 import { validateUrl } from "../utils/security";
 import { error } from "../utils/logging";
+import { promiseTracker } from "../utils/promiseTracker";
 
 // Validate action type and required fields
 function validateAction(action: any): action is Action {
@@ -114,15 +115,14 @@ interface ExtendedCallToolResult extends CallToolResult {
 }
 
 /**
- * Ensures all resources are properly released after tool execution
- * This helps prevent delays after operations are complete
+ * Clean up resources after tool execution
  */
 async function cleanupAfterToolExecution(): Promise<void> {
-	// Allow any pending microtasks to complete
-	await new Promise<void>(resolve => {
-		// Use a minimal timeout to allow the event loop to process any pending operations
-		setTimeout(() => resolve(), 0);
-	});
+	// Clean up browser resources
+	await cleanupBrowserResources();
+	
+	// Wait for any pending promises to complete with a short timeout
+	await promiseTracker.waitForPending(1000);
 }
 
 export async function handleToolCall(
