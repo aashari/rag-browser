@@ -5,6 +5,7 @@ import { applyStorageState } from "./storageManager";
 import { injectUtilityScripts, injectLinkModifiers } from "./scriptInjector";
 import { analyzePage } from "./pageAnalyzer";
 import { info, error, warn } from "../../utils/logging";
+import { DEFAULT_TIMEOUT } from "../../config/constants";
 import type { Cookie } from "playwright";
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -75,129 +76,146 @@ export async function analyzeBrowserPage(url: string, options: BrowserOptions): 
         options.storageState = await loadStorageStateFromFile();
     }
     
-    // Launch browser with persistent context
-    const browser = await launchBrowserContext(options);
-    let actionSucceeded = false;
+    // Create a timeout promise to ensure the function doesn't run indefinitely
+    const timeoutPromise = new Promise<PageAnalysis>((_, reject) => {
+        // Handle the case where options.timeout is undefined
+        const timeout = options.timeout ?? DEFAULT_TIMEOUT;
+        // Use a reasonable timeout that won't hang the process
+        const timeoutMs = timeout !== -1 ? Math.min(timeout + 5000, 60000) : 60000;
+        setTimeout(() => {
+            reject(new Error(`Analysis timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
+    });
     
-    try {
-        // Create a new page
-        const page = await browser.newPage();
+    // The actual analysis function
+    const analysisPromise = async (): Promise<PageAnalysis> => {
+        // Launch browser with persistent context
+        const browser = await launchBrowserContext(options);
+        let actionSucceeded = false;
         
-        // Set up all event handlers
-        setupEventHandlers(page);
-        
-        // Set up console log streaming for this page if in debug mode
-        if (options.debug) {
-            page.on('console', message => {
-                const type = message.type();
-                const text = message.text();
-                
-                // Log with appropriate level based on console message type
-                switch (type) {
-                    case 'log':
-                    case 'info':
-                        info(`[Browser Console] ${text}`);
-                        break;
-                    case 'warning':
-                        warn(`[Browser Console] ${text}`);
-                        break;
-                    case 'error':
-                        error(`[Browser Console] ${text}`);
-                        break;
-                    default:
-                        info(`[Browser Console] [${type}] ${text}`);
-                }
-            });
-            
-            // Also capture page errors
-            page.on('pageerror', exception => {
-                error(`[Browser Exception] ${exception.message}`);
-            });
-        }
-        
-        // Apply storage state if provided
-        if (options.storageState) {
-            await applyStorageState(page, options.storageState);
-        }
-        
-        // Inject utility scripts
-        await injectUtilityScripts(page);
-        
-        // Inject link modifiers
-        await injectLinkModifiers(page);
-        
-        // Analyze the page
-        const analysis = await analyzePage(page, url, options, browser);
-        
-        // Set actionSucceeded based on planned actions
-        actionSucceeded = analysis.plannedActions ? 
-            !analysis.plannedActions.some(action => action.error) : 
-            true;
-        
-        return analysis;
-    } catch (err) {
-        error("Error during browser analysis", err);
-        
-        // Return error state
-        return {
-            title: url,
-            error: err instanceof Error ? err.message : String(err),
-            inputs: [],
-            buttons: [],
-            links: []
-        };
-    } finally {
-        // Always show analysis summary before closing
         try {
-            // Log final state summary
-            info("Final execution state", {
-                url,
-                actionSucceeded,
-                hasTimeout: options.timeout !== -1
-            });
+            // Create a new page
+            const page = await browser.newPage();
+            
+            // Set up all event handlers
+            setupEventHandlers(page);
+            
+            // Set up console log streaming for this page if in debug mode
+            if (options.debug) {
+                page.on('console', message => {
+                    const type = message.type();
+                    const text = message.text();
+                    
+                    // Log with appropriate level based on console message type
+                    switch (type) {
+                        case 'log':
+                        case 'info':
+                            info(`[Browser Console] ${text}`);
+                            break;
+                        case 'warning':
+                            warn(`[Browser Console] ${text}`);
+                            break;
+                        case 'error':
+                            error(`[Browser Console] ${text}`);
+                            break;
+                        default:
+                            info(`[Browser Console] [${type}] ${text}`);
+                    }
+                });
+                
+                // Also capture page errors
+                page.on('pageerror', exception => {
+                    error(`[Browser Exception] ${exception.message}`);
+                });
+            }
+            
+            // Apply storage state if provided
+            if (options.storageState) {
+                await applyStorageState(page, options.storageState);
+            }
+            
+            // Inject utility scripts
+            await injectUtilityScripts(page);
+            
+            // Inject link modifiers
+            await injectLinkModifiers(page);
+            
+            // Analyze the page
+            const analysis = await analyzePage(page, url, options, browser);
+            
+            // Set actionSucceeded based on planned actions
+            actionSucceeded = analysis.plannedActions ? 
+                !analysis.plannedActions.some(action => action.error) : 
+                true;
+            
+            return analysis;
         } catch (err) {
-            error("Error in cleanup", { error: err instanceof Error ? err.message : String(err) });
-        }
-
-        // Close browser unless we're in infinite wait and action hasn't succeeded
-        if (actionSucceeded || options.timeout !== -1) {
+            error("Error during browser analysis", err);
+            
+            // Return error state
+            return {
+                title: url,
+                error: err instanceof Error ? err.message : String(err),
+                inputs: [],
+                buttons: [],
+                links: []
+            };
+        } finally {
+            // Always show analysis summary before closing
             try {
-                // Get browser state before closing
-                const state = await browser.storageState();
-                
-                // Process and save state before closing the browser
-                await processAndSaveState(state, options);
-                
-                // Unroute all routes to prevent "Target page, context or browser has been closed" errors
-                if (options.debug) {
-                    info("Cleaning up browser routes before closing");
-                    const pages = browser.pages();
-                    for (const page of pages) {
-                        try {
-                            await page.unrouteAll({ behavior: 'ignoreErrors' });
-                        } catch (e) {
-                            // Ignore errors during unrouting
+                // Log final state summary
+                info("Final execution state", {
+                    url,
+                    actionSucceeded,
+                    hasTimeout: options.timeout !== -1
+                });
+            } catch (err) {
+                error("Error in cleanup", { error: err instanceof Error ? err.message : String(err) });
+            }
+
+            // Close browser unless we're in infinite wait and action hasn't succeeded
+            if (actionSucceeded || options.timeout !== -1) {
+                try {
+                    // Get browser state before closing
+                    const state = await browser.storageState();
+                    
+                    // Process and save state before closing the browser
+                    await processAndSaveState(state, options);
+                    
+                    // Unroute all routes to prevent "Target page, context or browser has been closed" errors
+                    if (options.debug) {
+                        info("Cleaning up browser routes before closing");
+                        const pages = browser.pages();
+                        for (const page of pages) {
+                            try {
+                                await page.unrouteAll({ behavior: 'ignoreErrors' });
+                            } catch (e) {
+                                // Ignore errors during unrouting
+                            }
                         }
                     }
-                }
-                
-                // Add a small delay to ensure all operations are complete
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                // Close the browser
-                info("Closing browser");
-                await browser.close();
-                
-            } catch (closeErr) {
-                error("Error closing browser", closeErr);
-                try {
+                    
+                    // No need for artificial delay, just ensure all operations are properly awaited
+                    
+                    // Close the browser
+                    info("Closing browser");
                     await browser.close();
-                } catch (e) {
-                    // Ignore additional errors during closure
+                    info("Browser closed successfully");
+                    
+                } catch (closeErr) {
+                    error("Error closing browser", closeErr);
+                    try {
+                        await browser.close();
+                    } catch (e) {
+                        // Ignore additional errors during closure
+                    }
                 }
             }
         }
-    }
+    };
+    
+    // Race the analysis against the timeout
+    return Promise.race([analysisPromise(), timeoutPromise]);
 }
 
 // Process and save browser state

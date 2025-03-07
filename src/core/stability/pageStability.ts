@@ -26,11 +26,12 @@ export async function waitForPageStability(
     debug("Starting page stability check", { timeout });
 
     // Create a promise that resolves after the safety timeout
+    // Use a very short safety timeout to prevent hanging
     const safetyTimeoutPromise = new Promise<boolean>((resolve) => {
         setTimeout(() => {
             warn("Safety timeout reached in waitForPageStability", { timeout });
             resolve(true);
-        }, Math.min(timeout + 5000, 60000)); // Add 5 seconds to regular timeout, but cap at 60 seconds
+        }, Math.min(3000, timeout / 2)); // Use at most 3 seconds or half the timeout
     });
 
     // Race the actual stability check with the safety timeout
