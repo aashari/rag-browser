@@ -129,10 +129,10 @@ bunx github:aashari/rag-browser --url "https://example.com" --headless --json
 #### Show All Interactive Elements
 
 ```bash
-bunx github:aashari/rag-browser --url "https://example.com" --inputs --buttons --links
+bunx github:aashari/rag-browser --url "https://example.com"
 ```
 
-**Output**: Lists all inputs, buttons, and links with selectors.
+**Output**: Lists top 5 inputs, buttons, and links with selectors.
 
 #### Execute an Action Plan
 
@@ -162,9 +162,6 @@ bunx github:aashari/rag-browser --url "https://wikipedia.org" --plan '{
 | `--simple-selectors` | Use simpler CSS selectors       | (flag)                  |
 | `--plan`             | JSON string of actions          | See above example       |
 | `--timeout`          | Timeout in ms (-1 for infinite) | `5000`                  |
-| `--inputs`           | Show all inputs                 | (flag)                  |
-| `--buttons`          | Show all buttons                | (flag)                  |
-| `--links`            | Show all links                  | (flag)                  |
 
 ### MCP Server Mode
 
@@ -230,7 +227,7 @@ Add to your AI system's MCP configuration:
 
 1. Analyze a login page:
    ```bash
-   bunx github:aashari/rag-browser --url "https://example.com/login" --inputs --buttons
+   bunx github:aashari/rag-browser --url "https://example.com/login"
    ```
 2. Create a plan to log in:
    ```json

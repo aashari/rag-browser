@@ -26,18 +26,11 @@ export function formatAnalysis(
 	format: OutputFormat | string = "pretty",
 	options: DisplayOptions = {}
 ): string {
-	// Ensure we have valid options with defaults
-	const normalizedOptions: DisplayOptions = {
-		showInputs: options.showInputs ?? false,
-		showButtons: options.showButtons ?? false,
-		showLinks: options.showLinks ?? false
-	};
-	
 	// Normalize the format
 	const normalizedFormat = normalizeFormat(format);
 	
 	// Use the existing printAnalysis function with normalized parameters
-	return printAnalysis(analysis, normalizedFormat, normalizedOptions);
+	return printAnalysis(analysis, normalizedFormat, options);
 }
 
 export function printPlan(plan: Plan): string {
@@ -184,74 +177,38 @@ export function printAnalysis(
 	output += "Page Elements Summary:\n";
 	output += "=".repeat(50) + "\n";
 
-	// Show input elements with more details
+	// Show input elements with more details - always show top 5 only
 	if (analysis.inputs.length > 0) {
 		output += `Total Input Elements: ${analysis.inputs.length}\n`;
-		if (options.showInputs) {
-			output += "[Showing all inputs]\n";
-			analysis.inputs.forEach((input, index) => {
-				const inputType = input.type ? `(${input.type})` : '';
-				const placeholder = input.placeholder ? ` placeholder="${input.placeholder}"` : '';
-				const visibility = input.isVisible === false ? " [hidden]" : " [visible]";
-				output += `- ${index + 1}. ${input.label || 'No label'} ${inputType}${placeholder}${visibility}\n`;
-				output += `  Selector: ${input.selector}\n`;
-			});
-		} else {
-			output += "[Showing top visible 5 inputs]\n";
-			analysis.inputs.slice(0, 5).forEach((input, index) => {
-				const inputType = input.type ? `(${input.type})` : '';
-				const placeholder = input.placeholder ? ` placeholder="${input.placeholder}"` : '';
-				output += `- ${index + 1}. ${input.label || 'No label'} ${inputType}${placeholder}\n`;
-				output += `  Selector: ${input.selector}\n`;
-			});
-			if (analysis.inputs.length > 5) {
-				output += "> to get list of all inputs add --inputs\n";
-			}
-		}
+		output += "[Showing top visible 5 inputs]\n";
+		analysis.inputs.slice(0, 5).forEach((input, index) => {
+			const inputType = input.type ? `(${input.type})` : '';
+			const placeholder = input.placeholder ? ` placeholder="${input.placeholder}"` : '';
+			output += `- ${index + 1}. ${input.label || 'No label'} ${inputType}${placeholder}\n`;
+			output += `  Selector: ${input.selector}\n`;
+		});
 		output += "\n";
 	}
 
-	// Show button elements with more details
+	// Show button elements with more details - always show top 5 only
 	if (analysis.buttons.length > 0) {
 		output += `Total Button Elements: ${analysis.buttons.length}\n`;
-		if (options.showButtons) {
-			output += "[Showing all buttons]\n";
-			analysis.buttons.forEach((button, index) => {
-				output += `- ${index + 1}. ${button.text || 'No text'}\n`;
-				output += `  Selector: ${button.selector}\n`;
-			});
-		} else {
-			output += "[Showing top visible 5 buttons]\n";
-			analysis.buttons.slice(0, 5).forEach((button, index) => {
-				output += `- ${index + 1}. ${button.text || 'No text'}\n`;
-				output += `  Selector: ${button.selector}\n`;
-			});
-			if (analysis.buttons.length > 5) {
-				output += "> to get list of all buttons add --buttons\n";
-			}
-		}
+		output += "[Showing top visible 5 buttons]\n";
+		analysis.buttons.slice(0, 5).forEach((button, index) => {
+			output += `- ${index + 1}. ${button.text || 'No text'}\n`;
+			output += `  Selector: ${button.selector}\n`;
+		});
 		output += "\n";
 	}
 
-	// Show link elements with more details including URLs
+	// Show link elements with more details including URLs - always show top 5 only
 	if (analysis.links.length > 0) {
 		output += `Total Link Elements: ${analysis.links.length}\n`;
-		if (options.showLinks) {
-			output += "[Showing all links]\n";
-			analysis.links.forEach((link, index) => {
-				output += `- ${index + 1}. ${link.title} → ${link.url}\n`;
-				output += `  Selector: ${link.selector}\n`;
-			});
-		} else {
-			output += "[Showing top visible 5 links]\n";
-			analysis.links.slice(0, 5).forEach((link, index) => {
-				output += `- ${index + 1}. ${link.title} → ${link.url}\n`;
-				output += `  Selector: ${link.selector}\n`;
-			});
-			if (analysis.links.length > 5) {
-				output += "> to get list of all links add --links\n";
-			}
-		}
+		output += "[Showing top visible 5 links]\n";
+		analysis.links.slice(0, 5).forEach((link, index) => {
+			output += `- ${index + 1}. ${link.title} → ${link.url}\n`;
+			output += `  Selector: ${link.selector}\n`;
+		});
 	}
 	output += "\n";
 

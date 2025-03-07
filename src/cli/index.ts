@@ -14,11 +14,6 @@ export async function main(): Promise<void> {
 	const headless = args.includes("--headless");
 	const format = (args.includes("--json") ? "json" : "pretty") as OutputFormat;
 	const selectorMode = args.includes("--simple-selectors") ? "simple" : "full";
-	
-	// New display options
-	const showInputs = args.includes("--inputs");
-	const showButtons = args.includes("--buttons");
-	const showLinks = args.includes("--links");
 
 	if (urlIndex === 0 || urlIndex >= args.length) {
 		console.error(
@@ -31,10 +26,6 @@ export async function main(): Promise<void> {
 		console.error("  --simple-selectors Use simple selectors without full paths (optional, default: full paths)");
 		console.error("  --plan             JSON string defining actions to perform (optional)");
 		console.error("  --timeout          Timeout in ms, use -1 for infinite wait (optional, default: 30000)");
-		console.error("\nDisplay Options:");
-		console.error("  --inputs           Show all input elements (optional, default: top 5)");
-		console.error("  --buttons          Show all buttons (optional, default: top 5)");
-		console.error("  --links            Show all links (optional, default: top 5)");
 		process.exit(1);
 	}
 
@@ -73,7 +64,7 @@ export async function main(): Promise<void> {
 			selectorMode,
 			plan,
 		});
-		console.warn(formatAnalysis(analysis, format, { showInputs, showButtons, showLinks }));
+		console.warn(formatAnalysis(analysis, format));
 	} catch (error) {
 		console.error("Error:", error instanceof Error ? error.message : String(error));
 		process.exit(1);
@@ -82,8 +73,8 @@ export async function main(): Promise<void> {
 
 // Only run main if this file is being executed directly
 if (fileURLToPath(import.meta.url) === process.argv[1]) {
-    main().catch(error => {
-        console.error("Fatal error:", error instanceof Error ? error.message : String(error));
-        process.exit(1);
-    });
+	main().catch(error => {
+		console.error("Fatal error:", error instanceof Error ? error.message : String(error));
+		process.exit(1);
+	});
 }
