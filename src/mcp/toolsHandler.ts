@@ -97,11 +97,13 @@ export async function handleToolCall(
 			timeout: number;
 			selectorMode: "full" | "simple";
 			plan?: Plan;
+			debug?: boolean;
 		} = {
 			headless: args.headless === "true",
 			slowMo: VISIBLE_MODE_SLOW_MO,
 			timeout: args.timeout ? parseInt(args.timeout, 10) : DEFAULT_TIMEOUT,
-			selectorMode: args.selectorMode as "full" | "simple" || "full"
+			selectorMode: args.selectorMode as "full" | "simple" || "full",
+			debug: args.debug === "true"
 		};
 
 		if (name === "action") {
