@@ -42,8 +42,8 @@ export async function runServer(debug: boolean = false): Promise<void> {
 	const transport = new StdioServerTransport();
 	await server.connect(transport);
 
-	// Enhanced startup log with version - suppress if in debug mode
-	if (!debug) {
+	// Enhanced startup log with version - only show when in debug mode
+	if (debug) {
 		console.warn(
 			JSON.stringify({
 				jsonrpc: "2.0",

@@ -64,11 +64,14 @@ function truncateLogData(data: unknown): unknown {
  * Send a log message following JSON-RPC 2.0 notification format
  */
 export function log(message: string, level: "debug" | "info" | "warn" | "error" = "info", data?: unknown): void {
-	// Skip logging if in debug mode
-	if (isDebugMode) return;
+	// Only show logs if in debug mode or if DEBUG constant is true
+	if (!isDebugMode && !DEBUG) {
+		// Skip all logs when not in debug mode and DEBUG is false
+		return;
+	}
 	
-	// Skip debug logs if DEBUG constant is false
-	if (!DEBUG && level === "debug") return;
+	// Skip debug logs if DEBUG constant is false and not in debug mode
+	if (!DEBUG && level === "debug" && !isDebugMode) return;
 
 	const notification: JsonRpcNotification = {
 		jsonrpc: "2.0",

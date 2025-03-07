@@ -27,7 +27,7 @@ export async function main(): Promise<void> {
 		console.error("  --simple-selectors Use simple selectors without full paths (optional, default: full paths)");
 		console.error("  --plan             JSON string defining actions to perform (optional)");
 		console.error("  --timeout          Timeout in ms, use -1 for infinite wait (optional, default: 30000)");
-		console.error("  --debug            Run in debug mode, suppressing all logs (optional, default: false)");
+		console.error("  --debug            Enable verbose debug logging (optional, default: false)");
 		process.exit(1);
 	}
 
@@ -49,18 +49,14 @@ export async function main(): Promise<void> {
 			if (!plan.actions || !Array.isArray(plan.actions)) {
 				throw new Error("Plan must have an actions array");
 			}
-			if (!debug) {
-				console.warn(printPlan(plan));
-			}
+			console.warn(printPlan(plan));
 		} catch (error) {
 			console.error("Invalid --plan JSON:", error instanceof Error ? error.message : String(error));
 			process.exit(1);
 		}
 	}
 
-	if (!debug) {
-		console.warn(`Running in ${headless ? "headless" : "visible"} mode with ${selectorMode} selectors...`);
-	}
+	console.warn(`Running in ${headless ? "headless" : "visible"} mode with ${selectorMode} selectors...`);
 
 	try {
 		const analysis = await analyzePage(url, {
@@ -72,14 +68,9 @@ export async function main(): Promise<void> {
 			debug,
 		});
 		
-		// Only output the analysis if not in debug mode
-		if (!debug) {
-			console.warn(formatAnalysis(analysis, format));
-		}
+		console.warn(formatAnalysis(analysis, format));
 	} catch (error) {
-		if (!debug) {
-			console.error("Error:", error instanceof Error ? error.message : String(error));
-		}
+		console.error("Error:", error instanceof Error ? error.message : String(error));
 		process.exit(1);
 	}
 }

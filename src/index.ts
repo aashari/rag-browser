@@ -10,7 +10,8 @@ const isDebugMode = process.argv.includes("--debug");
 if (hasUrlArg) {
     // Run in CLI mode
     runCli().catch((error: Error) => {
-        if (!isDebugMode) {
+        // Always show errors unless in debug mode
+        if (isDebugMode) {
             console.error("CLI execution failed:", error);
         }
         process.exit(1);
@@ -18,7 +19,8 @@ if (hasUrlArg) {
 } else {
     // Run in MCP server mode
     runServer(isDebugMode).catch((error: Error) => {
-        if (!isDebugMode) {
+        // Always show errors unless in debug mode
+        if (isDebugMode) {
             console.error("Failed to start MCP server:", error);
         }
         process.exit(1);

@@ -162,8 +162,7 @@ bunx github:aashari/rag-browser --url "https://wikipedia.org" --plan '{
 | `--simple-selectors` | Use simpler CSS selectors       | (flag)                  |
 | `--plan`             | JSON string of actions          | See above example       |
 | `--timeout`          | Timeout in ms (-1 for infinite) | `5000`                  |
-| `--debug`            | Suppress all logging            | (flag)                  |
-| `--debug`            | Suppress all logging            | (flag)                  |
+| `--debug`            | Enable verbose debug logging            | (flag)                  |
 
 ### MCP Server Mode
 
