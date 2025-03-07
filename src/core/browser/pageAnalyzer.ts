@@ -111,8 +111,11 @@ export async function analyzePage(page: Page, url: string, options: BrowserOptio
             waitUntil: 'domcontentloaded',
         });
 
-        // Wait for the page to stabilize
-        await waitForPageStability(page, { timeout: options.timeout || DEFAULT_TIMEOUT });
+        // Wait for the page to stabilize with configurable options
+        await waitForPageStability(page, { 
+            timeout: options.timeout || DEFAULT_TIMEOUT,
+            ...options.stabilityOptions
+        });
 
         // If there's a plan, execute it
         if (options.plan) {

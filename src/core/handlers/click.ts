@@ -6,11 +6,15 @@ import { error } from "../../utils/logging";
 export async function executeClickAction(
     page: Page,
     action: ClickAction,
-    _options: BrowserOptions
+    options: BrowserOptions
 ): Promise<ActionResult> {
     try {
         await page.click(action.element);
-        const isStable = await waitForActionStability(page, { expectNavigation: true }).catch(() => false);
+        const isStable = await waitForActionStability(page, { 
+            expectNavigation: true,
+            ...options.stabilityOptions
+        }).catch(() => false);
+        
         if (isStable) {
             // Mark the action as completed
             action.completed = true;

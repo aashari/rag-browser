@@ -1,8 +1,22 @@
 import type { Page } from "playwright";
 import {
     ACTION_STABILITY_TIMEOUT,
+    NETWORK_IDLE_TIMEOUT,
 } from "../../config/constants";
 import { debug, warn } from "../../utils/logging";
+import type { StabilityOptions } from "./pageStability";
+
+/**
+ * Default action stability options
+ */
+const DEFAULT_ACTION_STABILITY_OPTIONS: StabilityOptions = {
+    timeout: ACTION_STABILITY_TIMEOUT,
+    expectNavigation: false,
+    waitForNetworkIdle: true,
+    networkIdleTimeout: 5000, // Shorter timeout for actions
+    waitForAnimations: true,
+    animationSettleTime: 500
+};
 
 /**
  * Waits for stability after an action (click, type, etc.) has been performed
@@ -10,24 +24,38 @@ import { debug, warn } from "../../utils/logging";
  */
 export async function waitForActionStability(
     page: Page,
-    options: { 
-        timeout?: number; 
-        expectNavigation?: boolean;
-        abortSignal?: AbortSignal;
-    } = {}
+    options: StabilityOptions = {}
 ): Promise<boolean> {
-    const timeout = options.timeout || ACTION_STABILITY_TIMEOUT;
-    debug("Starting simplified action stability check", { timeout });
+    // Merge provided options with defaults
+    const stabilityOptions = { ...DEFAULT_ACTION_STABILITY_OPTIONS, ...options };
+    const {
+        timeout,
+        expectNavigation,
+        abortSignal,
+        waitForNetworkIdle,
+        networkIdleTimeout,
+        waitForAnimations,
+        animationSettleTime
+    } = stabilityOptions;
+    
+    debug("Starting simplified action stability check", { 
+        timeout,
+        expectNavigation,
+        waitForNetworkIdle,
+        waitForAnimations
+    });
 
     // If we expect navigation, wait for navigation events
-    if (options.expectNavigation) {
+    if (expectNavigation) {
         try {
             debug("Waiting for navigation to complete");
-            await page.waitForLoadState("domcontentloaded", { timeout: Math.min(timeout, 30000) })
+            await page.waitForLoadState("domcontentloaded", { timeout: Math.min(timeout || ACTION_STABILITY_TIMEOUT, 30000) })
                 .catch(() => debug("DOMContentLoaded timeout reached, continuing anyway"));
                 
-            await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 30000) })
-                .catch(() => debug("Network idle timeout reached, continuing anyway"));
+            if (waitForNetworkIdle) {
+                await page.waitForLoadState("networkidle", { timeout: Math.min(timeout || ACTION_STABILITY_TIMEOUT, 30000) })
+                    .catch(() => debug("Network idle timeout reached, continuing anyway"));
+            }
             
             debug("Navigation completed");
             return true;
@@ -48,14 +76,19 @@ export async function waitForActionStability(
 
     // For regular actions, wait a short time for any effects to complete
     try {
-        // Wait for any network activity to settle
-        debug("Waiting for network to settle after action");
-        await page.waitForLoadState("networkidle", { timeout: Math.min(timeout, 5000) })
-            .catch(() => debug("Network idle timeout reached, continuing anyway"));
+        // Wait for any network activity to settle if configured
+        if (waitForNetworkIdle) {
+            debug("Waiting for network to settle after action");
+            await page.waitForLoadState("networkidle", { 
+                timeout: Math.min(networkIdleTimeout || 5000, 10000) 
+            }).catch(() => debug("Network idle timeout reached, continuing anyway"));
+        }
         
-        // Wait a short time for any animations or DOM updates
-        debug("Waiting for animations and DOM updates");
-        await page.waitForTimeout(500);
+        // Wait for animations to complete if configured
+        if (waitForAnimations && animationSettleTime) {
+            debug(`Waiting for animations and DOM updates`);
+            await page.waitForTimeout(animationSettleTime);
+        }
         
         debug("Action stability check complete");
         return true;

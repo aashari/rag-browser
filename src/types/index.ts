@@ -113,6 +113,17 @@ export interface BrowserOptions {
 		}[];
 	};
 	abortSignal?: AbortSignal;
+	stabilityOptions?: {
+		timeout?: number;
+		expectNavigation?: boolean;
+		abortSignal?: AbortSignal;
+		waitForNetworkIdle?: boolean;
+		networkIdleTimeout?: number;
+		checkLoadingIndicators?: boolean;
+		loadingIndicatorSelector?: string;
+		waitForAnimations?: boolean;
+		animationSettleTime?: number;
+	};
 }
 
 export interface ActionResult {
