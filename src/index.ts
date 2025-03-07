@@ -17,7 +17,7 @@ if (hasUrlArg) {
     });
 } else {
     // Run in MCP server mode
-    runServer().catch((error: Error) => {
+    runServer(isDebugMode).catch((error: Error) => {
         if (!isDebugMode) {
             console.error("Failed to start MCP server:", error);
         }

@@ -1,4 +1,4 @@
-export const DEBUG = true; // Toggle debug logging (set to true for verbose output)
+export const DEBUG = false; // Toggle debug logging (set to false by default, use --debug flag to enable)
 
 export const DEFAULT_TIMEOUT = 30000;
 export const STABILITY_DELAY = 500;

@@ -6,7 +6,7 @@ import { createToolDefinitions } from "./tools.js";
 import { setupRequestHandlers } from "./requestHandler.js";
 import { VERSION, PACKAGE_NAME } from "../config/version.js";
 
-export async function runServer(): Promise<void> {
+export async function runServer(debug: boolean = false): Promise<void> {
 	const server = new Server(
 		{
 			name: PACKAGE_NAME,
@@ -42,22 +42,27 @@ export async function runServer(): Promise<void> {
 	const transport = new StdioServerTransport();
 	await server.connect(transport);
 
-	// Enhanced startup log with version
-	console.warn(
-		JSON.stringify({
-			jsonrpc: "2.0",
-			method: "server.started",
-			id: "startup-1",
-			params: {
-				name: PACKAGE_NAME,
-				version: VERSION,
-				mode: "MCP Server",
-				capabilities: {
-					resources: true,
-					tools: true,
-					logging: true,
+	// Enhanced startup log with version - suppress if in debug mode
+	if (!debug) {
+		console.warn(
+			JSON.stringify({
+				jsonrpc: "2.0",
+				method: "server.started",
+				id: "startup-1",
+				params: {
+					name: PACKAGE_NAME,
+					version: VERSION,
+					mode: "MCP Server",
+					capabilities: {
+						resources: true,
+						tools: true,
+						logging: true,
+					},
 				},
-			},
-		})
-	);
+			})
+		);
+	}
+
+	// Keep the process running
+	return new Promise<void>(() => {});
 }

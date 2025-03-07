@@ -17,5 +17,10 @@ export async function launchBrowserContext(options: BrowserOptions) {
 		args: ['--disable-web-security', '--disable-features=IsolateOrigins,site-per-process'],
 		bypassCSP: true,
 		permissions: ['clipboard-read', 'clipboard-write'],
+		// Suppress browser logs when in debug mode
+		logger: options.debug ? {
+			isEnabled: () => false,
+			log: () => {},
+		} : undefined,
 	});
 } 
