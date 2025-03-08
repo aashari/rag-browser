@@ -39,21 +39,33 @@ class PromiseTracker {
             debug(`Pending promises: ${pendingLabels.join(', ')}`);
         }
         
-        const timeoutPromise = new Promise<void>((_, reject) => {
-            setTimeout(() => reject(new Error(`Timeout waiting for ${this.pendingPromises.size} pending promises`)), timeout);
+        // Create a copy of the pending promises to avoid modification during iteration
+        const pendingPromisesCopy = [...this.pendingPromises];
+        
+        // Create individual timeout promises for each pending promise
+        const timeoutPromises = pendingPromisesCopy.map(promise => {
+            return Promise.race([
+                promise.catch(err => {
+                    debug(`Promise error (${this.labels.get(promise) || 'unlabeled'}): ${err}`);
+                    return null;
+                }),
+                new Promise<null>(resolve => {
+                    setTimeout(() => {
+                        debug(`Promise timed out (${this.labels.get(promise) || 'unlabeled'})`);
+                        resolve(null);
+                    }, timeout);
+                })
+            ]);
         });
         
-        try {
-            await Promise.race([
-                Promise.all([...this.pendingPromises]),
-                timeoutPromise
-            ]);
-        } catch (err) {
-            debug(`Some promises didn't complete: ${this.pendingPromises.size} remaining`);
-            // Clear the pending promises to avoid memory leaks
-            this.pendingPromises.clear();
-            this.labels.clear();
-        }
+        // Wait for all promises to either complete or timeout
+        await Promise.all(timeoutPromises);
+        
+        // Clear any remaining promises to prevent memory leaks
+        this.pendingPromises.clear();
+        this.labels.clear();
+        
+        debug('All pending promises handled');
     }
 
     /**

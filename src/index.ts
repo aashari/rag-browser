@@ -9,7 +9,12 @@ const isDebugMode = process.argv.includes("--debug");
 
 if (hasUrlArg) {
     // Run in CLI mode
-    runCli().catch((error: Error) => {
+    runCli().then((result) => {
+        // Ensure process exits after successful completion
+        setTimeout(() => {
+            process.exit(0);
+        }, 100); // Small delay to allow for any final logging
+    }).catch((error: Error) => {
         // Always show errors unless in debug mode
         if (isDebugMode) {
             console.error("CLI execution failed:", error);
