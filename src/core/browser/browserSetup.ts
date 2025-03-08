@@ -17,17 +17,25 @@ export async function launchBrowserContext(options: BrowserOptions) {
 	// Set up browser launch options
 	const launchOptions = {
 		headless: options.headless !== false,
-		slowMo: options.headless === false ? 100 : undefined,
+		slowMo: options.headless === false ? options.slowMo || 100 : undefined,
 	};
 	
 	// Launch browser with persistent context if userDataDir is provided
 	const browser = await chromium.launchPersistentContext(
-		options.userDataDir || '',
+		options.userDataDir || getDefaultUserDataDir(),
 		{
 			...launchOptions,
 			viewport: { width: 1280, height: 800 },
 			acceptDownloads: true,
 			ignoreHTTPSErrors: true,
+			bypassCSP: true, // Allow JavaScript execution in all contexts
+			javaScriptEnabled: true,
+			hasTouch: false,
+			isMobile: false,
+			deviceScaleFactor: 1,
+			forcedColors: 'none',
+			reducedMotion: 'no-preference',
+			colorScheme: 'light',
 		}
 	);
 	

@@ -1,5 +1,5 @@
 import type { PageAnalysis, BrowserOptions, StorageState } from "../types";
-import { analyzeBrowserPage, cleanupBrowserResources } from "./browser/index";
+import { analyzeBrowserPage, cleanupBrowsers as cleanupBrowserContexts } from "./browser/index";
 import { setDebugMode } from "../utils/logging";
 import { loadStorageState, saveStorageState, cleanupStorageFiles, abortActiveOperations } from "./browser/storageManager";
 import { promiseTracker } from "../utils/promiseTracker";
@@ -12,24 +12,17 @@ export async function analyzePage(url: string, options: BrowserOptions): Promise
 }
 
 /**
- * Load browser storage state for a specific URL
- * @param url The URL to load storage state for
- * @returns The storage state or undefined if not found
+ * Load storage state for a URL
  */
-export async function loadBrowserState(url: string): Promise<StorageState | undefined> {
+export function loadBrowserStorage(url: string): Promise<StorageState | null> {
 	return loadStorageState(url);
 }
 
 /**
- * Save browser storage state for a specific URL
- * @param state The storage state to save
- * @param url The URL to associate with this state
+ * Save storage state for a URL
  */
-export function saveBrowserState(state: StorageState, url: string): Promise<void> {
-	return promiseTracker.track(
-		saveStorageState(state, url),
-		`saveBrowserState:${url}`
-	);
+export function saveBrowserStorage(url: string, state: StorageState): Promise<void> {
+	return saveStorageState(url, state);
 }
 
 /**
@@ -51,8 +44,14 @@ export async function cleanupResources(): Promise<void> {
 	abortActiveOperations();
 	
 	// Clean up browser resources
-	await cleanupBrowserResources();
+	await cleanupBrowserContexts();
 	
 	// Wait for any pending promises to complete with a short timeout
 	await promiseTracker.waitForPending(1000);
 }
+
+/**
+ * Clean up any active browser contexts
+ * This is exported for direct use in other modules
+ */
+export const cleanupBrowsers = cleanupBrowserContexts;

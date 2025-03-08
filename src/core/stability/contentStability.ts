@@ -2,8 +2,8 @@ import type { Page } from "playwright";
 import { debug } from "../../utils/logging";
 
 /**
- * Simplified function to check if content is stable
- * Only performs a basic check with minimal waiting
+ * Waits for content to be stable using Playwright's built-in mechanisms
+ * This uses a comprehensive approach to ensure the content is fully loaded and stable
  */
 export async function waitForContentStability(
     page: Page,
@@ -11,26 +11,43 @@ export async function waitForContentStability(
     options: { 
         timeout?: number;
         abortSignal?: AbortSignal;
+        waitForVisible?: boolean;
     } = {}
 ): Promise<boolean> {
-    debug("Starting simplified content stability check", { selector });
+    debug("Starting content stability check", { selector });
     
     try {
-        // Check if the element exists
+        // First check if the element exists
         const element = await page.$(selector);
         if (!element) {
             debug("Element not found", { selector });
             return false;
         }
         
-        // Simple fixed wait
-        await page.waitForTimeout(300);
+        // If we need to wait for visibility, use Playwright's built-in waitForSelector
+        if (options.waitForVisible) {
+            debug("Waiting for element to be visible", { selector });
+            await page.waitForSelector(selector, { 
+                state: 'visible',
+                timeout: options.timeout || 5000
+            });
+        }
+        
+        // Check if the element is still in the DOM after waiting
+        const elementStillExists = await page.$(selector)
+            .then(el => !!el)
+            .catch(() => false);
+            
+        if (!elementStillExists) {
+            debug("Element disappeared during stability check", { selector });
+            return false;
+        }
         
         debug("Content stability check complete");
         return true;
     } catch (err) {
         // Return false if there was an error
-        debug("Error during content stability check, continuing anyway");
+        debug("Error during content stability check", err);
         return false;
     }
 } 

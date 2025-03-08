@@ -1,6 +1,6 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { analyzePage, cleanupResources as cleanupBrowserResources } from "../core/browser";
+import { analyzePage, cleanupBrowsers } from "../core/browser";
 import { formatAnalysis } from "../utils/output";
 import type { Plan, Action } from "../types";
 import { storeAnalysis } from "./resources";
@@ -119,7 +119,7 @@ interface ExtendedCallToolResult extends CallToolResult {
  */
 async function cleanupAfterToolExecution(): Promise<void> {
 	// Clean up browser resources
-	await cleanupBrowserResources();
+	await cleanupBrowsers();
 	
 	// Wait for any pending promises to complete with a short timeout
 	await promiseTracker.waitForPending(1000);
