@@ -2,6 +2,28 @@
 
 All notable changes to the `rag-browser` project will be documented in this file.
 
+## [2.2.0] - 2025-03-08
+
+### Added
+- Added comprehensive test suite using Bun's test framework
+- Added common test utilities for shared functionality
+- Added test scripts to package.json for running specific test suites
+- Added coverage reporting for tests
+
+### Changed
+- Improved browser automation performance with simplified element collection
+- Enhanced page and action stability checks for more reliable automation
+- Optimized browser setup with additional configuration options
+- Refactored code for better maintainability and performance
+- Updated documentation with detailed testing information
+
+### Fixed
+- Fixed process hanging after analysis completion
+- Improved domain-specific storage handling
+- Fixed timeout issues in browser session handling
+- Optimized storage operations to eliminate post-analysis delays
+- Implemented proper resource cleanup
+
 ## [2.1.1] - 2025-03-04
 
 ### Added
