@@ -300,6 +300,13 @@ src/
 ├── types/       # TypeScript types
 ├── utils/       # Helper functions
 └── index.ts     # Main entry point
+tests/
+├── mcp-server.test.ts  # Core MCP server tests
+├── simple-mcp.test.ts  # Simple MCP tests
+├── wikipedia-search.test.ts  # Wikipedia search tests
+├── resource.test.ts  # Resource management tests
+├── test-utils.ts  # Common test utilities
+└── README.md         # Testing documentation
 ```
 
 ### Build and Run Locally
@@ -308,3 +315,39 @@ src/
 bun install
 bun run src/index.ts --url "https://example.com"
 ```
+
+### Testing
+
+The project includes a comprehensive test suite for the MCP server. The tests use Bun's built-in test runner and the MCP SDK client to test the server's functionality.
+
+#### Running Tests
+
+```bash
+# Run all tests
+bun test
+
+# Run specific test suites
+bun test tests/mcp-server.test.ts
+bun test tests/simple-mcp.test.ts
+bun test tests/wikipedia-search.test.ts
+bun test tests/resource.test.ts
+
+# Or use the npm scripts
+npm test
+npm run test:mcp
+npm run test:simple
+npm run test:wikipedia
+npm run test:resource
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+The test suite includes:
+
+- **Core MCP Server Tests**: Tests the basic functionality of the MCP server
+- **Simple MCP Tests**: Tests basic operations like listing tools and analyzing a webpage
+- **Wikipedia Search Tests**: Tests executing complex action plans like searching Wikipedia
+- **Resource Management Tests**: Tests resource listing and reading capabilities
+
+For more information about testing, see the [tests/README.md](tests/README.md) file.

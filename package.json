@@ -11,7 +11,13 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "build": "tsc",
-    "prepare": "tsc"
+    "prepare": "tsc",
+    "test": "bun test",
+    "test:mcp": "bun test tests/mcp-server.test.ts",
+    "test:simple": "bun test tests/simple-mcp.test.ts",
+    "test:wikipedia": "bun test tests/wikipedia-search.test.ts",
+    "test:resource": "bun test tests/resource.test.ts",
+    "test:coverage": "bun test --coverage --coverage-reporter=lcov --coverage-reporter=text --coverage-dir=./coverage"
   },
   "devDependencies": {
     "@types/jsdom": "^21.1.7",
