@@ -11,9 +11,7 @@ const DEFAULT_ACTION_STABILITY_OPTIONS: StabilityOptions = {
     timeout: ACTION_STABILITY_TIMEOUT,
     expectNavigation: false,
     waitForNetworkIdle: true,
-    networkIdleTimeout: NETWORK_IDLE_TIMEOUT,
-    checkLoadingIndicators: true,
-    loadingIndicatorSelector: '[aria-busy="true"], [class*="loading"], [id*="loading"], .spinner, .loader'
+    networkIdleTimeout: NETWORK_IDLE_TIMEOUT
 };
 
 /**
@@ -30,9 +28,7 @@ export async function waitForActionStability(
         timeout, 
         expectNavigation, 
         waitForNetworkIdle, 
-        networkIdleTimeout,
-        checkLoadingIndicators,
-        loadingIndicatorSelector
+        networkIdleTimeout
     } = stabilityOptions;
     
     debug("Starting comprehensive action stability check");
@@ -75,30 +71,6 @@ export async function waitForActionStability(
             }).catch(err => {
                 debug("Network idle timeout reached, continuing anyway", err);
             });
-        }
-        
-        // Check for loading indicators if requested and we have time
-        if (checkLoadingIndicators && loadingIndicatorSelector && 
-            Date.now() - startTime < (timeout || ACTION_STABILITY_TIMEOUT) - 2000) {
-            debug("Checking for loading indicators");
-            
-            // First check if any loading indicators exist
-            const hasLoadingIndicators = await page.$(loadingIndicatorSelector)
-                .then(element => !!element)
-                .catch(() => false);
-                
-            if (hasLoadingIndicators) {
-                debug("Loading indicators found, waiting for them to disappear");
-                // Wait for loading indicators to disappear with a reasonable timeout
-                await page.waitForSelector(loadingIndicatorSelector, { 
-                    state: 'detached',
-                    timeout: 2000
-                }).catch(err => {
-                    debug("Loading indicators still present after timeout, continuing anyway", err);
-                });
-            } else {
-                debug("No loading indicators found");
-            }
         }
         
         debug("Action stability check complete");

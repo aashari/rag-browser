@@ -120,8 +120,6 @@ export interface BrowserOptions {
 		abortSignal?: AbortSignal;
 		waitForNetworkIdle?: boolean;
 		networkIdleTimeout?: number;
-		checkLoadingIndicators?: boolean;
-		loadingIndicatorSelector?: string;
 		waitForAnimations?: boolean;
 		animationSettleTime?: number;
 	};

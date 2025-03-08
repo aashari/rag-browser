@@ -17,10 +17,6 @@ export interface StabilityOptions {
     waitForNetworkIdle?: boolean;
     /** Timeout for network idle */
     networkIdleTimeout?: number;
-    /** Whether to check for loading indicators */
-    checkLoadingIndicators?: boolean;
-    /** Selector for loading indicators */
-    loadingIndicatorSelector?: string;
 }
 
 /**
@@ -30,9 +26,7 @@ const DEFAULT_STABILITY_OPTIONS: StabilityOptions = {
     timeout: DEFAULT_TIMEOUT,
     expectNavigation: false,
     waitForNetworkIdle: true,
-    networkIdleTimeout: NETWORK_IDLE_TIMEOUT,
-    checkLoadingIndicators: true,
-    loadingIndicatorSelector: '[aria-busy="true"], [class*="loading"], [id*="loading"], .spinner, .loader'
+    networkIdleTimeout: NETWORK_IDLE_TIMEOUT
 };
 
 /**
@@ -49,9 +43,7 @@ export async function waitForPageStability(
         timeout, 
         expectNavigation, 
         waitForNetworkIdle, 
-        networkIdleTimeout,
-        checkLoadingIndicators,
-        loadingIndicatorSelector
+        networkIdleTimeout
     } = stabilityOptions;
     
     debug("Starting comprehensive page stability check");
@@ -92,30 +84,6 @@ export async function waitForPageStability(
             }).catch(err => {
                 debug("Network idle timeout reached, continuing anyway", err);
             });
-        }
-        
-        // Check for loading indicators if requested
-        if (checkLoadingIndicators && loadingIndicatorSelector && 
-            Date.now() - startTime < (timeout || DEFAULT_TIMEOUT) - 3000) {
-            debug("Checking for loading indicators");
-            
-            // First check if any loading indicators exist
-            const hasLoadingIndicators = await page.$(loadingIndicatorSelector)
-                .then(element => !!element)
-                .catch(() => false);
-                
-            if (hasLoadingIndicators) {
-                debug("Loading indicators found, waiting for them to disappear");
-                // Wait for loading indicators to disappear with a reasonable timeout
-                await page.waitForSelector(loadingIndicatorSelector, { 
-                    state: 'detached',
-                    timeout: 3000
-                }).catch(err => {
-                    debug("Loading indicators still present after timeout, continuing anyway", err);
-                });
-            } else {
-                debug("No loading indicators found");
-            }
         }
         
         debug("Page stability check complete");
