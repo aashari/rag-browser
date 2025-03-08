@@ -122,6 +122,11 @@ export interface BrowserOptions {
 		networkIdleTimeout?: number;
 		waitForAnimations?: boolean;
 		animationSettleTime?: number;
+		checkDOMStability?: boolean;
+		domStabilityInterval?: number;
+		checkResourceStability?: boolean;
+		checkVisualStability?: boolean;
+		visualStabilityInterval?: number;
 	};
 }
 

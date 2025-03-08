@@ -3,6 +3,7 @@ import { ACTION_STABILITY_TIMEOUT, NETWORK_IDLE_TIMEOUT } from "../../config/con
 import { debug } from "../../utils/logging";
 import type { StabilityOptions } from "./pageStability";
 import { getLastUserInteractionTime } from "../browser/eventHandlers";
+import { waitForDOMStability, waitForResourceStability, waitForVisualStability } from "./pageStability";
 
 /**
  * Default action stability options
@@ -11,7 +12,12 @@ const DEFAULT_ACTION_STABILITY_OPTIONS: StabilityOptions = {
     timeout: ACTION_STABILITY_TIMEOUT,
     expectNavigation: false,
     waitForNetworkIdle: true,
-    networkIdleTimeout: NETWORK_IDLE_TIMEOUT
+    networkIdleTimeout: NETWORK_IDLE_TIMEOUT,
+    checkDOMStability: true,
+    domStabilityInterval: 500,
+    checkResourceStability: true,
+    checkVisualStability: true,
+    visualStabilityInterval: 500
 };
 
 /**
@@ -28,7 +34,12 @@ export async function waitForActionStability(
         timeout, 
         expectNavigation, 
         waitForNetworkIdle, 
-        networkIdleTimeout
+        networkIdleTimeout,
+        checkDOMStability,
+        domStabilityInterval,
+        checkResourceStability,
+        checkVisualStability,
+        visualStabilityInterval
     } = stabilityOptions;
     
     debug("Starting comprehensive action stability check");
@@ -73,7 +84,29 @@ export async function waitForActionStability(
             });
         }
         
-        debug("Action stability check complete");
+        // Add advanced stability checks
+        if (checkDOMStability && Date.now() - startTime < (timeout || ACTION_STABILITY_TIMEOUT) - 3000) {
+            debug("Waiting for DOM stability");
+            await waitForDOMStability(page, domStabilityInterval).catch(err => {
+                debug("DOM stability check failed, continuing anyway", err);
+            });
+        }
+        
+        if (checkResourceStability && Date.now() - startTime < (timeout || ACTION_STABILITY_TIMEOUT) - 3000) {
+            debug("Waiting for resource stability");
+            await waitForResourceStability(page).catch(err => {
+                debug("Resource stability check failed, continuing anyway", err);
+            });
+        }
+        
+        if (checkVisualStability && Date.now() - startTime < (timeout || ACTION_STABILITY_TIMEOUT) - 3000) {
+            debug("Waiting for visual stability");
+            await waitForVisualStability(page, visualStabilityInterval).catch(err => {
+                debug("Visual stability check failed, continuing anyway", err);
+            });
+        }
+        
+        debug("Advanced action stability check complete");
         return true;
     } catch (err) {
         // Always return true to allow the process to continue
