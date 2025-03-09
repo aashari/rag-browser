@@ -2,8 +2,10 @@ import type { Page } from "playwright";
 import type { WaitAction, ActionResult, BrowserOptions } from "../../types";
 import { waitForActionStability } from "../stability";
 import { DEFAULT_TIMEOUT } from "../../config/constants";
-import { error, info } from "../../utils/logging";
+import { error, info, debug } from "../../utils/logging";
 import { captureElementsHtml } from "./print";
+import { generateFallbackSelectorChain, discoverContentSelectors, findBestSelectorForContent } from "../selectors";
+import { identifyMainContent } from "../analysis";
 
 export async function executeWaitAction(
     page: Page,
@@ -178,6 +180,116 @@ export async function executeWaitAction(
                     format: 'html'
                 }]
             };
+        }
+        
+        // Try to find alternative selectors using our new selector discovery
+        debug("Original selectors not found, attempting to discover alternatives");
+        
+        try {
+            // First, try to generate fallback selectors for each original selector
+            const fallbackResults = await Promise.all(
+                action.elements.map(async (selector) => {
+                    try {
+                        return await generateFallbackSelectorChain(page, selector);
+                    } catch (e) {
+                        return [];
+                    }
+                })
+            );
+            
+            // Flatten and deduplicate fallback selectors
+            const fallbackSelectors = [...new Set(fallbackResults.flat())];
+            
+            if (fallbackSelectors.length > 0) {
+                debug(`Generated ${fallbackSelectors.length} fallback selectors`);
+                
+                // Try each fallback selector
+                for (const fallbackSelector of fallbackSelectors) {
+                    try {
+                        const exists = await page.$(fallbackSelector).then(Boolean);
+                        if (exists) {
+                            debug(`Found matching fallback selector: ${fallbackSelector}`);
+                            
+                            // Capture content from the fallback selector
+                            const fallbackContent = await captureElementsHtml(
+                                page, 
+                                [fallbackSelector], 
+                                'markdown',
+                                options
+                            );
+                            
+                            return {
+                                success: true,
+                                message: `Found alternative element with selector: ${fallbackSelector}`,
+                                warning: `Original selectors "${action.elements.join(', ')}" not found; using fallback selector "${fallbackSelector}"`,
+                                data: [fallbackContent]
+                            };
+                        }
+                    } catch (e) {
+                        // Invalid selector, skip
+                    }
+                }
+            }
+            
+            // If fallback selectors didn't work, try to discover content selectors
+            debug("Fallback selectors not found, attempting to discover content");
+            const discoveredSelectors = await discoverContentSelectors(page);
+            
+            if (discoveredSelectors.length > 0) {
+                debug(`Discovered ${discoveredSelectors.length} potential content selectors`);
+                
+                // Try each discovered selector, starting with highest confidence
+                for (const { selector, confidence, type } of discoveredSelectors) {
+                    try {
+                        const exists = await page.$(selector).then(Boolean);
+                        if (exists) {
+                            debug(`Found matching discovered selector: ${selector} (${type}, confidence: ${confidence})`);
+                            
+                            // Capture content from the discovered selector
+                            const discoveredContent = await captureElementsHtml(
+                                page, 
+                                [selector], 
+                                'markdown',
+                                options
+                            );
+                            
+                            return {
+                                success: true,
+                                message: `Found ${type} content with selector: ${selector}`,
+                                warning: `Original selectors "${action.elements.join(', ')}" not found; discovered ${type} content with confidence ${confidence.toFixed(2)}`,
+                                data: [discoveredContent]
+                            };
+                        }
+                    } catch (e) {
+                        // Invalid selector, skip
+                    }
+                }
+            }
+            
+            // If all else fails, try to identify the main content
+            debug("Discovered selectors not found, attempting to identify main content");
+            const mainContent = await identifyMainContent(page);
+            
+            if (mainContent && mainContent.selector) {
+                debug(`Identified main content with selector: ${mainContent.selector} (confidence: ${mainContent.confidence})`);
+                
+                // Capture content from the main content selector
+                const mainContentResult = await captureElementsHtml(
+                    page, 
+                    [mainContent.selector], 
+                    'markdown',
+                    options
+                );
+                
+                return {
+                    success: true,
+                    message: `Identified main content with selector: ${mainContent.selector}`,
+                    warning: `Original selectors "${action.elements.join(', ')}" not found; identified main content with confidence ${mainContent.confidence.toFixed(2)}`,
+                    data: [mainContentResult]
+                };
+            }
+        } catch (discoveryErr) {
+            debug(`Error during selector discovery: ${discoveryErr instanceof Error ? discoveryErr.message : String(discoveryErr)}`);
         }
         
         // When elements aren't found, extract broader page content to help AI understand the context

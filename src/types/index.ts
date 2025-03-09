@@ -87,6 +87,33 @@ export type PageAnalysis = {
 	timestamp?: number;
 	expiresAt?: number;
 	error?: string;
+	pageStructure?: {
+		url: string;
+		title: string;
+		description?: string;
+		components: Array<{
+			type: string;
+			selector: string;
+			confidence: number;
+			children: any[];
+		}>;
+		mainContent?: any;
+		navigation?: any;
+		header?: any;
+		footer?: any;
+		forms?: any[];
+		timestamp: number;
+	};
+	pageType?: {
+		type: string;
+		confidence: number;
+		features: string[];
+	};
+	contentSelectors?: Array<{
+		selector: string;
+		type: string;
+		confidence: number;
+	}>;
 };
 
 export type SelectorMode = "full" | "simple";

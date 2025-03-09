@@ -5,6 +5,8 @@ import { waitForPageStability } from "../stability";
 import { getElementInfo, getFullPath } from "../../utils/element";
 import { info, error, debug } from "../../utils/logging";
 import { DEFAULT_TIMEOUT, LINK_SELECTORS, BUTTON_SELECTORS, INPUT_SELECTORS } from "../../config/constants";
+import { analyzePageStructure, classifyPage } from "../analysis";
+import { discoverContentSelectors } from "../selectors";
 
 // Add constants for element count limits
 const MAX_ELEMENTS_PER_TYPE = 200; // Maximum number of elements to process per type (inputs, buttons, links)
@@ -146,6 +148,36 @@ export async function analyzePage(page: Page, url: string, options: BrowserOptio
             collectElements(page, LINK_SELECTORS, elementLimit)
         ]);
 
+        // Enhanced analysis with our new features
+        let pageStructure = null;
+        let pageType = null;
+        let contentSelectors = null;
+
+        // Only perform enhanced analysis if there's no plan or the plan succeeded
+        if (!options.plan || actionSucceeded) {
+            try {
+                // Run these analyses in parallel for better performance
+                [pageStructure, pageType, contentSelectors] = await Promise.all([
+                    analyzePageStructure(page).catch(err => {
+                        debug("Error analyzing page structure", { error: err });
+                        return null;
+                    }),
+                    classifyPage(page).catch(err => {
+                        debug("Error classifying page", { error: err });
+                        return null;
+                    }),
+                    discoverContentSelectors(page).catch(err => {
+                        debug("Error discovering content selectors", { error: err });
+                        return null;
+                    })
+                ]);
+
+                debug("Enhanced page analysis completed");
+            } catch (err) {
+                debug("Error during enhanced page analysis", { error: err });
+            }
+        }
+
         return {
             title,
             description,
@@ -154,6 +186,18 @@ export async function analyzePage(page: Page, url: string, options: BrowserOptio
             links,
             plannedActions: plannedActionResults.length > 0 ? plannedActionResults : undefined,
             timestamp: Date.now(),
+            // Include enhanced analysis results if available
+            pageStructure: pageStructure || undefined,
+            pageType: pageType ? {
+                type: pageType.type,
+                confidence: pageType.confidence,
+                features: pageType.features
+            } : undefined,
+            contentSelectors: contentSelectors ? contentSelectors.map(s => ({
+                selector: s.selector,
+                type: s.type,
+                confidence: s.confidence
+            })) : undefined
         };
     } catch (err) {
         error("Error during page analysis", err);
