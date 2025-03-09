@@ -32,7 +32,7 @@ describe("RAG Browser MCP Server", () => {
     const actionTool = tools.tools.find(tool => tool.name === "action");
     expect(actionTool).toBeDefined();
     expect(actionTool?.name).toBe("action");
-    expect(actionTool?.version).toBe("2.2.0");
+    expect(actionTool?.version).toBe("2.3.0");
   }, TEST_TIMEOUT);
 
   // Test calling the action tool with a simple example
